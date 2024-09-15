@@ -256,41 +256,6 @@ const ControlPanel = ({ onZoom, isMultiSelectMode }) => {
   )
 }
 
-const Shelf = () => {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        right: 0,
-        width: "200px",
-        height: "100vh",
-        backgroundColor: "#f0f0f0",
-        borderLeft: "1px solid #ddd",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        paddingTop: "20px",
-      }}
-    >
-      <div
-        draggable
-        style={{
-          width: "100px",
-          height: "100px",
-          backgroundColor: "#888",
-          marginBottom: "10px",
-          borderRadius: "8px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-        }}
-      >
-        Drag me
-      </div>
-    </div>
-  )
-}
+
 
 export default CustomGrid

@@ -1,50 +1,32 @@
-# React + TypeScript + Vite
+# Concept: Whiteboard with ReactComponents
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The idea is to build something similar to Miro, but instead of using a canvas or SVG, the focus will be on React components. These components will be fully interactive, supporting drag-and-drop functionality and more. Alternatively, it could evolve into a sandbox or an interactive dashboard where users can arrange and manipulate React components on a whiteboard-like interface.
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![alt text](public/zoom.gif)
 
-## Expanding the ESLint configuration
+![alt text](public/pan.gif)
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+![alt text](public/dnd.gif)
 
-- Configure the top-level `parserOptions` property like this:
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+## use cases
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+Component-Based Dashboard Builder
+
+**Idea:** Allow users to create custom dashboards by dragging and dropping React components that represent widgets, charts, and data visualizations.
+
+**Features:**
+	  •	Drag and drop widgets like graphs, data tables, and notifications.
+	  •	Real-time updates with live data streams (e.g., stock prices, analytics).
+	  •	Responsive layout for mobile and desktop views.
+
+
+
+
+
+
+
+######  React + TypeScript + Vite
