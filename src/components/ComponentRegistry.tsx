@@ -1,8 +1,12 @@
-import React from "react";
-import { Clock, Cloud, FileText } from "lucide-react";
-import Timer from "@/components/Timer";
-import Weather from "@/components/Weather";
-import TextNote from "@/components/TextNote";
+import { Clock, Cloud, Type, Video, Music, Link as LinkIcon, Share2 } from "lucide-react";
+import { Timer } from "@/components/Timer";
+import { Weather } from "@/components/Weather";
+import { ScrollingText } from "@/components/ScrollingText";
+import { YouTubeVideo } from "@/components/YouTubeVideo";
+import { SoundCloudWidget } from "@/components/SoundCloudWidget";
+import { SpotifyWidget } from "@/components/SpotifyWidget";
+import { StylishLink } from "@/components/StylishLink";
+import { FlowCanvas } from "@/components/FlowCanvas";
 import { ComponentRegistry } from "@/store/whiteboard";
 
 /**
@@ -39,6 +43,68 @@ export const COMPONENT_REGISTRY: ComponentRegistry = {
     },
     icon: <Cloud className="w-5 h-5" />,
     category: "Data",
+  },
+
+  scrollingText: {
+    name: "Scrolling Text",
+    component: ScrollingText,
+    defaultProps: {
+      initialText: "Welcome to the whiteboard! Edit this text...",
+    },
+    icon: <Type className="w-5 h-5" />,
+    category: "Content",
+  },
+
+  youtubeVideo: {
+    name: "YouTube Video",
+    component: YouTubeVideo,
+    defaultProps: {
+      initialUrl: "",
+    },
+    icon: <Video className="w-5 h-5" />,
+    category: "Media",
+  },
+
+  soundcloud: {
+    name: "SoundCloud",
+    component: SoundCloudWidget,
+    defaultProps: {
+      initialUrl: "",
+    },
+    icon: <Music className="w-5 h-5 text-orange-500" />,
+    category: "Media",
+  },
+
+  spotify: {
+    name: "Spotify",
+    component: SpotifyWidget,
+    defaultProps: {
+      initialUrl: "",
+    },
+    icon: <Music className="w-5 h-5 text-green-500" />,
+    category: "Media",
+  },
+
+  stylishlink: {
+    name: "Stylish Link",
+    component: StylishLink,
+    defaultProps: {
+      initialUrl: "",
+      initialTitle: "Click to Visit",
+    },
+    icon: <LinkIcon className="w-5 h-5 text-indigo-500" />,
+    category: "Content",
+  },
+
+  flowCanvas: {
+    name: "Flow Connections",
+    component: FlowCanvas as unknown as React.ComponentType<Record<string, unknown>>,
+    defaultProps: {
+      width: 600,
+      height: 300
+    },
+    icon: <Share2 className="w-5 h-5 text-blue-500" />,
+    category: "Utilities",
   },
 
   // Example of how to add a new component:

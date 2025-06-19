@@ -9,18 +9,40 @@ import { CurrencyConverter } from "./components/CurrencyConverter";
 import { TextNote } from "./components/TextNote";
 import { ConfettiButton } from "./components/ConfettiButton";
 import { Watch } from "./components/Watch";
+import { ScrollingText } from "./components/ScrollingText";
+import { YouTubeVideo } from "./components/YouTubeVideo";
+import { SoundCloudWidget } from "./components/SoundCloudWidget";
+import { SpotifyWidget } from "./components/SpotifyWidget";
+import { StylishLink } from "./components/StylishLink";
+import { FlowCanvas } from "./components/FlowCanvas";
 
 const CustomGrid = () => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [transform, setTransform] = useState(d3.zoomIdentity);
-  const [components, setComponents] = useState([
-    { id: 1, x: 100, y: 100, type: "timer" },
-    { id: 2, x: 300, y: 200, type: "weather" },
-    { id: 3, x: 600, y: 100, type: "bitcoin" },
-    { id: 4, x: 100, y: 400, type: "currency" },
-    { id: 5, x: 400, y: 400, type: "confetti" },
-    { id: 6, x: 700, y: 400, type: "note" },
-    { id: 7, x: 1000, y: 100, type: "watch" },
+  interface Component {
+    id: number;
+    x: number;
+    y: number;
+    type: string;
+    width?: number;
+    height?: number;
+    zIndex?: number;
+  }
+
+  const [components, setComponents] = useState<Component[]>([
+    { id: 1, x: 100, y: 100, type: "timer", zIndex: 1 },
+    { id: 2, x: 300, y: 200, type: "weather", zIndex: 2 },
+    { id: 3, x: 600, y: 100, type: "bitcoin", zIndex: 3 },
+    { id: 4, x: 100, y: 400, type: "currency", zIndex: 4 },
+    { id: 5, x: 400, y: 400, type: "confetti", zIndex: 5 },
+    { id: 6, x: 700, y: 400, type: "note", zIndex: 6 },
+    { id: 7, x: 1000, y: 100, type: "watch", zIndex: 7 },
+    { id: 8, x: 1000, y: 400, type: "scrollingtext", zIndex: 8 },
+    { id: 9, x: 500, y: 200, type: "youtubeVideo", zIndex: 9 },
+    { id: 10, x: 800, y: 200, type: "soundcloud", zIndex: 10 },
+    { id: 11, x: 300, y: 600, type: "spotify", zIndex: 11 },
+    { id: 12, x: 600, y: 600, type: "stylishlink", zIndex: 12 },
+    { id: 13, x: 800, y: 600, type: "flowCanvas", width: 600, height: 300, zIndex: 13 },
   ]);
   const [selectedComponents, setSelectedComponents] = useState<number[]>([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
@@ -34,13 +56,17 @@ const CustomGrid = () => {
 
   const handleDeleteComponent = useCallback((id: number) => {
     console.log(`Deleting component with ID: ${id}`);
-    setComponents(prev => prev.filter(component => component.id !== id));
-    setSelectedComponents(prev => prev.filter(selectedId => selectedId !== id));
+    setComponents((prev) => prev.filter((component) => component.id !== id));
+    setSelectedComponents((prev) =>
+      prev.filter((selectedId) => selectedId !== id)
+    );
   }, []);
 
   const handleDeleteSelected = useCallback(() => {
     if (selectedComponents.length > 0) {
-      setComponents(prev => prev.filter(component => !selectedComponents.includes(component.id)));
+      setComponents((prev) =>
+        prev.filter((component) => !selectedComponents.includes(component.id))
+      );
       setSelectedComponents([]);
     }
   }, [selectedComponents]);
@@ -79,6 +105,9 @@ const CustomGrid = () => {
   }, [isMultiSelectMode, handleDeleteSelected]);
 
   const handleDragStart = (id: number) => {
+    // Bring the component to the front when starting to drag
+    bringToFront(id);
+    
     if (isMultiSelectMode && selectedComponents.includes(id)) {
       const positions = selectedComponents.map((selectedId) => {
         const component = components.find((c) => c.id === selectedId);
@@ -152,6 +181,8 @@ const CustomGrid = () => {
 
   const addNewComponent = (type: string) => {
     const newId = Math.max(...components.map((c) => c.id)) + 1;
+    const highestZIndex = Math.max(...components.map((c) => c.zIndex || 0), 0);
+    
     console.log(`Adding new ${type} component with ID: ${newId}`);
     setComponents((prev) => [
       ...prev,
@@ -160,9 +191,24 @@ const CustomGrid = () => {
         x: 200 + Math.random() * 200,
         y: 200 + Math.random() * 200,
         type,
+        zIndex: highestZIndex + 1, // Place new component on top
       },
     ]);
   };
+
+  const bringToFront = useCallback((id: number) => {
+    setComponents((prevComponents) => {
+      const highestZIndex = Math.max(
+        ...prevComponents.map((comp) => comp.zIndex || 0),
+        0
+      );
+      return prevComponents.map((component) =>
+        component.id === id
+          ? { ...component, zIndex: highestZIndex + 1 }
+          : component
+      );
+    });
+  }, []);
 
   return (
     <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
@@ -176,20 +222,24 @@ const CustomGrid = () => {
           pointerEvents: "none",
         }}
       >
-        {components.map((component) => (
-          <DraggableComponent
-            key={component.id}
-            x={component.x}
-            y={component.y}
-            id={component.id}
-            type={component.type}
-            onDrag={handleDrag}
-            onDragStart={handleDragStart}
+        {/* Sort components by z-index before rendering */}
+        {[...components]
+          .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
+          .map((component) => (
+            <DraggableComponent
+              key={component.id}
+              x={component.x}
+              y={component.y}
+              id={component.id}
+              type={component.type}
+              onDrag={handleDrag}
+              onDragStart={handleDragStart}
             onSelect={handleSelect}
             onDelete={handleDeleteComponent}
             selected={selectedComponents.includes(component.id)}
             transform={transform}
             isMultiSelectMode={isMultiSelectMode}
+            zIndex={component.zIndex || 0}
           />
         ))}
       </div>
@@ -210,6 +260,7 @@ interface DraggableComponentProps {
   onDelete: (id: number) => void;
   selected: boolean;
   transform: d3.ZoomTransform;
+  zIndex?: number;
   isMultiSelectMode: boolean;
 }
 
@@ -225,6 +276,7 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
   selected,
   transform,
   isMultiSelectMode,
+  zIndex,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
@@ -245,15 +297,18 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
     onDelete(id);
   };
 
-  const handleMouseMove = useCallback((event: MouseEvent) => {
-    if (!isDragging) return;
+  const handleMouseMove = useCallback(
+    (event: MouseEvent) => {
+      if (!isDragging) return;
 
-    const currentMousePos = { x: event.clientX, y: event.clientY };
-    const deltaX = (currentMousePos.x - dragStartPos.x) / transform.k;
-    const deltaY = (currentMousePos.y - dragStartPos.y) / transform.k;
+      const currentMousePos = { x: event.clientX, y: event.clientY };
+      const deltaX = (currentMousePos.x - dragStartPos.x) / transform.k;
+      const deltaY = (currentMousePos.y - dragStartPos.y) / transform.k;
 
-    onDrag(id, deltaX, deltaY);
-  }, [isDragging, dragStartPos, transform.k, onDrag, id]);
+      onDrag(id, deltaX, deltaY);
+    },
+    [isDragging, dragStartPos, transform.k, onDrag, id]
+  );
 
   const handleMouseUp = () => {
     setIsDragging(false);
@@ -290,6 +345,18 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
         return <ConfettiButton />;
       case "watch":
         return <Watch />;
+      case "scrollingtext":
+        return <ScrollingText />;
+      case "youtubeVideo":
+        return <YouTubeVideo />;
+      case "soundcloud":
+        return <SoundCloudWidget />;
+      case "spotify":
+        return <SpotifyWidget />;
+      case "stylishlink":
+        return <StylishLink />;
+      case "flowCanvas":
+        return <FlowCanvas />;
       default:
         return (
           <div className="w-20 bg-slate-800 rounded-md p-2">
@@ -307,11 +374,12 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
       style={{
         left: `${x}px`,
         top: `${y}px`,
+        zIndex: zIndex,
       }}
       onMouseDown={handleMouseDown}
     >
       {renderComponent()}
-      
+
       {/* Delete button - appears on hover */}
       <button
         className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center hover:bg-red-600 z-10"
@@ -402,7 +470,7 @@ const Shelf: React.FC<ShelfProps> = ({ onAddComponent }) => {
         size="sm"
         className="justify-start"
       >
-        ₿ Add Bitcoin Chart
+        💰 Add Crypto Chart
       </Button>
       <Button
         onClick={() => onAddComponent("currency")}
@@ -435,6 +503,54 @@ const Shelf: React.FC<ShelfProps> = ({ onAddComponent }) => {
         className="justify-start"
       >
         ⌚ Add Watch
+      </Button>
+      <Button
+        onClick={() => onAddComponent("scrollingtext")}
+        variant="outline"
+        size="sm"
+        className="justify-start"
+      >
+        📣 Add Scrolling Text
+      </Button>
+      <Button
+        onClick={() => onAddComponent("youtubeVideo")}
+        variant="outline"
+        size="sm"
+        className="justify-start"
+      >
+        🎬 Add YouTube Video
+      </Button>
+      <Button
+        onClick={() => onAddComponent("soundcloud")}
+        variant="outline"
+        size="sm"
+        className="justify-start"
+      >
+        🔊 Add SoundCloud Track
+      </Button>
+      <Button
+        onClick={() => onAddComponent("spotify")}
+        variant="outline"
+        size="sm"
+        className="justify-start"
+      >
+        🎵 Add Spotify Player
+      </Button>
+      <Button
+        onClick={() => onAddComponent("stylishlink")}
+        variant="outline"
+        size="sm"
+        className="justify-start"
+      >
+        🔗 Add Stylish Link
+      </Button>
+      <Button
+        onClick={() => onAddComponent("flowCanvas")}
+        variant="outline"
+        size="sm"
+        className="justify-start"
+      >
+        🔄 Add Flow Connections
       </Button>
       <p className="text-xs text-gray-500 mt-2">
         Press 'H' to toggle multi-select mode

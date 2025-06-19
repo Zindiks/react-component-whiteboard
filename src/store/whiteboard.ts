@@ -1,6 +1,16 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 
+// Connection type definition
+export interface Connection {
+  id: string;
+  fromId: string;
+  toId: string;
+  type: 'straight' | 'curved';
+  color: string;
+  label?: string;
+}
+
 // Types for our whiteboard components
 export interface WhiteboardComponent {
   id: string;
@@ -9,15 +19,15 @@ export interface WhiteboardComponent {
   y: number;
   width?: number;
   height?: number;
-  props?: Record<string, any>;
+  props?: Record<string, unknown>;
   zIndex?: number;
 }
 
 export interface ComponentRegistry {
   [key: string]: {
     name: string;
-    component: React.ComponentType<any>;
-    defaultProps?: Record<string, any>;
+    component: React.ComponentType<Record<string, unknown>>;
+    defaultProps?: Record<string, unknown>;
     icon?: React.ReactNode;
     category?: string;
   };
@@ -32,6 +42,14 @@ interface WhiteboardState {
   // Components on the whiteboard
   components: WhiteboardComponent[];
   selectedComponents: string[];
+  
+  // Connections between components
+  connections: Connection[];
+  selectedConnection: string | null;
+  isCreatingConnection: boolean;
+  connectionStartComponent: string | null;
+  connectionType: 'straight' | 'curved';
+  connectionColor: string;
 
   // Drag state
   isDragging: boolean;
@@ -59,6 +77,17 @@ interface WhiteboardState {
     snapToGrid?: boolean
   ) => void;
   duplicateComponents: (componentIds: string[]) => void;
+  
+  // Connection actions
+  addConnection: (connection: Omit<Connection, "id">) => void;
+  updateConnection: (id: string, updates: Partial<Connection>) => void;
+  removeConnection: (id: string) => void;
+  selectConnection: (id: string | null) => void;
+  startConnectionCreation: (componentId: string) => void;
+  finishConnectionCreation: (componentId: string) => void;
+  cancelConnectionCreation: () => void;
+  setConnectionType: (type: 'straight' | 'curved') => void;
+  setConnectionColor: (color: string) => void;
 }
 
 // Helper function to snap to grid
@@ -71,6 +100,11 @@ const generateId = (): string => {
   return `component_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
+// Generate connection ID
+const generateConnectionId = (): string => {
+  return `conn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
 export const useWhiteboardStore = create<WhiteboardState>()(
   subscribeWithSelector((set, get) => ({
     // Initial state
@@ -79,6 +113,12 @@ export const useWhiteboardStore = create<WhiteboardState>()(
     gridVisible: true,
     components: [],
     selectedComponents: [],
+    connections: [],
+    selectedConnection: null,
+    isCreatingConnection: false,
+    connectionStartComponent: null,
+    connectionType: 'curved',
+    connectionColor: '#3b82f6',
     isDragging: false,
     dragStartPosition: null,
     componentRegistry: {},
@@ -109,12 +149,24 @@ export const useWhiteboardStore = create<WhiteboardState>()(
       })),
 
     removeComponent: (id) =>
-      set((state) => ({
-        components: state.components.filter((comp) => comp.id !== id),
-        selectedComponents: state.selectedComponents.filter(
-          (selectedId) => selectedId !== id
-        ),
-      })),
+      set((state) => {
+        // Also remove any connections that use this component
+        const updatedConnections = state.connections.filter(
+          conn => conn.fromId !== id && conn.toId !== id
+        );
+        
+        return {
+          components: state.components.filter((comp) => comp.id !== id),
+          selectedComponents: state.selectedComponents.filter(
+            (selectedId) => selectedId !== id
+          ),
+          connections: updatedConnections,
+          selectedConnection: state.selectedConnection && 
+            (state.connections.find(c => c.id === state.selectedConnection)?.fromId === id ||
+             state.connections.find(c => c.id === state.selectedConnection)?.toId === id) 
+            ? null : state.selectedConnection,
+        };
+      }),
 
     selectComponent: (id, multiSelect = false) =>
       set((state) => {
@@ -158,8 +210,8 @@ export const useWhiteboardStore = create<WhiteboardState>()(
 
             return {
               ...comp,
-              x: snapToGrid ? snapToGrid(newX, gridSize) : newX,
-              y: snapToGrid ? snapToGrid(newY, gridSize) : newY,
+              x: snapToGrid ? Math.round(newX / gridSize) * gridSize : newX,
+              y: snapToGrid ? Math.round(newY / gridSize) * gridSize : newY,
             };
           }
           return comp;
@@ -186,6 +238,76 @@ export const useWhiteboardStore = create<WhiteboardState>()(
         selectedComponents: duplicated.map((comp) => comp.id),
       }));
     },
+    
+    // Connection actions
+    addConnection: (connection) => {
+      const newConnection: Connection = {
+        ...connection,
+        id: generateConnectionId()
+      };
+      
+      set((state) => ({
+        connections: [...state.connections, newConnection]
+      }));
+      
+      return newConnection.id;
+    },
+    
+    updateConnection: (id, updates) =>
+      set((state) => ({
+        connections: state.connections.map(conn =>
+          conn.id === id ? { ...conn, ...updates } : conn
+        )
+      })),
+      
+    removeConnection: (id) =>
+      set((state) => ({
+        connections: state.connections.filter(conn => conn.id !== id),
+        selectedConnection: state.selectedConnection === id ? null : state.selectedConnection
+      })),
+      
+    selectConnection: (id) =>
+      set({ selectedConnection: id }),
+    
+    startConnectionCreation: (componentId) =>
+      set({ 
+        isCreatingConnection: true,
+        connectionStartComponent: componentId,
+        selectedConnection: null
+      }),
+      
+    finishConnectionCreation: (componentId) =>
+      set((state) => {
+        if (!state.isCreatingConnection || !state.connectionStartComponent || state.connectionStartComponent === componentId) {
+          return { isCreatingConnection: false, connectionStartComponent: null };
+        }
+        
+        const newConnection: Connection = {
+          id: generateConnectionId(),
+          fromId: state.connectionStartComponent,
+          toId: componentId,
+          type: state.connectionType,
+          color: state.connectionColor
+        };
+        
+        return {
+          connections: [...state.connections, newConnection],
+          isCreatingConnection: false,
+          connectionStartComponent: null
+        };
+      }),
+      
+    cancelConnectionCreation: () =>
+      set({ 
+        isCreatingConnection: false, 
+        connectionStartComponent: null
+      }),
+      
+    setConnectionType: (type) =>
+      set({ connectionType: type }),
+      
+    setConnectionColor: (color) =>
+      set({ connectionColor: color })
   }))
 );
 
