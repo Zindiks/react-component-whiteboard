@@ -1,33 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { ExternalLink, Edit3, Link as LinkIcon, Globe, Copy } from 'lucide-react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
+import React, { useState, useEffect } from "react";
+import {
+  ExternalLink,
+  Edit3,
+  Link as LinkIcon,
+  Globe,
+  Copy,
+} from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { ComponentHeader } from "./ComponentHeader";
 
 interface StylishLinkProps {
   initialUrl?: string;
   initialTitle?: string;
   width?: number;
   height?: number;
+  onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const StylishLink: React.FC<StylishLinkProps> = ({
-  initialUrl = '',
-  initialTitle = '',
+  initialUrl = "",
+  initialTitle = "",
   width = 400,
-  height = 180
+  height = 180,
+  onHeaderMouseDown,
+  onDelete,
 }) => {
   const [url, setUrl] = useState<string>(initialUrl);
-  const [title, setTitle] = useState<string>(initialTitle || 'Untitled Link');
+  const [title, setTitle] = useState<string>(initialTitle || "Untitled Link");
   const [isEditing, setIsEditing] = useState<boolean>(!initialUrl);
   const [copied, setCopied] = useState<boolean>(false);
-  const [favicon, setFavicon] = useState<string>('');
-  const [urlColor, setUrlColor] = useState<string>('#3b82f6'); // Default blue
+  const [favicon, setFavicon] = useState<string>("");
+  const [urlColor, setUrlColor] = useState<string>("#3b82f6"); // Default blue
   const [isHovered, setIsHovered] = useState<boolean>(false);
 
   // Helper function to validate URL and add protocol if missing
   const formatUrl = (inputUrl: string): string => {
-    if (!inputUrl) return '';
-    if (!inputUrl.startsWith('http://') && !inputUrl.startsWith('https://')) {
+    if (!inputUrl) return "";
+    if (!inputUrl.startsWith("http://") && !inputUrl.startsWith("https://")) {
       return `https://${inputUrl}`;
     }
     return inputUrl;
@@ -39,7 +50,7 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
       const url = new URL(formatUrl(inputUrl));
       return url.hostname;
     } catch {
-      return '';
+      return "";
     }
   };
 
@@ -54,19 +65,19 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
         for (let i = 0; i < domain.length; i++) {
           hash = domain.charCodeAt(i) + ((hash << 5) - hash);
         }
-        
+
         // Convert to hex color - skew toward brighter colors
         const hue = Math.abs(hash) % 360;
         const saturation = 70 + (Math.abs(hash) % 20); // 70-90%
         const lightness = 45 + (Math.abs(hash) % 15); // 45-60%
-        
+
         setUrlColor(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
-        
+
         // Try to get favicon
         setFavicon(`https://www.google.com/s2/favicons?domain=${domain}&sz=64`);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
   const handleCopyUrl = () => {
@@ -77,7 +88,7 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
 
   const handleSave = () => {
     if (!url) {
-      alert('Please enter a URL');
+      alert("Please enter a URL");
       return;
     }
     setIsEditing(false);
@@ -85,7 +96,7 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
 
   const handleVisitLink = () => {
     if (url) {
-      window.open(formatUrl(url), '_blank');
+      window.open(formatUrl(url), "_blank");
     }
   };
 
@@ -94,31 +105,33 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
       className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col"
       style={{ width, height }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
-            <LinkIcon className="w-3 h-3 text-white" />
-          </div>
-          <h3 className="text-sm font-semibold text-gray-800">Stylish Link</h3>
-        </div>
-        <div className="flex items-center space-x-1">
+      <ComponentHeader
+        title="Stylish Link"
+        icon={LinkIcon}
+        iconColor="bg-indigo-500"
+        onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
+        actions={
           <button
-            className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${isEditing ? 'bg-blue-100 text-blue-600' : ''}`}
+            className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
+              isEditing ? "bg-blue-100 text-blue-600" : ""
+            }`}
             onClick={() => setIsEditing(!isEditing)}
             title={isEditing ? "Save" : "Edit link"}
           >
             <Edit3 className="h-4 w-4" />
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Content */}
       <div className="flex-grow relative">
         {isEditing ? (
           <div className="p-4 h-full flex flex-col">
             <div className="mb-3">
-              <label className="text-xs text-gray-600 mb-1 block">Link Title:</label>
+              <label className="text-xs text-gray-600 mb-1 block">
+                Link Title:
+              </label>
               <Input
                 type="text"
                 value={title}
@@ -127,7 +140,7 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
                 className="text-sm"
               />
             </div>
-            
+
             <div className="mb-4">
               <label className="text-xs text-gray-600 mb-1 block">URL:</label>
               <Input
@@ -139,53 +152,56 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
               />
             </div>
 
-            <Button 
-              onClick={handleSave} 
-              className="w-full mt-auto"
-            >
+            <Button onClick={handleSave} className="w-full mt-auto">
               Save Link
             </Button>
           </div>
         ) : (
-          <div 
+          <div
             className="p-4 h-full flex flex-col"
-            style={{ 
+            style={{
               background: `linear-gradient(135deg, ${urlColor}10, ${urlColor}30)`,
-              borderLeft: `4px solid ${urlColor}` 
+              borderLeft: `4px solid ${urlColor}`,
             }}
           >
             <div className="flex-grow flex flex-col items-center justify-center">
-              <div 
+              <div
                 className="w-full bg-white rounded-lg border border-gray-100 shadow-sm p-4 transition-all duration-300 hover:shadow-md"
-                style={{ transform: isHovered ? 'translateY(-2px)' : 'none' }}
+                style={{ transform: isHovered ? "translateY(-2px)" : "none" }}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 onClick={handleVisitLink}
               >
                 <div className="flex items-center mb-2">
                   {favicon && (
-                    <img 
-                      src={favicon} 
-                      alt="Site icon" 
+                    <img
+                      src={favicon}
+                      alt="Site icon"
                       className="w-5 h-5 mr-2"
                       onError={(e) => {
                         // If favicon fails to load, show default icon
-                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).style.display = "none";
                       }}
                     />
                   )}
-                  <Globe className={`w-4 h-4 ${favicon ? 'hidden' : 'inline mr-2'}`} style={{ color: urlColor }} />
-                  <span className="text-sm font-medium flex-grow truncate" style={{ color: urlColor }}>
-                    {title || 'Visit Link'}
+                  <Globe
+                    className={`w-4 h-4 ${favicon ? "hidden" : "inline mr-2"}`}
+                    style={{ color: urlColor }}
+                  />
+                  <span
+                    className="text-sm font-medium flex-grow truncate"
+                    style={{ color: urlColor }}
+                  >
+                    {title || "Visit Link"}
                   </span>
                   <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="text-xs text-gray-500 truncate max-w-[80%]">
                     {getDomainFromUrl(url)}
                   </div>
-                  <button 
+                  <button
                     className="text-gray-400 hover:text-gray-600 p-1 rounded-full"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -202,16 +218,16 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
                 </div>
               </div>
             </div>
-            
+
             <div className="mt-3 text-center">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full" 
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
                 onClick={handleVisitLink}
-                style={{ 
+                style={{
                   borderColor: urlColor,
-                  color: urlColor
+                  color: urlColor,
                 }}
               >
                 <ExternalLink className="w-3.5 h-3.5 mr-2" />

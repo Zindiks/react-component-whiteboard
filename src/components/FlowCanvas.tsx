@@ -1,6 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Share2, Plus, Trash2 } from 'lucide-react';
-import { useWhiteboardStore, Connection } from '@/store/whiteboard';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Share2,
+  Plus,
+  Trash2,
+  Circle,
+  Square,
+  Diamond,
+  ArrowRight,
+  Download,
+  Upload,
+} from "lucide-react";
+import { useWhiteboardStore, Connection } from "@/store/whiteboard";
+import { ComponentHeader } from "./ComponentHeader";
 
 interface Position {
   x: number;
@@ -16,63 +27,103 @@ interface ComponentPositions {
 interface FlowCanvasProps {
   width?: number;
   height?: number;
+  onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
-export const FlowCanvas: React.FC<FlowCanvasProps> = ({ 
-  width = 800, 
+export const FlowCanvas: React.FC<FlowCanvasProps> = ({
+  width = 800,
   height = 600,
+  onHeaderMouseDown,
+  onDelete,
 }) => {
   // Get state and actions from the whiteboard store
-  const components = useWhiteboardStore(state => state.components);
-  const connections = useWhiteboardStore(state => state.connections);
-  const isCreatingConnection = useWhiteboardStore(state => state.isCreatingConnection);
-  const connectionStartComponent = useWhiteboardStore(state => state.connectionStartComponent);
-  const selectedConnection = useWhiteboardStore(state => state.selectedConnection);
-  const connectionType = useWhiteboardStore(state => state.connectionType);
-  const connectionColor = useWhiteboardStore(state => state.connectionColor);
-  
-  const startConnectionCreation = useWhiteboardStore(state => state.startConnectionCreation);
-  const finishConnectionCreation = useWhiteboardStore(state => state.finishConnectionCreation);
-  const cancelConnectionCreation = useWhiteboardStore(state => state.cancelConnectionCreation);
-  const addConnection = useWhiteboardStore(state => state.addConnection);
-  const updateConnection = useWhiteboardStore(state => state.updateConnection);
-  const removeConnection = useWhiteboardStore(state => state.removeConnection);
-  const selectConnection = useWhiteboardStore(state => state.selectConnection);
-  const setConnectionType = useWhiteboardStore(state => state.setConnectionType);
-  const setConnectionColor = useWhiteboardStore(state => state.setConnectionColor);
-  
+  const components = useWhiteboardStore((state) => state.components);
+  const connections = useWhiteboardStore((state) => state.connections);
+  const isCreatingConnection = useWhiteboardStore(
+    (state) => state.isCreatingConnection
+  );
+  const connectionStartComponent = useWhiteboardStore(
+    (state) => state.connectionStartComponent
+  );
+  const selectedConnection = useWhiteboardStore(
+    (state) => state.selectedConnection
+  );
+  const connectionType = useWhiteboardStore((state) => state.connectionType);
+  const connectionColor = useWhiteboardStore((state) => state.connectionColor);
+
+  const startConnectionCreation = useWhiteboardStore(
+    (state) => state.startConnectionCreation
+  );
+  const finishConnectionCreation = useWhiteboardStore(
+    (state) => state.finishConnectionCreation
+  );
+  const cancelConnectionCreation = useWhiteboardStore(
+    (state) => state.cancelConnectionCreation
+  );
+  const addConnection = useWhiteboardStore((state) => state.addConnection);
+  const updateConnection = useWhiteboardStore(
+    (state) => state.updateConnection
+  );
+  const removeConnection = useWhiteboardStore(
+    (state) => state.removeConnection
+  );
+  const selectConnection = useWhiteboardStore(
+    (state) => state.selectConnection
+  );
+  const setConnectionType = useWhiteboardStore(
+    (state) => state.setConnectionType
+  );
+  const setConnectionColor = useWhiteboardStore(
+    (state) => state.setConnectionColor
+  );
+
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
-  const [componentPositions, setComponentPositions] = useState<ComponentPositions>({});
+  const [componentPositions, setComponentPositions] =
+    useState<ComponentPositions>({});
   const [editingLabel, setEditingLabel] = useState<string | null>(null);
-  const [labelText, setLabelText] = useState<string>('');
+  const [labelText, setLabelText] = useState<string>("");
 
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const labelInputRef = useRef<HTMLInputElement>(null);
 
   const colors = [
-    '#3b82f6', // blue
-    '#ef4444', // red
-    '#10b981', // green
-    '#f59e0b', // amber
-    '#8b5cf6', // violet
-    '#ec4899', // pink
-    '#6b7280', // gray
+    "#3b82f6", // blue
+    "#ef4444", // red
+    "#10b981", // green
+    "#f59e0b", // amber
+    "#8b5cf6", // violet
+    "#ec4899", // pink
+    "#6b7280", // gray
   ];
+
+  const connectionStyles = [
+    { type: "curved", label: "⌒", name: "Curved" },
+    { type: "straight", label: "───", name: "Straight" },
+    { type: "dotted", label: "⋯", name: "Dotted" },
+    { type: "dashed", label: "- -", name: "Dashed" },
+  ];
+
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [showNodePalette, setShowNodePalette] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [showMinimap, setShowMinimap] = useState(false);
 
   // Initialize component positions from components in the store
   useEffect(() => {
     const positions: ComponentPositions = {};
-    
-    components.forEach(component => {
+
+    components.forEach((component) => {
       positions[component.id] = {
         x: component.x,
         y: component.y,
-        width: component.width || 200,  // Default width if not specified
+        width: component.width || 200, // Default width if not specified
         height: component.height || 150, // Default height if not specified
       };
     });
-    
+
     setComponentPositions(positions);
   }, [components]);
 
@@ -88,7 +139,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
       if (rect) {
         setCursorPosition({
           x: e.clientX - rect.left,
-          y: e.clientY - rect.top
+          y: e.clientY - rect.top,
         });
       }
     }
@@ -115,7 +166,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
       selectConnection(null);
     } else {
       selectConnection(connectionId);
-      const connection = connections.find(conn => conn.id === connectionId);
+      const connection = connections.find((conn) => conn.id === connectionId);
       if (connection) {
         setConnectionType(connection.type);
         setConnectionColor(connection.color);
@@ -124,9 +175,9 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
   };
 
   const startEditingLabel = (connectionId: string) => {
-    const connection = connections.find(conn => conn.id === connectionId);
+    const connection = connections.find((conn) => conn.id === connectionId);
     setEditingLabel(connectionId);
-    setLabelText(connection?.label || '');
+    setLabelText(connection?.label || "");
   };
 
   const saveLabel = () => {
@@ -136,12 +187,15 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
     }
   };
 
-  const updateConnectionStyle = (newType?: 'straight' | 'curved', newColor?: string) => {
+  const updateConnectionStyle = (
+    newType?: "straight" | "curved" | "dotted" | "dashed",
+    newColor?: string
+  ) => {
     if (selectedConnection) {
       const updates: Partial<Connection> = {};
       if (newType) updates.type = newType;
       if (newColor) updates.color = newColor;
-      
+
       updateConnection(selectedConnection, updates);
 
       if (newType) setConnectionType(newType);
@@ -150,13 +204,15 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
   };
 
   // Helper to get component center position
-  const getComponentCenter = (componentId: string): { x: number; y: number } | null => {
+  const getComponentCenter = (
+    componentId: string
+  ): { x: number; y: number } | null => {
     const position = componentPositions[componentId];
     if (!position) return null;
-    
+
     return {
       x: position.x + position.width / 2,
-      y: position.y + position.height / 2
+      y: position.y + position.height / 2,
     };
   };
 
@@ -164,10 +220,14 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
   const getConnectionPath = (connection: Connection): string => {
     const fromCenter = getComponentCenter(connection.fromId);
     const toCenter = getComponentCenter(connection.toId);
-    
-    if (!fromCenter || !toCenter) return '';
-    
-    if (connection.type === 'straight') {
+
+    if (!fromCenter || !toCenter) return "";
+
+    if (
+      connection.type === "straight" ||
+      connection.type === "dotted" ||
+      connection.type === "dashed"
+    ) {
       return `M ${fromCenter.x} ${fromCenter.y} L ${toCenter.x} ${toCenter.y}`;
     } else {
       // Curved connection
@@ -176,15 +236,15 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
       const dx = toCenter.x - fromCenter.x;
       const dy = toCenter.y - fromCenter.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      
+
       // Adjust curve based on distance
       const curve = Math.min(distance * 0.3, 80);
-      
+
       // Find perpendicular point for control point
       const angle = Math.atan2(dy, dx) - Math.PI / 2;
       const controlX = mx + Math.cos(angle) * curve;
       const controlY = my + Math.sin(angle) * curve;
-      
+
       return `M ${fromCenter.x} ${fromCenter.y} Q ${controlX} ${controlY} ${toCenter.x} ${toCenter.y}`;
     }
   };
@@ -193,13 +253,13 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
   const getLabelPosition = (connection: Connection) => {
     const fromCenter = getComponentCenter(connection.fromId);
     const toCenter = getComponentCenter(connection.toId);
-    
+
     if (!fromCenter || !toCenter) return { x: 0, y: 0 };
-    
-    if (connection.type === 'straight') {
+
+    if (connection.type === "straight") {
       return {
         x: (fromCenter.x + toCenter.x) / 2,
-        y: (fromCenter.y + toCenter.y) / 2
+        y: (fromCenter.y + toCenter.y) / 2,
       };
     } else {
       // For curved connections, position label near the control point
@@ -209,62 +269,527 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
       const dy = toCenter.y - fromCenter.y;
       const angle = Math.atan2(dy, dx) - Math.PI / 2;
       const curve = Math.min(Math.sqrt(dx * dx + dy * dy) * 0.3, 80);
-      
+
       return {
         x: mx + Math.cos(angle) * curve * 0.8,
-        y: my + Math.sin(angle) * curve * 0.8
+        y: my + Math.sin(angle) * curve * 0.8,
       };
     }
   };
 
   // Get arrow marker ID for a specific connection
   const getArrowMarkerId = (connection: Connection) => {
-    const colorHex = connection.color.replace('#', '');
+    const colorHex = connection.color.replace("#", "");
     return `arrow-${colorHex}`;
   };
 
+  // Export flow data
+  const exportFlowData = () => {
+    const flowData = {
+      connections: connections,
+      components: components.map((comp) => ({
+        id: comp.id,
+        type: comp.type,
+        x: comp.x,
+        y: comp.y,
+        width: comp.width,
+        height: comp.height,
+      })),
+      timestamp: new Date().toISOString(),
+    };
+
+    const dataStr = JSON.stringify(flowData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `flow-diagram-${Date.now()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Import flow data
+  const importFlowData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const flowData = JSON.parse(e.target?.result as string);
+        // Here you would update the store with the imported data
+        console.log("Imported flow data:", flowData);
+      } catch (error) {
+        console.error("Failed to import flow data:", error);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Flow templates
+  const flowTemplates = [
+    {
+      id: "simple-process",
+      name: "Simple Process",
+      description: "Start → Process → End",
+      connections: [],
+    },
+    {
+      id: "decision-tree",
+      name: "Decision Tree",
+      description: "Start → Decision → Yes/No → End",
+      connections: [],
+    },
+    {
+      id: "workflow",
+      name: "Workflow",
+      description: "Multi-step workflow process",
+      connections: [],
+    },
+  ];
+
+  const applyTemplate = (templateId: string) => {
+    const template = flowTemplates.find((t) => t.id === templateId);
+    if (template) {
+      // Apply template logic here
+      setSelectedTemplate(templateId);
+      console.log("Applying template:", template.name);
+    }
+  };
+
+  // Connection statistics
+  const getConnectionStats = () => {
+    return {
+      total: connections.length,
+      types: {
+        straight: connections.filter((c) => c.type === "straight").length,
+        curved: connections.filter((c) => c.type === "curved").length,
+        dotted: connections.filter((c) => c.type === "dotted").length,
+        dashed: connections.filter((c) => c.type === "dashed").length,
+      },
+      withLabels: connections.filter((c) => c.label).length,
+    };
+  };
+
+  const stats = getConnectionStats();
+
+  // Flow diagram node components
+  const FlowNode: React.FC<{
+    id: string;
+    x: number;
+    y: number;
+    type: "start" | "process" | "decision" | "end";
+    label: string;
+    color?: string;
+  }> = ({ id, x, y, type, label, color = "#3b82f6" }) => {
+    const nodeSize = 80;
+
+    const renderShape = () => {
+      switch (type) {
+        case "start":
+        case "end":
+          return (
+            <circle
+              cx={x + nodeSize / 2}
+              cy={y + nodeSize / 2}
+              r={nodeSize / 2 - 2}
+              fill={color}
+              stroke="#fff"
+              strokeWidth="2"
+              className="cursor-pointer hover:opacity-80"
+            />
+          );
+        case "decision":
+          return (
+            <polygon
+              points={`${x + nodeSize / 2},${y + 2} ${x + nodeSize - 2},${
+                y + nodeSize / 2
+              } ${x + nodeSize / 2},${y + nodeSize - 2} ${x + 2},${
+                y + nodeSize / 2
+              }`}
+              fill={color}
+              stroke="#fff"
+              strokeWidth="2"
+              className="cursor-pointer hover:opacity-80"
+            />
+          );
+        default: // process
+          return (
+            <rect
+              x={x + 2}
+              y={y + 2}
+              width={nodeSize - 4}
+              height={nodeSize - 4}
+              rx="8"
+              fill={color}
+              stroke="#fff"
+              strokeWidth="2"
+              className="cursor-pointer hover:opacity-80"
+            />
+          );
+      }
+    };
+
+    return (
+      <g>
+        {renderShape()}
+        <text
+          x={x + nodeSize / 2}
+          y={y + nodeSize / 2}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fill="white"
+          fontSize="12"
+          fontWeight="500"
+          className="pointer-events-none select-none"
+        >
+          {label}
+        </text>
+      </g>
+    );
+  };
+
+  // Add flow node to canvas
+  const addFlowNode = (type: "start" | "process" | "decision" | "end") => {
+    const newNode = {
+      id: `node-${Date.now()}`,
+      x: Math.random() * (width - 100) + 50,
+      y: Math.random() * (height - 200) + 100,
+      type,
+      label: type.charAt(0).toUpperCase() + type.slice(1),
+    };
+
+    // Here you could add the node to your component store
+    console.log("Adding flow node:", newNode);
+  };
+
+  // Connection validation
+  const validateConnection = (fromId: string, toId: string): boolean => {
+    // Prevent self-connections
+    if (fromId === toId) return false;
+
+    // Prevent duplicate connections
+    const existingConnection = connections.find(
+      (conn) =>
+        (conn.fromId === fromId && conn.toId === toId) ||
+        (conn.fromId === toId && conn.toId === fromId)
+    );
+    if (existingConnection) return false;
+
+    return true;
+  };
+
+  // Bulk operations for connections
+  const selectAllConnections = () => {
+    connections.forEach((conn) => selectConnection(conn.id));
+  };
+
+  const deleteAllConnections = () => {
+    if (window.confirm("Delete all connections?")) {
+      connections.forEach((conn) => removeConnection(conn.id));
+    }
+  };
+
+  const duplicateSelectedConnection = () => {
+    if (!selectedConnection) return;
+
+    const connection = connections.find((c) => c.id === selectedConnection);
+    if (connection) {
+      // Find components near the original connection endpoints
+      const fromComp = components.find((c) => c.id === connection.fromId);
+      const toComp = components.find((c) => c.id === connection.toId);
+
+      if (fromComp && toComp) {
+        // Create a duplicate connection with slight offset if possible
+        console.log("Duplicating connection:", connection);
+      }
+    }
+  };
+
+  // Auto-layout for connections
+  const autoArrangeConnections = () => {
+    // Simple auto-arrange algorithm
+    console.log("Auto-arranging connections...");
+
+    // You could implement algorithms like:
+    // - Force-directed layout
+    // - Hierarchical layout
+    // - Circular layout
+  };
+
+  // Minimap for connections overview
+  const ConnectionMinimap: React.FC<{ width: number; height: number }> = ({
+    width: mmWidth,
+    height: mmHeight,
+  }) => {
+    const scale = Math.min(mmWidth / width, mmHeight / height) * 0.8;
+
+    return (
+      <div className="absolute top-16 right-4 bg-white border border-gray-200 rounded shadow-sm p-2 z-10">
+        <div className="text-xs text-gray-600 mb-1">Overview</div>
+        <svg
+          width={mmWidth}
+          height={mmHeight}
+          className="border border-gray-100"
+        >
+          {/* Minimap components */}
+          {components.map((component) => {
+            const pos = componentPositions[component.id];
+            if (!pos) return null;
+
+            return (
+              <rect
+                key={`mm-${component.id}`}
+                x={pos.x * scale}
+                y={pos.y * scale}
+                width={(pos.width || 200) * scale}
+                height={(pos.height || 150) * scale}
+                fill="#e5e7eb"
+                stroke="#9ca3af"
+                strokeWidth="0.5"
+              />
+            );
+          })}
+
+          {/* Minimap connections */}
+          {connections.map((connection) => {
+            const fromCenter = getComponentCenter(connection.fromId);
+            const toCenter = getComponentCenter(connection.toId);
+
+            if (!fromCenter || !toCenter) return null;
+
+            return (
+              <line
+                key={`mm-conn-${connection.id}`}
+                x1={fromCenter.x * scale}
+                y1={fromCenter.y * scale}
+                x2={toCenter.x * scale}
+                y2={toCenter.y * scale}
+                stroke={connection.color}
+                strokeWidth="1"
+                opacity="0.8"
+              />
+            );
+          })}
+        </svg>
+      </div>
+    );
+  };
+
   return (
-    <div 
+    <div
       ref={containerRef}
       className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col"
       style={{ width, height }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-            <Share2 className="w-3 h-3 text-white" />
-          </div>
-          <h3 className="text-sm font-semibold text-gray-800">Flow Connections</h3>
-        </div>
-        <div className="flex items-center space-x-1">
-          <button
-            className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${isCreatingConnection ? 'text-blue-600 bg-blue-100' : ''}`}
-            onClick={() => {
-              if (isCreatingConnection) {
-                cancelConnection();
+      <ComponentHeader
+        title="Flow Connections"
+        icon={Share2}
+        iconColor="bg-blue-500"
+        onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
+        actions={
+          <div className="flex items-center space-x-1">
+            <button
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+              onClick={() => setShowNodePalette(!showNodePalette)}
+              title="Flow Nodes"
+            >
+              <Circle className="h-4 w-4" />
+            </button>
+            <button
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+              onClick={() => setShowStats(!showStats)}
+              title="Connection Statistics"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+              onClick={() => setShowMinimap(!showMinimap)}
+              title="Connection Minimap"
+            >
+              <Square className="h-3 w-3" />
+            </button>
+            <button
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+              onClick={() => setShowTemplates(!showTemplates)}
+              title="Flow Templates"
+            >
+              <Square className="h-4 w-4" />
+            </button>
+            <label
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-500 cursor-pointer"
+              title="Import Flow"
+            >
+              <Upload className="h-4 w-4" />
+              <input
+                type="file"
+                accept=".json"
+                onChange={importFlowData}
+                className="hidden"
+              />
+            </label>
+            <button
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+              onClick={exportFlowData}
+              title="Export Flow"
+            >
+              <Download className="h-4 w-4" />
+            </button>
+            <button
+              className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
+                isCreatingConnection ? "text-blue-600 bg-blue-100" : ""
+              }`}
+              onClick={() => {
+                if (isCreatingConnection) {
+                  cancelConnection();
+                }
+              }}
+              title={
+                isCreatingConnection ? "Cancel connection" : "Connection mode"
               }
-            }}
-            title={isCreatingConnection ? "Cancel connection" : "Connection mode"}
-          >
-            <Plus className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+        }
+      />
 
       {/* SVG Connection Canvas */}
       <div className="relative flex-grow overflow-hidden">
-        <svg 
-          ref={svgRef} 
-          width="100%" 
-          height="100%" 
+        {/* Templates Panel */}
+        {showTemplates && (
+          <div className="absolute top-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20 w-60">
+            <h4 className="text-sm font-semibold mb-2">Flow Templates</h4>
+            <div className="space-y-2">
+              {flowTemplates.map((template) => (
+                <div
+                  key={template.id}
+                  className="p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer"
+                  onClick={() => applyTemplate(template.id)}
+                >
+                  <div className="font-medium text-sm">{template.name}</div>
+                  <div className="text-xs text-gray-600">
+                    {template.description}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowTemplates(false)}
+              className="mt-2 text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded w-full"
+            >
+              Close
+            </button>
+          </div>
+        )}
+
+        {/* Node Palette Panel */}
+        {showNodePalette && (
+          <div className="absolute top-4 left-4 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20 w-48">
+            <h4 className="text-sm font-semibold mb-2">Flow Nodes</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => addFlowNode("start")}
+                className="p-2 border border-gray-200 rounded hover:bg-green-50 hover:border-green-300 text-center"
+              >
+                <Circle className="w-6 h-6 mx-auto mb-1 text-green-600" />
+                <div className="text-xs">Start</div>
+              </button>
+              <button
+                onClick={() => addFlowNode("process")}
+                className="p-2 border border-gray-200 rounded hover:bg-blue-50 hover:border-blue-300 text-center"
+              >
+                <Square className="w-6 h-6 mx-auto mb-1 text-blue-600" />
+                <div className="text-xs">Process</div>
+              </button>
+              <button
+                onClick={() => addFlowNode("decision")}
+                className="p-2 border border-gray-200 rounded hover:bg-yellow-50 hover:border-yellow-300 text-center"
+              >
+                <Diamond className="w-6 h-6 mx-auto mb-1 text-yellow-600" />
+                <div className="text-xs">Decision</div>
+              </button>
+              <button
+                onClick={() => addFlowNode("end")}
+                className="p-2 border border-gray-200 rounded hover:bg-red-50 hover:border-red-300 text-center"
+              >
+                <Circle className="w-6 h-6 mx-auto mb-1 text-red-600" />
+                <div className="text-xs">End</div>
+              </button>
+            </div>
+            <button
+              onClick={() => setShowNodePalette(false)}
+              className="mt-2 text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded w-full"
+            >
+              Close
+            </button>
+          </div>
+        )}
+
+        {/* Statistics Panel */}
+        {showStats && (
+          <div className="absolute bottom-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20 w-56">
+            <h4 className="text-sm font-semibold mb-2">
+              Connection Statistics
+            </h4>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span>Total Connections:</span>
+                <span className="font-medium">{stats.total}</span>
+              </div>
+              <div className="border-t pt-2">
+                <div className="text-gray-600 mb-1">By Type:</div>
+                <div className="pl-2 space-y-1">
+                  <div className="flex justify-between">
+                    <span>Straight:</span>
+                    <span>{stats.types.straight}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Curved:</span>
+                    <span>{stats.types.curved}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Dotted:</span>
+                    <span>{stats.types.dotted}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Dashed:</span>
+                    <span>{stats.types.dashed}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="border-t pt-2">
+                <div className="flex justify-between">
+                  <span>With Labels:</span>
+                  <span className="font-medium">{stats.withLabels}</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowStats(false)}
+              className="mt-2 text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded w-full"
+            >
+              Close
+            </button>
+          </div>
+        )}
+
+        {/* Connection Minimap */}
+        {showMinimap && <ConnectionMinimap width={150} height={100} />}
+
+        <svg
+          ref={svgRef}
+          width="100%"
+          height="100%"
           className="absolute top-0 left-0 pointer-events-none"
           onMouseMove={handleMouseMove}
           style={{ zIndex: 1000 }}
         >
           <defs>
-            {colors.map(color => {
-              const colorHex = color.replace('#', '');
+            {colors.map((color) => {
+              const colorHex = color.replace("#", "");
               return (
                 <marker
                   key={colorHex}
@@ -280,14 +805,24 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
                 </marker>
               );
             })}
+
+            {/* Animated flow indicator */}
+            <circle id="flowIndicator" r="3" fill="#3b82f6" opacity="0.8">
+              <animate
+                attributeName="opacity"
+                values="0.8;0.3;0.8"
+                dur="2s"
+                repeatCount="indefinite"
+              />
+            </circle>
           </defs>
 
           {/* Existing connections */}
-          {connections.map(connection => {
+          {connections.map((connection) => {
             const path = getConnectionPath(connection);
             const labelPos = getLabelPosition(connection);
             const isSelected = selectedConnection === connection.id;
-            
+
             return (
               <g key={connection.id}>
                 {/* Connection path */}
@@ -295,16 +830,47 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
                   d={path}
                   stroke={connection.color}
                   strokeWidth={isSelected ? 3 : 2}
+                  strokeDasharray={
+                    connection.type === "dotted"
+                      ? "2,3"
+                      : connection.type === "dashed"
+                      ? "5,5"
+                      : "none"
+                  }
                   fill="none"
                   className="cursor-pointer"
                   markerEnd={`url(#${getArrowMarkerId(connection)})`}
                   onClick={() => handleConnectionClick(connection.id)}
-                  style={{ pointerEvents: 'stroke', strokeLinecap: 'round' }}
+                  style={{ pointerEvents: "stroke", strokeLinecap: "round" }}
                 />
-                
+
+                {/* Animated flow indicator */}
+                {isSelected && (
+                  <circle r="4" fill={connection.color} opacity="0.7">
+                    <animateMotion dur="3s" repeatCount="indefinite">
+                      <mpath href={`#path-${connection.id}`} />
+                    </animateMotion>
+                    <animate
+                      attributeName="opacity"
+                      values="0.7;0.3;0.7"
+                      dur="1.5s"
+                      repeatCount="indefinite"
+                    />
+                  </circle>
+                )}
+
+                {/* Hidden path for animation */}
+                <path
+                  id={`path-${connection.id}`}
+                  d={path}
+                  stroke="none"
+                  fill="none"
+                  style={{ display: "none" }}
+                />
+
                 {/* Connection label */}
                 {connection.label && !editingLabel && (
-                  <g 
+                  <g
                     transform={`translate(${labelPos.x}, ${labelPos.y})`}
                     onClick={() => startEditingLabel(connection.id)}
                     className="cursor-pointer"
@@ -331,7 +897,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
                     </text>
                   </g>
                 )}
-                
+
                 {/* Edit label UI */}
                 {editingLabel === connection.id && (
                   <foreignObject
@@ -345,11 +911,11 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
                         ref={labelInputRef}
                         type="text"
                         value={labelText}
-                        onChange={e => setLabelText(e.target.value)}
+                        onChange={(e) => setLabelText(e.target.value)}
                         onBlur={saveLabel}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') saveLabel();
-                          if (e.key === 'Escape') {
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") saveLabel();
+                          if (e.key === "Escape") {
                             setEditingLabel(null);
                           }
                         }}
@@ -361,63 +927,76 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
               </g>
             );
           })}
-          
+
           {/* Creating new connection line */}
           {isCreatingConnection && connectionStartComponent && (
             <path
-              d={
-                (() => {
-                  const fromCenter = getComponentCenter(connectionStartComponent);
-                  if (!fromCenter) return '';
-                  
-                  if (connectionType === 'straight') {
-                    return `M ${fromCenter.x} ${fromCenter.y} L ${cursorPosition.x} ${cursorPosition.y}`;
-                  } else {
-                    const mx = (fromCenter.x + cursorPosition.x) / 2;
-                    const my = (fromCenter.y + cursorPosition.y) / 2;
-                    const dx = cursorPosition.x - fromCenter.x;
-                    const dy = cursorPosition.y - fromCenter.y;
-                    const angle = Math.atan2(dy, dx) - Math.PI / 2;
-                    const curve = Math.min(Math.sqrt(dx * dx + dy * dy) * 0.3, 80);
-                    
-                    const controlX = mx + Math.cos(angle) * curve;
-                    const controlY = my + Math.sin(angle) * curve;
-                    
-                    return `M ${fromCenter.x} ${fromCenter.y} Q ${controlX} ${controlY} ${cursorPosition.x} ${cursorPosition.y}`;
-                  }
-                })()
-              }
+              d={(() => {
+                const fromCenter = getComponentCenter(connectionStartComponent);
+                if (!fromCenter) return "";
+
+                if (connectionType === "straight") {
+                  return `M ${fromCenter.x} ${fromCenter.y} L ${cursorPosition.x} ${cursorPosition.y}`;
+                } else {
+                  const mx = (fromCenter.x + cursorPosition.x) / 2;
+                  const my = (fromCenter.y + cursorPosition.y) / 2;
+                  const dx = cursorPosition.x - fromCenter.x;
+                  const dy = cursorPosition.y - fromCenter.y;
+                  const angle = Math.atan2(dy, dx) - Math.PI / 2;
+                  const curve = Math.min(
+                    Math.sqrt(dx * dx + dy * dy) * 0.3,
+                    80
+                  );
+
+                  const controlX = mx + Math.cos(angle) * curve;
+                  const controlY = my + Math.sin(angle) * curve;
+
+                  return `M ${fromCenter.x} ${fromCenter.y} Q ${controlX} ${controlY} ${cursorPosition.x} ${cursorPosition.y}`;
+                }
+              })()}
               stroke={connectionColor}
               strokeWidth="2"
               strokeDasharray="5,5"
               fill="none"
-              markerEnd={`url(#arrow-${connectionColor.replace('#', '')})`}
+              markerEnd={`url(#arrow-${connectionColor.replace("#", "")})`}
             />
           )}
+
+          {/* Flow nodes - for testing */}
+          {/* <FlowNode id="node1" x={100} y={100} type="start" label="Start" />
+          <FlowNode id="node2" x={300} y={100} type="process" label="Process" />
+          <FlowNode id="node3" x={500} y={100} type="decision" label="Decision" />
+          <FlowNode id="node4" x={700} y={100} type="end" label="End" /> */}
         </svg>
 
         {/* Connection controls overlay */}
         {selectedConnection && (
-          <div className="absolute bottom-4 left-4 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-10">
+          <div className="absolute bottom-4 left-4 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-10 max-w-sm">
             <div className="flex items-center space-x-2 mb-2">
               <span className="text-xs text-gray-600 font-medium">Style:</span>
-              <button
-                onClick={() => updateConnectionStyle('straight')}
-                className={`p-1 rounded ${connectionType === 'straight' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
-                title="Straight line"
-              >
-                ───
-              </button>
-              <button
-                onClick={() => updateConnectionStyle('curved')}
-                className={`p-1 rounded ${connectionType === 'curved' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
-                title="Curved line"
-              >
-                ⌒
-              </button>
+              {connectionStyles.map((style) => (
+                <button
+                  key={style.type}
+                  onClick={() =>
+                    updateConnectionStyle(
+                      style.type as "straight" | "curved" | "dotted" | "dashed"
+                    )
+                  }
+                  className={`p-1 rounded text-sm ${
+                    connectionType === style.type
+                      ? "bg-blue-100 text-blue-600"
+                      : "hover:bg-gray-100"
+                  }`}
+                  title={style.name}
+                >
+                  {style.label}
+                </button>
+              ))}
               <button
                 onClick={() => {
-                  const connection = connections.find(c => c.id === selectedConnection);
+                  const connection = connections.find(
+                    (c) => c.id === selectedConnection
+                  );
                   if (connection) startEditingLabel(connection.id);
                 }}
                 className="p-1 rounded hover:bg-gray-100"
@@ -433,18 +1012,67 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
-            
-            <div className="flex items-center gap-1">
+
+            <div className="flex items-center gap-1 mb-2">
               <span className="text-xs text-gray-600 font-medium">Color:</span>
-              {colors.map(color => (
+              {colors.map((color) => (
                 <button
                   key={color}
                   onClick={() => updateConnectionStyle(undefined, color)}
-                  className={`w-5 h-5 rounded-full ${connectionColor === color ? 'ring-2 ring-offset-1 ring-blue-500' : ''}`}
+                  className={`w-5 h-5 rounded-full ${
+                    connectionColor === color
+                      ? "ring-2 ring-offset-1 ring-blue-500"
+                      : ""
+                  }`}
                   style={{ backgroundColor: color }}
                   title={`Set color to ${color}`}
                 />
               ))}
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={duplicateSelectedConnection}
+                className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
+              >
+                📄 Duplicate
+              </button>
+              <button
+                onClick={() => setShowTemplates(!showTemplates)}
+                className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
+              >
+                📋 Templates
+              </button>
+              <button
+                onClick={() => exportFlowData()}
+                className="text-xs bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded"
+              >
+                💾 Export
+              </button>
+            </div>
+
+            {/* Bulk operations */}
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={selectAllConnections}
+                  className="text-xs bg-green-100 hover:bg-green-200 px-2 py-1 rounded"
+                >
+                  ✓ Select All
+                </button>
+                <button
+                  onClick={deleteAllConnections}
+                  className="text-xs bg-red-100 hover:bg-red-200 px-2 py-1 rounded text-red-700"
+                >
+                  🗑️ Delete All
+                </button>
+                <button
+                  onClick={autoArrangeConnections}
+                  className="text-xs bg-purple-100 hover:bg-purple-200 px-2 py-1 rounded"
+                >
+                  ✨ Auto Layout
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -459,10 +1087,10 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
         )}
 
         {/* Component connection buttons */}
-        {components.map(component => {
+        {components.map((component) => {
           const position = componentPositions[component.id];
           if (!position) return null;
-          
+
           return (
             <React.Fragment key={`conn-${component.id}`}>
               {/* Connection start button */}
@@ -472,7 +1100,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
                   style={{
                     top: position.y + position.height / 2 - 12,
                     left: position.x + position.width / 2 - 12,
-                    opacity: 0.7
+                    opacity: 0.7,
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -482,25 +1110,29 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
                   <Plus className="w-4 h-4" />
                 </button>
               )}
-              
+
               {/* Connection target area - shown when creating a connection */}
-              {isCreatingConnection && connectionStartComponent !== component.id && (
-                <div
-                  className="absolute z-10 border-2 border-dashed border-blue-400 rounded-lg cursor-pointer"
-                  style={{
-                    top: position.y - 10,
-                    left: position.x - 10,
-                    width: position.width + 20,
-                    height: position.height + 20,
-                    opacity: 0.5,
-                    pointerEvents: 'all'
-                  }}
-                  onClick={() => finishConnection(component.id)}
-                />
-              )}
+              {isCreatingConnection &&
+                connectionStartComponent !== component.id && (
+                  <div
+                    className="absolute z-10 border-2 border-dashed border-blue-400 rounded-lg cursor-pointer"
+                    style={{
+                      top: position.y - 10,
+                      left: position.x - 10,
+                      width: position.width + 20,
+                      height: position.height + 20,
+                      opacity: 0.5,
+                      pointerEvents: "all",
+                    }}
+                    onClick={() => finishConnection(component.id)}
+                  />
+                )}
             </React.Fragment>
           );
         })}
+
+        {/* Minimap component */}
+        <ConnectionMinimap width={200} height={150} />
       </div>
     </div>
   );

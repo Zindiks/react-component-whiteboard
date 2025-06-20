@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Play, Pause, Square, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Play, Pause, Square, RotateCcw, Clock } from "lucide-react";
+import { ComponentHeader } from "./ComponentHeader";
 
 interface TimerProps {
   onTimeUpdate?: (time: number) => void;
   initialTime?: number;
+  onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const Timer: React.FC<TimerProps> = ({
   onTimeUpdate,
   initialTime = 0,
+  onHeaderMouseDown,
+  onDelete,
 }) => {
   const [time, setTime] = useState(initialTime);
   const [isRunning, setIsRunning] = useState(false);
@@ -72,42 +76,59 @@ export const Timer: React.FC<TimerProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200 min-w-[200px]">
-      <div className="text-center mb-4">
-        <div className="text-2xl font-mono font-bold text-gray-800">
-          {formatTime(time)}
+    <div className="bg-white rounded-lg shadow-md border border-gray-200 min-w-[200px]">
+      <ComponentHeader
+        title="Timer"
+        icon={Clock}
+        iconColor="bg-green-500"
+        onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
+        actions={
+          <div className="flex space-x-1">
+            {!isRunning ? (
+              <button
+                onClick={handleStart}
+                className="p-1 rounded-full hover:bg-gray-200 text-green-600"
+                title="Start Timer"
+              >
+                <Play className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                onClick={handlePause}
+                className="p-1 rounded-full hover:bg-gray-200 text-yellow-600"
+                title="Pause Timer"
+              >
+                <Pause className="w-4 h-4" />
+              </button>
+            )}
+            <button
+              onClick={handleStop}
+              className="p-1 rounded-full hover:bg-gray-200 text-red-600"
+              title="Stop Timer"
+            >
+              <Square className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleReset}
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-600"
+              title="Reset Timer"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          </div>
+        }
+      />
+
+      <div className="p-4">
+        <div className="text-center mb-4">
+          <div className="text-2xl font-mono font-bold text-gray-800">
+            {formatTime(time)}
+          </div>
+          <div className="text-sm text-gray-500 mt-1">
+            {isRunning ? "Running" : "Stopped"}
+          </div>
         </div>
-        <div className="text-sm text-gray-500 mt-1">
-          {isRunning ? "Running" : "Stopped"}
-        </div>
-      </div>
-
-      <div className="flex justify-center space-x-2">
-        {!isRunning ? (
-          <Button
-            onClick={handleStart}
-            size="sm"
-            className="bg-green-500 hover:bg-green-600"
-          >
-            <Play className="w-4 h-4" />
-          </Button>
-        ) : (
-          <Button
-            onClick={handlePause}
-            size="sm"
-            className="bg-yellow-500 hover:bg-yellow-600"
-          >
-            <Pause className="w-4 h-4" />
-          </Button>
-        )}
-
-        <Button onClick={handleStop} size="sm" variant="destructive">
-          <Square className="w-4 h-4" />
-        </Button>
-
-        <Button onClick={handleReset} size="sm" variant="outline">
-          <RotateCcw className="w-4 h-4" />
-        </Button>
       </div>
     </div>
   );

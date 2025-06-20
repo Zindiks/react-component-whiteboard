@@ -1,16 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Type, Edit3, Play, Pause, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Edit3,
+  Play,
+  Pause,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  ScrollText,
+} from "lucide-react";
+import { ComponentHeader } from "./ComponentHeader";
 
 interface ScrollingTextProps {
   initialText?: string;
   width?: number;
   height?: number;
+  onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
-export const ScrollingText: React.FC<ScrollingTextProps> = ({ 
-  initialText = "Welcome to the Scrolling Text Component! Edit this text and watch it scroll...", 
-  width = 400, 
-  height = 100 
+export const ScrollingText: React.FC<ScrollingTextProps> = ({
+  initialText = "Welcome to the Scrolling Text Component! Edit this text and watch it scroll...",
+  width = 400,
+  height = 100,
+  onHeaderMouseDown,
+  onDelete,
 }) => {
   // States
   const [text, setText] = useState(initialText);
@@ -18,13 +31,13 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
   const [isPaused, setIsPaused] = useState(false);
   const [speed, setSpeed] = useState(2); // pixels per frame
   const [position, setPosition] = useState(-width);
-  const [direction, setDirection] = useState<'ltr' | 'rtl'>('rtl'); // left-to-right or right-to-left
-  
+  const [direction, setDirection] = useState<"ltr" | "rtl">("rtl"); // left-to-right or right-to-left
+
   const textRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number>(0);
   const textWidthRef = useRef<number>(0);
-  
+
   // For editing mode
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -38,15 +51,15 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
   // Animation loop
   useEffect(() => {
     if (isEditing || isPaused) return;
-    
+
     const animate = () => {
       if (!containerRef.current) return;
-      
+
       const containerWidth = containerRef.current.offsetWidth;
-      
-      if (direction === 'rtl') {
+
+      if (direction === "rtl") {
         // Right to left animation (classic marquee)
-        setPosition(prevPos => {
+        setPosition((prevPos) => {
           const newPos = prevPos - speed;
           // Reset position when text has scrolled completely past the left edge
           if (newPos < -textWidthRef.current) {
@@ -56,7 +69,7 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
         });
       } else {
         // Left to right animation
-        setPosition(prevPos => {
+        setPosition((prevPos) => {
           const newPos = prevPos + speed;
           // Reset position when text has scrolled completely past the right edge
           if (newPos > containerWidth) {
@@ -65,35 +78,35 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
           return newPos;
         });
       }
-      
+
       frameRef.current = requestAnimationFrame(animate);
     };
-    
+
     frameRef.current = requestAnimationFrame(animate);
-    
+
     return () => {
       cancelAnimationFrame(frameRef.current);
     };
   }, [isEditing, isPaused, speed, direction]);
-  
+
   const handlePauseToggle = () => {
-    setIsPaused(prev => !prev);
+    setIsPaused((prev) => !prev);
   };
-  
+
   const handleDirectionToggle = () => {
-    setDirection(prev => prev === 'rtl' ? 'ltr' : 'rtl');
+    setDirection((prev) => (prev === "rtl" ? "ltr" : "rtl"));
     // Reset position when changing direction
-    if (direction === 'rtl') {
+    if (direction === "rtl") {
       setPosition(-textWidthRef.current);
     } else {
       setPosition(containerRef.current?.offsetWidth || 0);
     }
   };
-  
+
   const handleSpeedChange = (newSpeed: number) => {
     setSpeed(Math.max(1, Math.min(10, newSpeed))); // Clamp between 1-10
   };
-  
+
   const handleEditToggle = () => {
     if (!isEditing) {
       setIsEditing(true);
@@ -106,52 +119,61 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
       // Don't automatically unpause when exiting edit mode
     }
   };
-  
+
   return (
-    <div 
+    <div
       className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
       style={{ width, height }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
-            <Type className="w-3 h-3 text-white" />
+      <ComponentHeader
+        title="Scrolling Text"
+        icon={ScrollText}
+        iconColor="bg-pink-500"
+        onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
+        actions={
+          <div className="flex items-center space-x-1">
+            <button
+              className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
+                isEditing ? "bg-blue-100 text-blue-600" : ""
+              }`}
+              onClick={handleEditToggle}
+              title={isEditing ? "Save" : "Edit text"}
+            >
+              <Edit3 className="h-4 w-4" />
+            </button>
+            <button
+              className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
+                isPaused ? "bg-gray-200" : ""
+              }`}
+              onClick={handlePauseToggle}
+              disabled={isEditing}
+              title={isPaused ? "Play" : "Pause"}
+            >
+              {isPaused ? (
+                <Play className="h-4 w-4" />
+              ) : (
+                <Pause className="h-4 w-4" />
+              )}
+            </button>
+            <button
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+              onClick={handleDirectionToggle}
+              disabled={isEditing}
+              title="Change direction"
+            >
+              {direction === "rtl" ? (
+                <ChevronLeft className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </button>
           </div>
-          <h3 className="text-sm font-semibold text-gray-800">Scrolling Text</h3>
-        </div>
-        <div className="flex items-center space-x-1">
-          <button 
-            className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${isEditing ? 'bg-blue-100 text-blue-600' : ''}`}
-            onClick={handleEditToggle}
-            title={isEditing ? "Save" : "Edit text"}
-          >
-            <Edit3 className="h-4 w-4" />
-          </button>
-          <button
-            className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${isPaused ? 'bg-gray-200' : ''}`}
-            onClick={handlePauseToggle}
-            disabled={isEditing}
-            title={isPaused ? "Play" : "Pause"}
-          >
-            {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-          </button>
-          <button 
-            className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
-            onClick={handleDirectionToggle}
-            disabled={isEditing}
-            title="Change direction"
-          >
-            {direction === 'rtl' ? 
-              <ChevronLeft className="h-4 w-4" /> : 
-              <ChevronRight className="h-4 w-4" />
-            }
-          </button>
-        </div>
-      </div>
-      
+        }
+      />
+
       {/* Content Area */}
-      <div 
+      <div
         className="relative overflow-hidden"
         style={{ height: height - 40 }}
         ref={containerRef}
@@ -162,20 +184,20 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
             defaultValue={text}
             className="w-full h-full p-3 text-sm border-none resize-none focus:outline-none"
             placeholder="Enter text to display..."
-            style={{ fontSize: '16px' }}
+            style={{ fontSize: "16px" }}
           />
         ) : (
           <>
             <div
               ref={textRef}
               className="absolute whitespace-nowrap"
-              style={{ 
-                left: `${position}px`, 
-                top: '50%',
-                transform: 'translateY(-50%)',
-                fontSize: '18px',
+              style={{
+                left: `${position}px`,
+                top: "50%",
+                transform: "translateY(-50%)",
+                fontSize: "18px",
                 fontWeight: 500,
-                color: '#333'
+                color: "#333",
               }}
             >
               {text || "Enter some text..."}
@@ -183,12 +205,12 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
           </>
         )}
       </div>
-      
+
       {/* Speed Controls */}
       {!isEditing && (
         <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-2 py-1">
           <div className="flex items-center space-x-1">
-            <button 
+            <button
               className="p-1 rounded hover:bg-gray-200 text-gray-500"
               onClick={() => handleSpeedChange(speed - 1)}
               disabled={speed <= 1}
@@ -196,7 +218,7 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
               <span className="text-xs font-bold">-</span>
             </button>
             <div className="text-xs text-gray-600">Speed: {speed}</div>
-            <button 
+            <button
               className="p-1 rounded hover:bg-gray-200 text-gray-500"
               onClick={() => handleSpeedChange(speed + 1)}
               disabled={speed >= 10}
@@ -207,9 +229,10 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
           <button
             className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
             onClick={() => {
-              setPosition(direction === 'rtl' ? 
-                containerRef.current?.offsetWidth || 0 : 
-                -textWidthRef.current
+              setPosition(
+                direction === "rtl"
+                  ? containerRef.current?.offsetWidth || 0
+                  : -textWidthRef.current
               );
             }}
             title="Reset position"
