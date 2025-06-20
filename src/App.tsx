@@ -19,7 +19,19 @@ import { FlowNode } from "./components/FlowNode";
 
 const CustomGrid = () => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [transform, setTransform] = useState(d3.zoomIdentity);
+
+  // Marquee selection state
+  const [isMarqueeActive, setIsMarqueeActive] = useState(false);
+  const [marqueeStart, setMarqueeStart] = useState({ x: 0, y: 0 });
+  const [marqueeEnd, setMarqueeEnd] = useState({ x: 0, y: 0 });
+
+  // Pan state
+  const [isPanning, setIsPanning] = useState(false);
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
+  const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
+
   interface Component {
     id: number;
     x: number;
@@ -85,24 +97,208 @@ const CustomGrid = () => {
     }
   }, [selectedComponents]);
 
+  // Enhanced pan and zoom utilities
+  const getEventCoordinates = (event: MouseEvent | React.MouseEvent) => ({
+    x: event.clientX,
+    y: event.clientY,
+  });
+
+  const applyTransform = (newTransform: d3.ZoomTransform) => {
+    if (!svgRef.current || !zoomBehavior.current) return;
+    const svg = d3.select(svgRef.current);
+    svg.call(zoomBehavior.current.transform, newTransform);
+  };
+
+  const resetZoom = useCallback(() => {
+    if (!svgRef.current || !zoomBehavior.current) return;
+    const svg = d3.select(svgRef.current);
+    svg
+      .transition()
+      .duration(750)
+      .call(zoomBehavior.current.transform, d3.zoomIdentity);
+  }, []);
+
+  const zoomToFit = useCallback(() => {
+    if (!svgRef.current || !zoomBehavior.current || components.length === 0)
+      return;
+
+    const padding = 50;
+    const bounds = components.reduce(
+      (acc, comp) => ({
+        minX: Math.min(acc.minX, comp.x),
+        minY: Math.min(acc.minY, comp.y),
+        maxX: Math.max(acc.maxX, comp.x + (comp.width || 200)),
+        maxY: Math.max(acc.maxY, comp.y + (comp.height || 200)),
+      }),
+      { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
+    );
+
+    const width = bounds.maxX - bounds.minX + padding * 2;
+    const height = bounds.maxY - bounds.minY + padding * 2;
+    const centerX = bounds.minX + (bounds.maxX - bounds.minX) / 2;
+    const centerY = bounds.minY + (bounds.maxY - bounds.minY) / 2;
+
+    const scale = Math.min(
+      window.innerWidth / width,
+      window.innerHeight / height,
+      2 // Max zoom level
+    );
+
+    const svg = d3.select(svgRef.current);
+    svg
+      .transition()
+      .duration(750)
+      .call(
+        zoomBehavior.current.transform,
+        d3.zoomIdentity
+          .translate(window.innerWidth / 2, window.innerHeight / 2)
+          .scale(scale)
+          .translate(-centerX, -centerY)
+      );
+  }, [components]);
+
+  const zoomToSelection = useCallback(() => {
+    if (
+      !svgRef.current ||
+      !zoomBehavior.current ||
+      selectedComponents.length === 0
+    )
+      return;
+
+    const selectedComps = components.filter((comp) =>
+      selectedComponents.includes(comp.id)
+    );
+    const padding = 50;
+    const bounds = selectedComps.reduce(
+      (acc, comp) => ({
+        minX: Math.min(acc.minX, comp.x),
+        minY: Math.min(acc.minY, comp.y),
+        maxX: Math.max(acc.maxX, comp.x + (comp.width || 200)),
+        maxY: Math.max(acc.maxY, comp.y + (comp.height || 200)),
+      }),
+      { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
+    );
+
+    const width = bounds.maxX - bounds.minX + padding * 2;
+    const height = bounds.maxY - bounds.minY + padding * 2;
+    const centerX = bounds.minX + (bounds.maxX - bounds.minX) / 2;
+    const centerY = bounds.minY + (bounds.maxY - bounds.minY) / 2;
+
+    const scale = Math.min(
+      window.innerWidth / width,
+      window.innerHeight / height,
+      2 // Max zoom level
+    );
+
+    const svg = d3.select(svgRef.current);
+    svg
+      .transition()
+      .duration(750)
+      .call(
+        zoomBehavior.current.transform,
+        d3.zoomIdentity
+          .translate(window.innerWidth / 2, window.innerHeight / 2)
+          .scale(scale)
+          .translate(-centerX, -centerY)
+      );
+  }, [components, selectedComponents]);
+
+  // Marquee selection utilities
+  const getComponentsInMarquee = useCallback(() => {
+    const left = Math.min(marqueeStart.x, marqueeEnd.x);
+    const right = Math.max(marqueeStart.x, marqueeEnd.x);
+    const top = Math.min(marqueeStart.y, marqueeEnd.y);
+    const bottom = Math.max(marqueeStart.y, marqueeEnd.y);
+
+    return components.filter((comp) => {
+      // Convert component coordinates to screen coordinates
+      const screenX = comp.x * transform.k + transform.x;
+      const screenY = comp.y * transform.k + transform.y;
+      const compWidth = (comp.width || 200) * transform.k;
+      const compHeight = (comp.height || 200) * transform.k;
+
+      return (
+        screenX < right &&
+        screenX + compWidth > left &&
+        screenY < bottom &&
+        screenY + compHeight > top
+      );
+    });
+  }, [marqueeStart, marqueeEnd, components, transform]);
+
   useEffect(() => {
     if (!svgRef.current) return;
 
     const svg = d3.select(svgRef.current);
     svg.attr("width", window.innerWidth).attr("height", window.innerHeight);
 
+    // Enhanced zoom behavior with better filtering for Mac trackpad
     zoomBehavior.current = d3
       .zoom<SVGSVGElement, unknown>()
+      .filter((event) => {
+        // Prevent zoom during marquee selection or component dragging
+        if (isMarqueeActive) return false;
+
+        // Handle wheel events (mouse wheel and trackpad)
+        if (event.type === "wheel") {
+          // Mac trackpad pinch-to-zoom detection:
+          // - ctrlKey is automatically set by browser for pinch gestures
+          // - Small deltaY values with ctrlKey indicate pinch
+          // - Large deltaY without ctrlKey is typically scroll
+          if (event.ctrlKey || event.metaKey) {
+            // This is a zoom gesture (pinch or Ctrl+scroll)
+            return true;
+          }
+          // Regular scroll without modifiers should not trigger zoom
+          return false;
+        }
+
+        // Allow middle mouse button for pan
+        if (event.type === "mousedown" && event.button === 1) {
+          return true;
+        }
+
+        // Allow right mouse button for pan
+        if (event.type === "mousedown" && event.button === 2) {
+          return true;
+        }
+
+        // Allow pan with space + left click
+        if (
+          event.type === "mousedown" &&
+          event.button === 0 &&
+          isSpacePressed
+        ) {
+          return true;
+        }
+
+        return false;
+      })
       .on("zoom", (event) => {
-        if (!isMultiSelectMode) {
+        if (!isMultiSelectMode && !isMarqueeActive) {
           setTransform(event.transform);
         }
       });
 
     svg.call(zoomBehavior.current);
 
+    // Enhanced keyboard event handling
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "h") {
+      // Prevent default for our custom shortcuts
+      if (event.key === " ") {
+        event.preventDefault();
+        setIsSpacePressed(true);
+      } else if (event.key === "1") {
+        event.preventDefault();
+        if (event.shiftKey) {
+          zoomToFit();
+        } else {
+          resetZoom();
+        }
+      } else if (event.key === "2") {
+        event.preventDefault();
+        zoomToSelection();
+      } else if (event.key === "h" || event.key === "H") {
         setIsMultiSelectMode((prev) => !prev);
         setSelectedComponents([]); // Reset selection when mode changes
       } else if (event.key === "Delete" || event.key === "Backspace") {
@@ -110,42 +306,283 @@ const CustomGrid = () => {
       }
     };
 
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === " ") {
+        setIsSpacePressed(false);
+      }
+    };
+
+    // Mouse event handlers for marquee selection and panning
+    const handleMouseDown = (event: MouseEvent) => {
+      const coords = getEventCoordinates(event);
+
+      // Check if we clicked on a component (prevent marquee when clicking components)
+      const target = event.target as HTMLElement;
+      const isComponentClick = target.closest("[data-component]") !== null;
+
+      if (event.button === 0 && !isSpacePressed && !isComponentClick) {
+        // Left click without space on empty area - start marquee selection
+        setIsMarqueeActive(true);
+        setMarqueeStart(coords);
+        setMarqueeEnd(coords);
+      } else if (
+        event.button === 1 ||
+        event.button === 2 ||
+        (event.button === 0 && isSpacePressed)
+      ) {
+        // Middle, right, or space+left click - start panning
+        setIsPanning(true);
+        setLastPanPoint(coords);
+        event.preventDefault();
+      }
+    };
+
+    const handleMouseMove = (event: MouseEvent) => {
+      const coords = getEventCoordinates(event);
+
+      if (isMarqueeActive) {
+        setMarqueeEnd(coords);
+      } else if (isPanning) {
+        const deltaX = coords.x - lastPanPoint.x;
+        const deltaY = coords.y - lastPanPoint.y;
+
+        const newTransform = transform.translate(
+          deltaX / transform.k,
+          deltaY / transform.k
+        );
+        applyTransform(newTransform);
+        setLastPanPoint(coords);
+      }
+    };
+
+    const handleMouseUp = (event: MouseEvent) => {
+      if (isMarqueeActive) {
+        // Complete marquee selection
+        const selectedInMarquee = getComponentsInMarquee();
+        if (event.ctrlKey || event.metaKey) {
+          // Add to existing selection
+          setSelectedComponents((prev) => [
+            ...new Set([...prev, ...selectedInMarquee.map((comp) => comp.id)]),
+          ]);
+        } else {
+          // Replace selection
+          setSelectedComponents(selectedInMarquee.map((comp) => comp.id));
+        }
+        setIsMarqueeActive(false);
+      } else if (isPanning) {
+        setIsPanning(false);
+      }
+    };
+
+    // Enhanced trackpad gesture handling for Mac
+    const handleWheel = (event: WheelEvent) => {
+      // Distinguish between trackpad scroll and pinch gestures
+      if (event.ctrlKey || event.metaKey) {
+        // This is a pinch-to-zoom gesture (browser sets ctrlKey automatically)
+        // Let D3 zoom behavior handle this
+        return;
+      }
+
+      // This is a two-finger scroll gesture - use for panning
+      event.preventDefault();
+
+      // Apply momentum-based scaling for natural feel
+      const deltaX = -event.deltaX * 0.5; // Reduce sensitivity and invert direction
+      const deltaY = -event.deltaY * 0.5;
+
+      const newTransform = transform.translate(
+        deltaX / transform.k,
+        deltaY / transform.k
+      );
+      applyTransform(newTransform);
+    };
+
+    // Enhanced touch handling for mobile devices
+    let touchStartDistance = 0;
+    let touchStartTransform = transform;
+    let touchCenter = { x: 0, y: 0 };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      if (event.touches.length === 1) {
+        // Single finger - start panning
+        const touch = event.touches[0];
+        setIsPanning(true);
+        setLastPanPoint({ x: touch.clientX, y: touch.clientY });
+      } else if (event.touches.length === 2) {
+        // Two fingers - prepare for pinch zoom
+        const touch1 = event.touches[0];
+        const touch2 = event.touches[1];
+        touchStartDistance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+        touchCenter = {
+          x: (touch1.clientX + touch2.clientX) / 2,
+          y: (touch1.clientY + touch2.clientY) / 2,
+        };
+        touchStartTransform = transform;
+        setIsPanning(false); // Stop panning when second finger is added
+        event.preventDefault(); // Prevent default pinch behavior
+      }
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (event.touches.length === 1 && isPanning) {
+        // Single finger pan
+        const touch = event.touches[0];
+        const coords = { x: touch.clientX, y: touch.clientY };
+        const deltaX = coords.x - lastPanPoint.x;
+        const deltaY = coords.y - lastPanPoint.y;
+
+        const newTransform = transform.translate(
+          deltaX / transform.k,
+          deltaY / transform.k
+        );
+        applyTransform(newTransform);
+        setLastPanPoint(coords);
+        event.preventDefault();
+      } else if (event.touches.length === 2) {
+        // Two finger pinch zoom
+        const touch1 = event.touches[0];
+        const touch2 = event.touches[1];
+        const currentDistance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+
+        if (touchStartDistance > 0) {
+          const scale = currentDistance / touchStartDistance;
+          const newScale = Math.max(
+            0.1,
+            Math.min(5, touchStartTransform.k * scale)
+          ); // Limit zoom range
+
+          // Calculate the center point in transform space
+          const centerInTransformSpace = {
+            x: (touchCenter.x - touchStartTransform.x) / touchStartTransform.k,
+            y: (touchCenter.y - touchStartTransform.y) / touchStartTransform.k,
+          };
+
+          // Apply zoom centered on pinch center
+          const newTransform = d3.zoomIdentity
+            .translate(touchCenter.x, touchCenter.y)
+            .scale(newScale)
+            .translate(-centerInTransformSpace.x, -centerInTransformSpace.y);
+
+          applyTransform(newTransform);
+        }
+        event.preventDefault();
+      }
+    };
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      if (event.touches.length === 0) {
+        setIsPanning(false);
+        touchStartDistance = 0;
+      } else if (event.touches.length === 1) {
+        // Transition back to single finger pan
+        const touch = event.touches[0];
+        setLastPanPoint({ x: touch.clientX, y: touch.clientY });
+        setIsPanning(true);
+      }
+    };
+
+    // Context menu prevention for right-click pan
+    const handleContextMenu = (event: MouseEvent) => {
+      if (event.button === 2) {
+        event.preventDefault();
+      }
+    };
+
+    // Add event listeners
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("contextmenu", handleContextMenu);
+    window.addEventListener("touchstart", handleTouchStart, { passive: false });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd);
 
     return () => {
       svg.selectAll("*").remove();
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("contextmenu", handleContextMenu);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [isMultiSelectMode, handleDeleteSelected]);
+  }, [
+    isMultiSelectMode,
+    handleDeleteSelected,
+    isMarqueeActive,
+    isPanning,
+    isSpacePressed,
+    lastPanPoint,
+    marqueeStart,
+    marqueeEnd,
+    transform,
+    getComponentsInMarquee,
+    resetZoom,
+    zoomToFit,
+    zoomToSelection,
+  ]);
 
   const handleDragStart = (id: number) => {
     // Bring the component to the front when starting to drag
     bringToFront(id);
 
     if (isMultiSelectMode && selectedComponents.includes(id)) {
+      // Multi-select mode: dragging a selected component moves all selected components
+      const positions = selectedComponents.map((selectedId) => {
+        const component = components.find((c) => c.id === selectedId);
+        return { id: selectedId, x: component?.x || 0, y: component?.y || 0 };
+      });
+      setInitialPositions(positions);
+    } else if (
+      selectedComponents.length > 1 &&
+      selectedComponents.includes(id)
+    ) {
+      // Not in multi-select mode, but we have multiple selected components and clicked on one of them
+      // Move all selected components
       const positions = selectedComponents.map((selectedId) => {
         const component = components.find((c) => c.id === selectedId);
         return { id: selectedId, x: component?.x || 0, y: component?.y || 0 };
       });
       setInitialPositions(positions);
     } else {
-      // Store initial position for single component drag
+      // Single component drag - store initial position
       const component = components.find((c) => c.id === id);
       if (component) {
         setInitialPositions([{ id, x: component.x, y: component.y }]);
+        // If not in multi-select mode, clear other selections when dragging a single component
+        if (!isMultiSelectMode) {
+          setSelectedComponents([id]);
+        }
       }
     }
   };
 
   const handleDrag = useCallback(
     (id: number, deltaX: number, deltaY: number) => {
-      if (isMultiSelectMode && selectedComponents.includes(id)) {
+      if (
+        (isMultiSelectMode && selectedComponents.includes(id)) ||
+        (selectedComponents.length > 1 && selectedComponents.includes(id))
+      ) {
+        // Moving multiple selected components
         setComponents((prevComponents) =>
           prevComponents.map((component) => {
             const initialPos = initialPositions.find(
               (pos) => pos.id === component.id
             );
-            if (initialPos) {
+            if (initialPos && selectedComponents.includes(component.id)) {
               return {
                 ...component,
                 x: initialPos.x + deltaX,
@@ -156,7 +593,7 @@ const CustomGrid = () => {
           })
         );
       } else {
-        // Single component drag - use initial position stored in initialPositions
+        // Single component drag
         const initialPos = initialPositions.find((pos) => pos.id === id);
         if (initialPos) {
           setComponents((prevComponents) =>
@@ -225,8 +662,34 @@ const CustomGrid = () => {
   }, []);
 
   return (
-    <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
+    <div
+      ref={containerRef}
+      style={{
+        position: "relative",
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+      }}
+    >
       <svg ref={svgRef}></svg>
+
+      {/* Marquee selection overlay */}
+      {isMarqueeActive && (
+        <div
+          style={{
+            position: "absolute",
+            left: `${Math.min(marqueeStart.x, marqueeEnd.x)}px`,
+            top: `${Math.min(marqueeStart.y, marqueeEnd.y)}px`,
+            width: `${Math.abs(marqueeEnd.x - marqueeStart.x)}px`,
+            height: `${Math.abs(marqueeEnd.y - marqueeStart.y)}px`,
+            border: "2px dashed #3b82f6",
+            backgroundColor: "rgba(59, 130, 246, 0.1)",
+            pointerEvents: "none",
+            zIndex: 9999,
+          }}
+        />
+      )}
+
       <div
         style={{
           position: "absolute",
@@ -257,7 +720,11 @@ const CustomGrid = () => {
             />
           ))}
       </div>
-      <ControlPanel onZoom={handleZoom} isMultiSelectMode={isMultiSelectMode} />
+      <ControlPanel
+        onZoom={handleZoom}
+        isMultiSelectMode={isMultiSelectMode}
+        selectedComponents={selectedComponents}
+      />
       <Shelf onAddComponent={addNewComponent} />
     </div>
   );
@@ -297,9 +764,20 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
 
   // Header-specific mouse down handler for dragging
   const handleHeaderMouseDown = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
     if (isMultiSelectMode && !selected) {
+      // In multi-select mode, clicking an unselected component selects it
       onSelect(id);
+    } else if (isMultiSelectMode && selected) {
+      // In multi-select mode, clicking a selected component starts dragging all selected
+      setIsDragging(true);
+      const mousePos = { x: event.clientX, y: event.clientY };
+      setDragStartPos(mousePos);
+      onDragStart(id);
     } else {
+      // Normal mode - start dragging this component
       setIsDragging(true);
       const mousePos = { x: event.clientX, y: event.clientY };
       setDragStartPos(mousePos);
@@ -488,9 +966,29 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
 
   return (
     <div
+      data-component="true"
       className={`absolute pointer-events-auto ${
         selected ? "ring-2 ring-blue-500" : ""
       } group`}
+      onWheel={(e) => {
+        // Forward wheel events to the SVG to ensure whiteboard zoom works
+        // even when hovering over components
+        const svgElement = document.querySelector("svg");
+        if (svgElement) {
+          const wheelEvent = new WheelEvent("wheel", {
+            deltaX: e.deltaX,
+            deltaY: e.deltaY,
+            deltaZ: e.deltaZ,
+            deltaMode: e.deltaMode,
+            clientX: e.clientX,
+            clientY: e.clientY,
+            bubbles: true,
+            cancelable: true,
+          });
+          svgElement.dispatchEvent(wheelEvent);
+        }
+        e.preventDefault(); // Prevent component-specific zoom
+      }}
       style={{
         left: `${x}px`,
         top: `${y}px`,
@@ -505,11 +1003,13 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
 interface ControlPanelProps {
   onZoom: (factor: number) => void;
   isMultiSelectMode: boolean;
+  selectedComponents: number[];
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({
   onZoom,
   isMultiSelectMode,
+  selectedComponents,
 }) => {
   return (
     <div
@@ -521,18 +1021,45 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         padding: "10px",
         borderRadius: "5px",
         boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+        maxWidth: "250px",
       }}
       className="flex flex-col gap-2"
     >
-      <Button onClick={() => onZoom(1.2)} variant={"ghost"} size="sm">
-        <Plus className="w-4 h-4" />
-      </Button>
-      <Button onClick={() => onZoom(0.8)} variant={"ghost"} size="sm">
-        <Minus className="w-4 h-4" />
-      </Button>
+      <div className="flex gap-2">
+        <Button onClick={() => onZoom(1.2)} variant={"ghost"} size="sm">
+          <Plus className="w-4 h-4" />
+        </Button>
+        <Button onClick={() => onZoom(0.8)} variant={"ghost"} size="sm">
+          <Minus className="w-4 h-4" />
+        </Button>
+      </div>
       <p className="text-sm mt-2">
         Mode: {isMultiSelectMode ? "Multi-Select (H)" : "Pan"}
+        {selectedComponents.length > 0 && (
+          <span className="text-blue-600 ml-2">
+            ({selectedComponents.length} selected)
+          </span>
+        )}
       </p>
+      <div className="text-xs text-gray-600 mt-2 space-y-1">
+        <p>
+          <strong>Pan:</strong> Middle/Right-click drag, Space+drag, 2-finger
+          scroll
+        </p>
+        <p>
+          <strong>Zoom:</strong> Ctrl/Cmd+scroll, pinch-to-zoom
+        </p>
+        <p>
+          <strong>Select:</strong> Left-click drag (marquee)
+        </p>
+        <p>
+          <strong>Shortcuts:</strong> 1 (reset), Shift+1 (fit), 2 (zoom
+          selection)
+        </p>
+        <p className="text-xs text-blue-600 mt-1">
+          <strong>Mac Trackpad:</strong> 2-finger scroll = pan, pinch = zoom
+        </p>
+      </div>
     </div>
   );
 };
@@ -668,7 +1195,10 @@ const Shelf: React.FC<ShelfProps> = ({ onAddComponent }) => {
         Press 'Delete' to remove selected components
       </p>
       <p className="text-xs text-gray-500">
-        Hover over components to see delete button
+        Drag marquee or click components to select
+      </p>
+      <p className="text-xs text-gray-500">
+        Drag any selected component to move all
       </p>
     </div>
   );
