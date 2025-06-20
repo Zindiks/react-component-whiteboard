@@ -55,6 +55,11 @@ interface WhiteboardState {
   isDragging: boolean;
   dragStartPosition: { x: number; y: number } | null;
 
+  // Selection rectangle state
+  isSelecting: boolean;
+  selectionStart: { x: number; y: number } | null;
+  selectionEnd: { x: number; y: number } | null;
+
   // Component registry
   componentRegistry: ComponentRegistry;
 
@@ -68,6 +73,18 @@ interface WhiteboardState {
   setDragging: (
     isDragging: boolean,
     startPosition?: { x: number; y: number }
+  ) => void;
+
+  // Selection rectangle actions
+  startSelection: (x: number, y: number) => void;
+  updateSelection: (x: number, y: number) => void;
+  endSelection: () => void;
+  selectComponentsInRectangle: (
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    multiSelect?: boolean
   ) => void;
   registerComponent: (type: string, config: ComponentRegistry[string]) => void;
   moveComponents: (
@@ -90,6 +107,16 @@ interface WhiteboardState {
     type: "straight" | "curved" | "dotted" | "dashed"
   ) => void;
   setConnectionColor: (color: string) => void;
+
+  // Navigation utility actions
+  getBoundingBox: () => {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+  } | null;
+  centerView: () => void;
+  zoomToFit: (padding?: number) => void;
 }
 
 // Helper function to snap to grid
@@ -113,7 +140,14 @@ export const useWhiteboardStore = create<WhiteboardState>()(
     transform: { x: 0, y: 0, k: 1 },
     gridSize: 20,
     gridVisible: true,
-    components: [],
+    components: [
+      { id: "timer_1", type: "timer", x: 100, y: 100, zIndex: 1 },
+      { id: "weather_1", type: "weather", x: 300, y: 200, zIndex: 2 },
+      { id: "bitcoin_1", type: "bitcoin", x: 600, y: 100, zIndex: 3 },
+      { id: "currency_1", type: "currency", x: 100, y: 400, zIndex: 4 },
+      { id: "confetti_1", type: "confetti", x: 400, y: 400, zIndex: 5 },
+      { id: "note_1", type: "note", x: 700, y: 400, zIndex: 6 },
+    ],
     selectedComponents: [],
     connections: [],
     selectedConnection: null,
@@ -123,6 +157,9 @@ export const useWhiteboardStore = create<WhiteboardState>()(
     connectionColor: "#3b82f6",
     isDragging: false,
     dragStartPosition: null,
+    isSelecting: false,
+    selectionStart: null,
+    selectionEnd: null,
     componentRegistry: {},
 
     // Actions
@@ -196,6 +233,89 @@ export const useWhiteboardStore = create<WhiteboardState>()(
 
     setDragging: (isDragging, startPosition) =>
       set({ isDragging, dragStartPosition: startPosition || null }),
+
+    // Selection rectangle actions
+    startSelection: (x, y) =>
+      set({
+        isSelecting: true,
+        selectionStart: { x, y },
+        selectionEnd: { x, y },
+      }),
+
+    updateSelection: (x, y) =>
+      set({
+        selectionEnd: { x, y },
+      }),
+
+    endSelection: () =>
+      set({
+        isSelecting: false,
+        selectionStart: null,
+        selectionEnd: null,
+      }),
+
+    selectComponentsInRectangle: (x1, y1, x2, y2, multiSelect = false) => {
+      const minX = Math.min(x1, x2);
+      const maxX = Math.max(x1, x2);
+      const minY = Math.min(y1, y2);
+      const maxY = Math.max(y1, y2);
+
+      console.log("Selection rectangle bounds (canvas coords):", {
+        minX,
+        maxX,
+        minY,
+        maxY,
+        width: maxX - minX,
+        height: maxY - minY,
+      });
+
+      set((state) => {
+        const componentsInRectangle = state.components
+          .filter((component) => {
+            // Use default props from registry if available, otherwise fallback to defaults
+            const registry = state.componentRegistry[component.type];
+            const defaultWidth =
+              (registry?.defaultProps?.width as number) || 250;
+            const defaultHeight =
+              (registry?.defaultProps?.height as number) || 200;
+
+            const compWidth = component.width || defaultWidth;
+            const compHeight = component.height || defaultHeight;
+            const compRight = component.x + compWidth;
+            const compBottom = component.y + compHeight;
+
+            // Check if component intersects with selection rectangle using more generous bounds
+            // A component is selected if any part of it overlaps with the selection rectangle
+            const intersects = !(
+              component.x >= maxX ||
+              compRight <= minX ||
+              component.y >= maxY ||
+              compBottom <= minY
+            );
+
+            return intersects;
+          })
+          .map((comp) => comp.id);
+
+        console.log("Components selected:", componentsInRectangle);
+
+        if (multiSelect) {
+          // Add to existing selection
+          const newSelection = new Set([
+            ...state.selectedComponents,
+            ...componentsInRectangle,
+          ]);
+          return {
+            selectedComponents: Array.from(newSelection),
+          };
+        } else {
+          // Replace selection
+          return {
+            selectedComponents: componentsInRectangle,
+          };
+        }
+      });
+    },
 
     registerComponent: (type, config) =>
       set((state) => ({
@@ -319,6 +439,72 @@ export const useWhiteboardStore = create<WhiteboardState>()(
     setConnectionType: (type) => set({ connectionType: type }),
 
     setConnectionColor: (color) => set({ connectionColor: color }),
+
+    // Navigation utility actions
+    getBoundingBox: () => {
+      const { components } = get();
+      if (components.length === 0) return null;
+
+      const boundingBox = components.reduce(
+        (acc, component) => {
+          const minX = Math.min(acc.minX, component.x);
+          const minY = Math.min(acc.minY, component.y);
+          const maxX = Math.max(acc.maxX, component.x + (component.width || 0));
+          const maxY = Math.max(
+            acc.maxY,
+            component.y + (component.height || 0)
+          );
+
+          return { minX, minY, maxX, maxY };
+        },
+        {
+          minX: Infinity,
+          minY: Infinity,
+          maxX: -Infinity,
+          maxY: -Infinity,
+        }
+      );
+
+      return boundingBox;
+    },
+
+    centerView: () => {
+      const boundingBox = get().getBoundingBox();
+      if (!boundingBox) return;
+
+      const { minX, minY, maxX, maxY } = boundingBox;
+      const width = maxX - minX;
+      const height = maxY - minY;
+
+      set({
+        transform: {
+          x: -minX + (window.innerWidth - width) / 2,
+          y: -minY + (window.innerHeight - height) / 2,
+          k: get().transform.k,
+        },
+      });
+    },
+
+    zoomToFit: (padding = 20) => {
+      const boundingBox = get().getBoundingBox();
+      if (!boundingBox) return;
+
+      const { minX, minY, maxX, maxY } = boundingBox;
+      const width = maxX - minX;
+      const height = maxY - minY;
+
+      const xZoom = (window.innerWidth - padding * 2) / width;
+      const yZoom = (window.innerHeight - padding * 2) / height;
+      const zoom = Math.min(xZoom, yZoom, 1);
+
+      set({
+        transform: {
+          x: -minX * zoom + padding,
+          y: -minY * zoom + padding,
+          k: zoom,
+        },
+      });
+    },
   }))
 );
 

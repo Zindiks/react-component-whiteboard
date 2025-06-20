@@ -9,6 +9,11 @@ import {
   Circle,
   Square,
   Diamond,
+  TrendingUp,
+  DollarSign,
+  StickyNote,
+  Sparkles,
+  Watch as WatchIcon,
 } from "lucide-react";
 import { Timer } from "@/components/Timer";
 import { Weather } from "@/components/Weather";
@@ -20,6 +25,11 @@ import { StylishLink } from "@/components/StylishLink";
 import { FlowCanvas } from "@/components/FlowCanvas";
 import { FlowNode } from "@/components/FlowNode";
 import { ComponentRegistry } from "@/store/whiteboard";
+import { BitcoinChart } from "@/components/BitcoinChart";
+import { CurrencyConverter } from "@/components/CurrencyConverter";
+import { TextNote } from "@/components/TextNote";
+import { ConfettiButton } from "@/components/ConfettiButton";
+import { Watch } from "@/components/Watch";
 
 /**
  * Component Registry System
@@ -166,6 +176,46 @@ export const COMPONENT_REGISTRY: ComponentRegistry = {
       height: 300,
     },
     icon: <Share2 className="w-5 h-5 text-blue-500" />,
+    category: "Utilities",
+  },
+
+  bitcoin: {
+    name: "Bitcoin Chart",
+    component: BitcoinChart,
+    defaultProps: {},
+    icon: <TrendingUp className="w-5 h-5 text-orange-500" />,
+    category: "Data",
+  },
+
+  currency: {
+    name: "Currency Converter",
+    component: CurrencyConverter,
+    defaultProps: {},
+    icon: <DollarSign className="w-5 h-5 text-green-600" />,
+    category: "Data",
+  },
+
+  note: {
+    name: "Text Note",
+    component: TextNote,
+    defaultProps: {},
+    icon: <StickyNote className="w-5 h-5 text-yellow-500" />,
+    category: "Content",
+  },
+
+  confetti: {
+    name: "Confetti Button",
+    component: ConfettiButton,
+    defaultProps: {},
+    icon: <Sparkles className="w-5 h-5 text-purple-500" />,
+    category: "Utilities",
+  },
+
+  watch: {
+    name: "Watch",
+    component: Watch,
+    defaultProps: {},
+    icon: <WatchIcon className="w-5 h-5 text-gray-700" />,
     category: "Utilities",
   },
 
