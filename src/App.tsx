@@ -71,7 +71,6 @@ const CustomGrid = () => {
     { id: 17, x: 1850, y: 100, type: "flowNodeEnd", zIndex: 17 },
   ]);
   const [selectedComponents, setSelectedComponents] = useState<number[]>([]);
-  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [initialPositions, setInitialPositions] = useState<
     { id: number; x: number; y: number }[]
   >([]);
@@ -275,7 +274,7 @@ const CustomGrid = () => {
         return false;
       })
       .on("zoom", (event) => {
-        if (!isMultiSelectMode && !isMarqueeActive) {
+        if (!isMarqueeActive) {
           setTransform(event.transform);
         }
       });
@@ -298,9 +297,6 @@ const CustomGrid = () => {
       } else if (event.key === "2") {
         event.preventDefault();
         zoomToSelection();
-      } else if (event.key === "h" || event.key === "H") {
-        setIsMultiSelectMode((prev) => !prev);
-        setSelectedComponents([]); // Reset selection when mode changes
       } else if (event.key === "Delete" || event.key === "Backspace") {
         handleDeleteSelected();
       }
@@ -520,7 +516,6 @@ const CustomGrid = () => {
       window.removeEventListener("touchend", handleTouchEnd);
     };
   }, [
-    isMultiSelectMode,
     handleDeleteSelected,
     isMarqueeActive,
     isPanning,
@@ -539,43 +534,26 @@ const CustomGrid = () => {
     // Bring the component to the front when starting to drag
     bringToFront(id);
 
-    if (isMultiSelectMode && selectedComponents.includes(id)) {
-      // Multi-select mode: dragging a selected component moves all selected components
-      const positions = selectedComponents.map((selectedId) => {
-        const component = components.find((c) => c.id === selectedId);
-        return { id: selectedId, x: component?.x || 0, y: component?.y || 0 };
-      });
-      setInitialPositions(positions);
-    } else if (
-      selectedComponents.length > 1 &&
-      selectedComponents.includes(id)
-    ) {
-      // Not in multi-select mode, but we have multiple selected components and clicked on one of them
-      // Move all selected components
+    if (selectedComponents.length > 1 && selectedComponents.includes(id)) {
+      // Multiple selected components: dragging one moves all selected
       const positions = selectedComponents.map((selectedId) => {
         const component = components.find((c) => c.id === selectedId);
         return { id: selectedId, x: component?.x || 0, y: component?.y || 0 };
       });
       setInitialPositions(positions);
     } else {
-      // Single component drag - store initial position
+      // Single component drag - store initial position and select it
       const component = components.find((c) => c.id === id);
       if (component) {
         setInitialPositions([{ id, x: component.x, y: component.y }]);
-        // If not in multi-select mode, clear other selections when dragging a single component
-        if (!isMultiSelectMode) {
-          setSelectedComponents([id]);
-        }
+        setSelectedComponents([id]);
       }
     }
   };
 
   const handleDrag = useCallback(
     (id: number, deltaX: number, deltaY: number) => {
-      if (
-        (isMultiSelectMode && selectedComponents.includes(id)) ||
-        (selectedComponents.length > 1 && selectedComponents.includes(id))
-      ) {
+      if (selectedComponents.length > 1 && selectedComponents.includes(id)) {
         // Moving multiple selected components
         setComponents((prevComponents) =>
           prevComponents.map((component) => {
@@ -610,19 +588,15 @@ const CustomGrid = () => {
         }
       }
     },
-    [isMultiSelectMode, selectedComponents, initialPositions]
+    [selectedComponents, initialPositions]
   );
 
-  const handleSelect = useCallback(
-    (id: number) => {
-      if (isMultiSelectMode) {
-        setSelectedComponents((prev) =>
-          prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-        );
-      }
-    },
-    [isMultiSelectMode]
-  );
+  const handleSelect = useCallback((id: number) => {
+    // Toggle selection for the component
+    setSelectedComponents((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  }, []);
 
   const handleZoom = useCallback((factor: number) => {
     if (!svgRef.current || !zoomBehavior.current) return;
@@ -715,14 +689,12 @@ const CustomGrid = () => {
               onDelete={handleDeleteComponent}
               selected={selectedComponents.includes(component.id)}
               transform={transform}
-              isMultiSelectMode={isMultiSelectMode}
               zIndex={component.zIndex || 0}
             />
           ))}
       </div>
       <ControlPanel
         onZoom={handleZoom}
-        isMultiSelectMode={isMultiSelectMode}
         selectedComponents={selectedComponents}
       />
       <Shelf onAddComponent={addNewComponent} />
@@ -742,7 +714,6 @@ interface DraggableComponentProps {
   selected: boolean;
   transform: d3.ZoomTransform;
   zIndex?: number;
-  isMultiSelectMode: boolean;
 }
 
 const DraggableComponent: React.FC<DraggableComponentProps> = ({
@@ -756,7 +727,6 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
   onDelete,
   selected,
   transform,
-  isMultiSelectMode,
   zIndex,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -767,17 +737,11 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
     event.preventDefault();
     event.stopPropagation();
 
-    if (isMultiSelectMode && !selected) {
-      // In multi-select mode, clicking an unselected component selects it
+    if (!selected) {
+      // Clicking an unselected component selects it
       onSelect(id);
-    } else if (isMultiSelectMode && selected) {
-      // In multi-select mode, clicking a selected component starts dragging all selected
-      setIsDragging(true);
-      const mousePos = { x: event.clientX, y: event.clientY };
-      setDragStartPos(mousePos);
-      onDragStart(id);
     } else {
-      // Normal mode - start dragging this component
+      // Clicking a selected component starts dragging all selected
       setIsDragging(true);
       const mousePos = { x: event.clientX, y: event.clientY };
       setDragStartPos(mousePos);
@@ -970,25 +934,6 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
       className={`absolute pointer-events-auto ${
         selected ? "ring-2 ring-blue-500" : ""
       } group`}
-      onWheel={(e) => {
-        // Forward wheel events to the SVG to ensure whiteboard zoom works
-        // even when hovering over components
-        const svgElement = document.querySelector("svg");
-        if (svgElement) {
-          const wheelEvent = new WheelEvent("wheel", {
-            deltaX: e.deltaX,
-            deltaY: e.deltaY,
-            deltaZ: e.deltaZ,
-            deltaMode: e.deltaMode,
-            clientX: e.clientX,
-            clientY: e.clientY,
-            bubbles: true,
-            cancelable: true,
-          });
-          svgElement.dispatchEvent(wheelEvent);
-        }
-        e.preventDefault(); // Prevent component-specific zoom
-      }}
       style={{
         left: `${x}px`,
         top: `${y}px`,
@@ -1002,13 +947,11 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
 
 interface ControlPanelProps {
   onZoom: (factor: number) => void;
-  isMultiSelectMode: boolean;
   selectedComponents: number[];
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({
   onZoom,
-  isMultiSelectMode,
   selectedComponents,
 }) => {
   return (
@@ -1034,7 +977,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         </Button>
       </div>
       <p className="text-sm mt-2">
-        Mode: {isMultiSelectMode ? "Multi-Select (H)" : "Pan"}
+        Mode: Selection
         {selectedComponents.length > 0 && (
           <span className="text-blue-600 ml-2">
             ({selectedComponents.length} selected)
@@ -1189,9 +1132,6 @@ const Shelf: React.FC<ShelfProps> = ({ onAddComponent }) => {
         🔄 Add Flow Connections
       </Button>
       <p className="text-xs text-gray-500 mt-2">
-        Press 'H' to toggle multi-select mode
-      </p>
-      <p className="text-xs text-gray-500">
         Press 'Delete' to remove selected components
       </p>
       <p className="text-xs text-gray-500">
