@@ -2,17 +2,20 @@ import React, { useState } from "react";
 import { Video, Edit3, ExternalLink } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { ComponentHeader } from "./ComponentHeader";
 
 interface YouTubeVideoProps {
   initialUrl?: string;
   width?: number;
   height?: number;
+  onHeaderMouseDown?: (event: React.MouseEvent) => void;
 }
 
 export const YouTubeVideo: React.FC<YouTubeVideoProps> = ({
   initialUrl = "",
   width = 400,
   height = 300,
+  onHeaderMouseDown,
 }) => {
   const [url, setUrl] = useState<string>(initialUrl);
   const [isEditing, setIsEditing] = useState<boolean>(!initialUrl);
@@ -47,35 +50,34 @@ export const YouTubeVideo: React.FC<YouTubeVideoProps> = ({
       className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col"
       style={{ width, height }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center">
-            <Video className="w-3 h-3 text-white" />
-          </div>
-          <h3 className="text-sm font-semibold text-gray-800">YouTube Video</h3>
-        </div>
-        <div className="flex items-center space-x-1">
-          <button
-            className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
-              isEditing ? "bg-blue-100 text-blue-600" : ""
-            }`}
-            onClick={() => setIsEditing(!isEditing)}
-            title={isEditing ? "Save" : "Edit URL"}
-          >
-            <Edit3 className="h-4 w-4" />
-          </button>
-          {videoId && !isEditing && (
+      <ComponentHeader
+        title="YouTube Video"
+        icon={Video}
+        iconColor="bg-red-600"
+        onMouseDown={onHeaderMouseDown}
+        actions={
+          <div className="flex items-center space-x-1">
             <button
-              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
-              onClick={handleOpenInNewTab}
-              title="Open in YouTube"
+              className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
+                isEditing ? "bg-blue-100 text-blue-600" : ""
+              }`}
+              onClick={() => setIsEditing(!isEditing)}
+              title={isEditing ? "Save" : "Edit URL"}
             >
-              <ExternalLink className="h-4 w-4" />
+              <Edit3 className="h-4 w-4" />
             </button>
-          )}
-        </div>
-      </div>
+            {videoId && !isEditing && (
+              <button
+                className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+                onClick={handleOpenInNewTab}
+                title="Open in YouTube"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        }
+      />
 
       {/* Content */}
       <div className="flex-grow relative">

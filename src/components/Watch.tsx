@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Clock, Settings, Globe } from "lucide-react";
+import { ComponentHeader } from "./ComponentHeader";
 
 interface WatchProps {
   width?: number;
   height?: number;
+  onHeaderMouseDown?: (event: React.MouseEvent) => void;
 }
 
 const timeZones = [
@@ -24,7 +26,11 @@ const formats = [
   { label: "24-hour", value: "24" },
 ];
 
-export const Watch: React.FC<WatchProps> = ({ width = 280, height = 200 }) => {
+export const Watch: React.FC<WatchProps> = ({ 
+  width = 280, 
+  height = 200, 
+  onHeaderMouseDown 
+}) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [timeZone, setTimeZone] = useState("local");
   const [format, setFormat] = useState("12");
@@ -99,27 +105,24 @@ export const Watch: React.FC<WatchProps> = ({ width = 280, height = 200 }) => {
 
   return (
     <div
-      className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm relative"
+      className="bg-white border border-gray-200 rounded-lg shadow-sm relative"
       style={{ width, height }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-            <Clock className="w-4 h-4 text-white" />
-          </div>
-          <h3 className="text-sm font-semibold text-gray-800">
-            {timeZones.find((tz) => tz.value === timeZone)?.label || "Watch"}
-          </h3>
-        </div>
-        <button
-          onClick={() => setShowSettings(!showSettings)}
-          className="p-1 text-gray-400 hover:text-gray-600 rounded"
-          title="Settings"
-        >
-          <Settings className="w-4 h-4" />
-        </button>
-      </div>
+      <ComponentHeader
+        title={timeZones.find((tz) => tz.value === timeZone)?.label || "Watch"}
+        icon={Clock}
+        iconColor="bg-blue-500"
+        onMouseDown={onHeaderMouseDown}
+        actions={
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="p-1 rounded-full hover:bg-gray-200 text-gray-600"
+            title="Settings"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+        }
+      />
 
       {/* Settings Panel */}
       {showSettings && (
@@ -187,24 +190,26 @@ export const Watch: React.FC<WatchProps> = ({ width = 280, height = 200 }) => {
         </div>
       )}
 
-      {/* Time Display */}
-      <div className="text-center">
-        <div className="text-2xl font-mono font-bold text-gray-900 mb-1">
-          {formatTime(currentTime)}
+      <div className="p-4">
+        {/* Time Display */}
+        <div className="text-center">
+          <div className="text-2xl font-mono font-bold text-gray-900 mb-1">
+            {formatTime(currentTime)}
+          </div>
+
+          {showDate && (
+            <div className="text-sm text-gray-600 mb-2">
+              {formatDate(currentTime)}
+            </div>
+          )}
+
+          <div className="text-xs text-gray-500">{getTimeZoneOffset()}</div>
         </div>
 
-        {showDate && (
-          <div className="text-sm text-gray-600 mb-2">
-            {formatDate(currentTime)}
-          </div>
-        )}
-
-        <div className="text-xs text-gray-500">{getTimeZoneOffset()}</div>
-      </div>
-
-      {/* Digital Clock Style Indicator */}
-      <div className="absolute bottom-2 right-2">
-        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+        {/* Digital Clock Style Indicator */}
+        <div className="absolute bottom-2 right-2">
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+        </div>
       </div>
     </div>
   );

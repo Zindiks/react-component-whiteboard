@@ -1,24 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  Type,
   Edit3,
   Play,
   Pause,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
+  ScrollText,
 } from "lucide-react";
+import { ComponentHeader } from "./ComponentHeader";
 
 interface ScrollingTextProps {
   initialText?: string;
   width?: number;
   height?: number;
+  onHeaderMouseDown?: (event: React.MouseEvent) => void;
 }
 
 export const ScrollingText: React.FC<ScrollingTextProps> = ({
   initialText = "Welcome to the Scrolling Text Component! Edit this text and watch it scroll...",
   width = 400,
   height = 100,
+  onHeaderMouseDown,
 }) => {
   // States
   const [text, setText] = useState(initialText);
@@ -120,54 +123,51 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
       className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
       style={{ width, height }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
-            <Type className="w-3 h-3 text-white" />
+      <ComponentHeader
+        title="Scrolling Text"
+        icon={ScrollText}
+        iconColor="bg-pink-500"
+        onMouseDown={onHeaderMouseDown}
+        actions={
+          <div className="flex items-center space-x-1">
+            <button
+              className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
+                isEditing ? "bg-blue-100 text-blue-600" : ""
+              }`}
+              onClick={handleEditToggle}
+              title={isEditing ? "Save" : "Edit text"}
+            >
+              <Edit3 className="h-4 w-4" />
+            </button>
+            <button
+              className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
+                isPaused ? "bg-gray-200" : ""
+              }`}
+              onClick={handlePauseToggle}
+              disabled={isEditing}
+              title={isPaused ? "Play" : "Pause"}
+            >
+              {isPaused ? (
+                <Play className="h-4 w-4" />
+              ) : (
+                <Pause className="h-4 w-4" />
+              )}
+            </button>
+            <button
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+              onClick={handleDirectionToggle}
+              disabled={isEditing}
+              title="Change direction"
+            >
+              {direction === "rtl" ? (
+                <ChevronLeft className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </button>
           </div>
-          <h3 className="text-sm font-semibold text-gray-800">
-            Scrolling Text
-          </h3>
-        </div>
-        <div className="flex items-center space-x-1">
-          <button
-            className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
-              isEditing ? "bg-blue-100 text-blue-600" : ""
-            }`}
-            onClick={handleEditToggle}
-            title={isEditing ? "Save" : "Edit text"}
-          >
-            <Edit3 className="h-4 w-4" />
-          </button>
-          <button
-            className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
-              isPaused ? "bg-gray-200" : ""
-            }`}
-            onClick={handlePauseToggle}
-            disabled={isEditing}
-            title={isPaused ? "Play" : "Pause"}
-          >
-            {isPaused ? (
-              <Play className="h-4 w-4" />
-            ) : (
-              <Pause className="h-4 w-4" />
-            )}
-          </button>
-          <button
-            className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
-            onClick={handleDirectionToggle}
-            disabled={isEditing}
-            title="Change direction"
-          >
-            {direction === "rtl" ? (
-              <ChevronLeft className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Content Area */}
       <div

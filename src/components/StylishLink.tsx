@@ -8,12 +8,14 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { ComponentHeader } from "./ComponentHeader";
 
 interface StylishLinkProps {
   initialUrl?: string;
   initialTitle?: string;
   width?: number;
   height?: number;
+  onHeaderMouseDown?: (event: React.MouseEvent) => void;
 }
 
 export const StylishLink: React.FC<StylishLinkProps> = ({
@@ -21,6 +23,7 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
   initialTitle = "",
   width = 400,
   height = 180,
+  onHeaderMouseDown,
 }) => {
   const [url, setUrl] = useState<string>(initialUrl);
   const [title, setTitle] = useState<string>(initialTitle || "Untitled Link");
@@ -100,15 +103,12 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
       className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col"
       style={{ width, height }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
-            <LinkIcon className="w-3 h-3 text-white" />
-          </div>
-          <h3 className="text-sm font-semibold text-gray-800">Stylish Link</h3>
-        </div>
-        <div className="flex items-center space-x-1">
+      <ComponentHeader
+        title="Stylish Link"
+        icon={LinkIcon}
+        iconColor="bg-indigo-500"
+        onMouseDown={onHeaderMouseDown}
+        actions={
           <button
             className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
               isEditing ? "bg-blue-100 text-blue-600" : ""
@@ -118,8 +118,8 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
           >
             <Edit3 className="h-4 w-4" />
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Content */}
       <div className="flex-grow relative">

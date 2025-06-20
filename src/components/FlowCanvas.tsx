@@ -11,6 +11,7 @@ import {
   Upload,
 } from "lucide-react";
 import { useWhiteboardStore, Connection } from "@/store/whiteboard";
+import { ComponentHeader } from "./ComponentHeader";
 
 interface Position {
   x: number;
@@ -26,11 +27,13 @@ interface ComponentPositions {
 interface FlowCanvasProps {
   width?: number;
   height?: number;
+  onHeaderMouseDown?: (event: React.MouseEvent) => void;
 }
 
 export const FlowCanvas: React.FC<FlowCanvasProps> = ({
   width = 800,
   height = 600,
+  onHeaderMouseDown,
 }) => {
   // Get state and actions from the whiteboard store
   const components = useWhiteboardStore((state) => state.components);
@@ -577,81 +580,78 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
       className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col"
       style={{ width, height }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-            <Share2 className="w-3 h-3 text-white" />
-          </div>
-          <h3 className="text-sm font-semibold text-gray-800">
-            Flow Connections
-          </h3>
-        </div>
-        <div className="flex items-center space-x-1">
-          <button
-            className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
-            onClick={() => setShowNodePalette(!showNodePalette)}
-            title="Flow Nodes"
-          >
-            <Circle className="h-4 w-4" />
-          </button>
-          <button
-            className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
-            onClick={() => setShowStats(!showStats)}
-            title="Connection Statistics"
-          >
-            <ArrowRight className="h-4 w-4" />
-          </button>
-          <button
-            className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
-            onClick={() => setShowMinimap(!showMinimap)}
-            title="Connection Minimap"
-          >
-            <Square className="h-3 w-3" />
-          </button>
-          <button
-            className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
-            onClick={() => setShowTemplates(!showTemplates)}
-            title="Flow Templates"
-          >
-            <Square className="h-4 w-4" />
-          </button>
-          <label
-            className="p-1 rounded-full hover:bg-gray-200 text-gray-500 cursor-pointer"
-            title="Import Flow"
-          >
-            <Upload className="h-4 w-4" />
-            <input
-              type="file"
-              accept=".json"
-              onChange={importFlowData}
-              className="hidden"
-            />
-          </label>
-          <button
-            className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
-            onClick={exportFlowData}
-            title="Export Flow"
-          >
-            <Download className="h-4 w-4" />
-          </button>
-          <button
-            className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
-              isCreatingConnection ? "text-blue-600 bg-blue-100" : ""
-            }`}
-            onClick={() => {
-              if (isCreatingConnection) {
-                cancelConnection();
+      <ComponentHeader
+        title="Flow Connections"
+        icon={Share2}
+        iconColor="bg-blue-500"
+        onMouseDown={onHeaderMouseDown}
+        actions={
+          <div className="flex items-center space-x-1">
+            <button
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+              onClick={() => setShowNodePalette(!showNodePalette)}
+              title="Flow Nodes"
+            >
+              <Circle className="h-4 w-4" />
+            </button>
+            <button
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+              onClick={() => setShowStats(!showStats)}
+              title="Connection Statistics"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+              onClick={() => setShowMinimap(!showMinimap)}
+              title="Connection Minimap"
+            >
+              <Square className="h-3 w-3" />
+            </button>
+            <button
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+              onClick={() => setShowTemplates(!showTemplates)}
+              title="Flow Templates"
+            >
+              <Square className="h-4 w-4" />
+            </button>
+            <label
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-500 cursor-pointer"
+              title="Import Flow"
+            >
+              <Upload className="h-4 w-4" />
+              <input
+                type="file"
+                accept=".json"
+                onChange={importFlowData}
+                className="hidden"
+              />
+            </label>
+            <button
+              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+              onClick={exportFlowData}
+              title="Export Flow"
+            >
+              <Download className="h-4 w-4" />
+            </button>
+            <button
+              className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
+                isCreatingConnection ? "text-blue-600 bg-blue-100" : ""
+              }`}
+              onClick={() => {
+                if (isCreatingConnection) {
+                  cancelConnection();
+                }
+              }}
+              title={
+                isCreatingConnection ? "Cancel connection" : "Connection mode"
               }
-            }}
-            title={
-              isCreatingConnection ? "Cancel connection" : "Connection mode"
-            }
-          >
-            <Plus className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+        }
+      />
 
       {/* SVG Connection Canvas */}
       <div className="relative flex-grow overflow-hidden">

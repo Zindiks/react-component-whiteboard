@@ -1,15 +1,18 @@
 import React, { useState } from "react";
 import confetti from "canvas-confetti";
 import { Sparkles, Star, Heart, Zap } from "lucide-react";
+import { ComponentHeader } from "./ComponentHeader";
 
 interface ConfettiButtonProps {
   width?: number;
   height?: number;
+  onHeaderMouseDown?: (event: React.MouseEvent) => void;
 }
 
 export const ConfettiButton: React.FC<ConfettiButtonProps> = ({
   width = 250,
   height = 200,
+  onHeaderMouseDown,
 }) => {
   const [clickCount, setClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState<Date | null>(null);
@@ -149,24 +152,23 @@ export const ConfettiButton: React.FC<ConfettiButtonProps> = ({
 
   return (
     <div
-      className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+      className="bg-white border border-gray-200 rounded-lg shadow-sm"
       style={{ width, height }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-white" />
+      <ComponentHeader
+        title="Confetti Button"
+        icon={Sparkles}
+        iconColor="bg-purple-500"
+        onMouseDown={onHeaderMouseDown}
+        actions={
+          <div className="text-right">
+            <p className="text-lg font-bold text-purple-600">{clickCount}</p>
+            <p className="text-xs text-gray-500">clicks</p>
           </div>
-          <h3 className="text-sm font-semibold text-gray-800">
-            Confetti Button
-          </h3>
-        </div>
-        <div className="text-right">
-          <p className="text-lg font-bold text-purple-600">{clickCount}</p>
-          <p className="text-xs text-gray-500">clicks</p>
-        </div>
-      </div>
+        }
+      />
+      
+      <div className="p-4">
 
       {/* Main Confetti Button */}
       <div className="flex justify-center mb-4">
@@ -198,6 +200,7 @@ export const ConfettiButton: React.FC<ConfettiButtonProps> = ({
         {lastClickTime && (
           <span>Last celebration: {lastClickTime.toLocaleTimeString()}</span>
         )}
+      </div>
       </div>
     </div>
   );

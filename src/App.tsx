@@ -351,21 +351,21 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
       case "note":
         return <TextNote onHeaderMouseDown={handleHeaderMouseDown} />;
       case "confetti":
-        return <ConfettiButton />;
+        return <ConfettiButton onHeaderMouseDown={handleHeaderMouseDown} />;
       case "watch":
-        return <Watch />;
+        return <Watch onHeaderMouseDown={handleHeaderMouseDown} />;
       case "scrollingtext":
-        return <ScrollingText />;
+        return <ScrollingText onHeaderMouseDown={handleHeaderMouseDown} />;
       case "youtubeVideo":
-        return <YouTubeVideo />;
+        return <YouTubeVideo onHeaderMouseDown={handleHeaderMouseDown} />;
       case "soundcloud":
-        return <SoundCloudWidget />;
+        return <SoundCloudWidget onHeaderMouseDown={handleHeaderMouseDown} />;
       case "spotify":
-        return <SpotifyWidget />;
+        return <SpotifyWidget onHeaderMouseDown={handleHeaderMouseDown} />;
       case "stylishlink":
-        return <StylishLink />;
+        return <StylishLink onHeaderMouseDown={handleHeaderMouseDown} />;
       case "flowCanvas":
-        return <FlowCanvas />;
+        return <FlowCanvas onHeaderMouseDown={handleHeaderMouseDown} />;
       default:
         return (
           <div className="w-20 bg-slate-800 rounded-md p-2">
