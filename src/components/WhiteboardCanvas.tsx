@@ -22,7 +22,9 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
   const [spacePressed, setSpacePressed] = useState(false);
   const [lastPointerPos, setLastPointerPos] = useState({ x: 0, y: 0 });
   const [doubleTapPanning, setDoubleTapPanning] = useState(false);
+  const [trackpadPanning, setTrackpadPanning] = useState(false);
   const [lastTapTime, setLastTapTime] = useState(0);
+  const [panTimeout, setPanTimeout] = useState<NodeJS.Timeout | null>(null);
   const [showZoomIndicator, setShowZoomIndicator] = useState(false);
   const [zoomIndicatorTimeout, setZoomIndicatorTimeout] =
     useState<NodeJS.Timeout | null>(null);
@@ -30,7 +32,13 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
   const [zoomCenter, setZoomCenter] = useState<{ x: number; y: number } | null>(
     null
   );
-  const [showCoordinates, setShowCoordinates] = useState(true);
+  const [showCoordinates, setShowCoordinates] = useState(true); // Enabled by default for debugging drop coordinates
+
+  // Visual drop indicator state
+  const [dropIndicator, setDropIndicator] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   const {
     transform,
@@ -94,7 +102,7 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
 
       svg
         .transition()
-        .duration(300)
+        .duration(200) // Faster transition
         .call(zoomBehaviorRef.current.scaleTo, scale, centerPoint);
 
       // Show zoom level indicator
@@ -266,9 +274,11 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
       .filter((event) => {
         // Allow zoom with Ctrl/Cmd + wheel, pinch gestures, or programmatic zoom
         if (event.type === "wheel") {
+          // Only allow wheel events if they have Ctrl/Cmd pressed for zoom
+          // This prevents D3 from handling trackpad pan events
           return event.ctrlKey || event.metaKey;
         }
-        // Allow middle-click panning
+        // Allow middle-click panning and space+click panning
         if (event.type === "mousedown") {
           return (
             event.button === 1 || // Middle mouse button
@@ -382,33 +392,20 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
       }
     });
 
-    // Enhanced wheel handling for trackpad two-finger pan
-    const handleWheel = (event: WheelEvent) => {
-      // Check for two-finger pan gesture (trackpad without ctrl/cmd)
-      if (!event.ctrlKey && !event.metaKey && Math.abs(event.deltaX) > 0) {
-        event.preventDefault();
-
-        // Pan the canvas with trackpad two-finger scroll
-        setTransform({
-          x: transform.x - event.deltaX,
-          y: transform.y - event.deltaY,
-          k: transform.k,
-        });
-      }
-      // Let D3 handle zoom with Ctrl/Cmd + wheel
-    };
-
     // Global wheel handler to ensure zoom works even when hovering over components
+    let lastPanTime = 0;
     const handleGlobalWheel = (event: WheelEvent) => {
       // Only handle if the event is within our container
       if (!containerRef.current?.contains(event.target as Node)) {
         return;
       }
 
+      const now = Date.now();
+
       // Handle zoom with Ctrl/Cmd + wheel regardless of what element is hovered
       if ((event.ctrlKey || event.metaKey) && !event.shiftKey) {
         event.preventDefault();
-        event.stopPropagation();
+        event.stopImmediatePropagation();
 
         // Calculate zoom factor
         const delta = -event.deltaY;
@@ -460,16 +457,69 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
 
           svg
             .transition()
-            .duration(150)
+            .duration(100) // Even faster for wheel zoom
             .call(zoomBehaviorRef.current.scaleTo, newScale, centerPoint);
         }
 
         showZoomLevel();
+        return;
+      }
+
+      // Handle trackpad two-finger pan (without Ctrl/Cmd)
+      // More precise trackpad detection - look for horizontal movement with smooth deltas
+      const hasHorizontalMovement = Math.abs(event.deltaX) > 0.5;
+      const hasVerticalMovement = Math.abs(event.deltaY) > 0.5;
+      const isSmooth =
+        Math.abs(event.deltaX) % 1 !== 0 || Math.abs(event.deltaY) % 1 !== 0; // Trackpad gives fractional deltas
+
+      const isTrackpadPan =
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey &&
+        (hasHorizontalMovement || hasVerticalMovement) &&
+        isSmooth && // Trackpad typically gives smooth fractional values
+        Math.abs(event.deltaX) < 100 &&
+        Math.abs(event.deltaY) < 100; // Not a wheel event
+
+      if (isTrackpadPan) {
+        // Prevent this event from reaching D3 to avoid conflicts
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        // Throttle updates to avoid too many state changes
+        if (now - lastPanTime < 16) return; // ~60fps throttling
+        lastPanTime = now;
+
+        // Set trackpad panning mode
+        if (!trackpadPanning) {
+          setTrackpadPanning(true);
+        }
+
+        // Clear any existing timeout
+        if (panTimeout) {
+          clearTimeout(panTimeout);
+        }
+
+        // Get current transform to avoid stale state
+        const currentTransform = useWhiteboardStore.getState().transform;
+
+        // Pan smoothly with adjusted sensitivity
+        const sensitivity = 1.2;
+        setTransform({
+          x: currentTransform.x - event.deltaX * sensitivity,
+          y: currentTransform.y - event.deltaY * sensitivity,
+          k: currentTransform.k,
+        });
+
+        // Timeout to exit trackpad pan mode
+        const newTimeout = setTimeout(() => {
+          setTrackpadPanning(false);
+        }, 100);
+        setPanTimeout(newTimeout);
       }
     };
 
-    // Add wheel listeners
-    container.addEventListener("wheel", handleWheel, { passive: false });
+    // Add only ONE wheel listener to prevent conflicts
     document.addEventListener("wheel", handleGlobalWheel, { passive: false });
 
     // Prevent context menu on right-click
@@ -484,8 +534,10 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
 
     // Add global mouse move handler for double-tap panning, selection, and cursor tracking
     const handleGlobalMouseMove = (event: MouseEvent) => {
-      // Update mouse position relative to container for zoom centering
-      if (containerRef.current) {
+      // Throttle mouse position updates for coordinate display (only update every 16ms)
+      if (containerRef.current && !showCoordinates) {
+        // Skip expensive updates if coordinates aren't shown
+      } else if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         setMousePosition({
           x: event.clientX - rect.left,
@@ -493,17 +545,30 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
         });
       }
 
-      if (doubleTapPanning && isPanning && !isDragging) {
+      // Handle mouse-based panning (double-click pan, NOT trackpad pan)
+      // Trackpad pan is handled entirely by wheel events
+      if (
+        doubleTapPanning &&
+        isPanning &&
+        !isDragging &&
+        lastPointerPos.x !== 0 &&
+        lastPointerPos.y !== 0
+      ) {
+        // Only pan if this was initiated by mouse/touch, not trackpad
+        // We can detect this by checking if lastPointerPos was set by a mousedown event
         const deltaX = event.clientX - lastPointerPos.x;
         const deltaY = event.clientY - lastPointerPos.y;
 
-        setTransform({
-          x: transform.x + deltaX,
-          y: transform.y + deltaY,
-          k: transform.k,
-        });
+        // Only pan if we have significant movement
+        if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+          setTransform({
+            x: transform.x + deltaX,
+            y: transform.y + deltaY,
+            k: transform.k,
+          });
 
-        setLastPointerPos({ x: event.clientX, y: event.clientY });
+          setLastPointerPos({ x: event.clientX, y: event.clientY });
+        }
       }
 
       // Handle selection rectangle update
@@ -533,22 +598,6 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
         const canvasEndX = (selectionEnd.x - transform.x) / transform.k;
         const canvasEndY = (selectionEnd.y - transform.y) / transform.k;
 
-        console.log("Selection coordinates:", {
-          screen: {
-            start: selectionStart,
-            end: selectionEnd,
-            width: Math.abs(selectionEnd.x - selectionStart.x),
-            height: Math.abs(selectionEnd.y - selectionStart.y),
-          },
-          canvas: {
-            start: { x: canvasStartX, y: canvasStartY },
-            end: { x: canvasEndX, y: canvasEndY },
-            width: Math.abs(canvasEndX - canvasStartX),
-            height: Math.abs(canvasEndY - canvasStartY),
-          },
-          transform: transform,
-        });
-
         selectComponentsInRectangle(
           canvasStartX,
           canvasStartY,
@@ -569,32 +618,13 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
       document.removeEventListener("mouseup", handleGlobalMouseUp);
       document.removeEventListener("mousemove", handleGlobalMouseMove);
       document.removeEventListener("wheel", handleGlobalWheel);
-      container.removeEventListener("wheel", handleWheel);
       container.removeEventListener("contextmenu", (e) => e.preventDefault());
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    isDragging,
-    setTransform,
-    clearSelection,
+    // Only include essential dependencies to minimize re-runs for performance
     spacePressed,
-    zoomTo,
-    setIsPanning,
-    setLastPointerPos,
-    doubleTapPanning,
-    lastTapTime,
-    isPanning,
-    lastPointerPos,
-    transform,
-    showZoomIndicator,
     showZoomLevel,
-    isSelecting,
-    selectionStart,
-    selectionEnd,
-    startSelection,
-    updateSelection,
-    endSelection,
-    selectComponentsInRectangle,
-    setMousePosition,
   ]);
 
   // Initialize the store transform when D3 is ready
@@ -609,7 +639,7 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
     }
   }, [setTransform]); // Include setTransform dependency
 
-  // Render grid pattern
+  // Render grid pattern - optimized to only update when necessary
   const renderGrid = useCallback(() => {
     if (!svgRef.current || !gridVisible) return null;
 
@@ -623,14 +653,25 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
     const { width, height } = svgRef.current.getBoundingClientRect();
     const scaledGridSize = gridSize * transform.k;
 
-    // Calculate visible area
-    const startX = Math.floor(-transform.x / scaledGridSize) * scaledGridSize;
-    const startY = Math.floor(-transform.y / scaledGridSize) * scaledGridSize;
-    const endX = startX + width + scaledGridSize;
-    const endY = startY + height + scaledGridSize;
+    // Only render grid if it's visible enough (performance optimization)
+    if (scaledGridSize < 2) return null;
+
+    // Calculate visible area with some padding
+    const padding = scaledGridSize * 2;
+    const startX =
+      Math.floor((-transform.x - padding) / scaledGridSize) * scaledGridSize;
+    const startY =
+      Math.floor((-transform.y - padding) / scaledGridSize) * scaledGridSize;
+    const endX = startX + width + padding * 2;
+    const endY = startY + height + padding * 2;
+
+    // Limit the number of grid lines for performance
+    const maxLines = 200;
+    const stepX = Math.max(scaledGridSize, (endX - startX) / maxLines);
+    const stepY = Math.max(scaledGridSize, (endY - startY) / maxLines);
 
     // Draw vertical lines
-    for (let x = startX; x <= endX; x += scaledGridSize) {
+    for (let x = startX; x <= endX; x += stepX) {
       gridGroup
         .append("line")
         .attr("x1", x + transform.x)
@@ -643,7 +684,7 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
     }
 
     // Draw horizontal lines
-    for (let y = startY; y <= endY; y += scaledGridSize) {
+    for (let y = startY; y <= endY; y += stepY) {
       gridGroup
         .append("line")
         .attr("x1", 0)
@@ -654,17 +695,38 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
         .attr("stroke-width", 0.5)
         .attr("opacity", 0.5);
     }
-  }, [gridVisible, gridSize, transform]);
+  }, [gridVisible, gridSize, transform]); // Keep all transform dependencies for correctness
 
-  // Re-render grid when transform changes
+  // Re-render grid when transform changes - throttled for performance
   useEffect(() => {
-    renderGrid();
+    const timeoutId = setTimeout(() => {
+      renderGrid();
+    }, 16); // ~60fps throttling
+
+    return () => clearTimeout(timeoutId);
   }, [renderGrid]);
 
   // Handle drag and drop from sidebar
   const handleDragOver = (event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
+
+    // Show drop indicator at cursor position
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (rect) {
+      const screenX = event.clientX - rect.left;
+      const screenY = event.clientY - rect.top;
+      const canvasPos = screenToCanvas(screenX, screenY);
+      const snappedPos = snapToGrid(canvasPos.x, canvasPos.y);
+      setDropIndicator(snappedPos);
+    }
+  };
+
+  const handleDragLeave = (event: React.DragEvent) => {
+    // Only clear indicator when leaving the container completely
+    if (!containerRef.current?.contains(event.relatedTarget as Node)) {
+      setDropIndicator(null);
+    }
   };
 
   const handleDrop = (event: React.DragEvent) => {
@@ -673,18 +735,35 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
     const componentType = event.dataTransfer.getData("text/plain");
     if (!componentType) return;
 
-    const rect = svgRef.current?.getBoundingClientRect();
+    const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
     // Convert screen coordinates to canvas coordinates
-    const x = (event.clientX - rect.left - transform.x) / transform.k;
-    const y = (event.clientY - rect.top - transform.y) / transform.k;
+    // First get the drop position relative to the container
+    const screenX = event.clientX - rect.left;
+    const screenY = event.clientY - rect.top;
 
-    // Snap to grid
-    const snappedX = Math.round(x / gridSize) * gridSize;
-    const snappedY = Math.round(y / gridSize) * gridSize;
+    // Transform to canvas coordinates using our utility function
+    const canvasPos = screenToCanvas(screenX, screenY);
 
-    onDrop(componentType, snappedX, snappedY);
+    // Snap to grid using our utility function
+    const snappedPos = snapToGrid(canvasPos.x, canvasPos.y);
+
+    // Debug logging for coordinate issues (can be removed later)
+    if (showCoordinates) {
+      console.log("Drop coordinates:", {
+        screen: { x: screenX, y: screenY },
+        canvas: canvasPos,
+        snapped: snappedPos,
+        transform,
+        gridSize,
+      });
+    }
+
+    // Clear drop indicator
+    setDropIndicator(null);
+
+    onDrop(componentType, snappedPos.x, snappedPos.y);
   };
 
   // Handle component dragging
@@ -748,11 +827,10 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
         const currentComponents = useWhiteboardStore.getState().components;
         const comp = currentComponents.find((c) => c.id === id);
         if (comp) {
-          const snappedX = Math.round(comp.x / gridSize) * gridSize;
-          const snappedY = Math.round(comp.y / gridSize) * gridSize;
+          const snappedPos = snapToGrid(comp.x, comp.y);
           useWhiteboardStore
             .getState()
-            .updateComponent(id, { x: snappedX, y: snappedY });
+            .updateComponent(id, { x: snappedPos.x, y: snappedPos.y });
         }
       });
 
@@ -1019,15 +1097,36 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
     </div>
   );
 
+  // Utility functions for coordinate transformations
+  const screenToCanvas = useCallback(
+    (screenX: number, screenY: number) => {
+      const canvasX = (screenX - transform.x) / transform.k;
+      const canvasY = (screenY - transform.y) / transform.k;
+      return { x: canvasX, y: canvasY };
+    },
+    [transform]
+  );
+
+  const snapToGrid = useCallback(
+    (x: number, y: number) => {
+      return {
+        x: Math.round(x / gridSize) * gridSize,
+        y: Math.round(y / gridSize) * gridSize,
+      };
+    },
+    [gridSize]
+  );
+
   return (
     <div
       ref={containerRef}
       className="flex-1 relative overflow-hidden bg-gray-50 min-h-screen"
       onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       style={{
         cursor:
-          isPanning || doubleTapPanning
+          isPanning || doubleTapPanning || trackpadPanning
             ? "grabbing"
             : spacePressed
             ? "grab"
@@ -1118,11 +1217,11 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
       <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 border shadow-sm text-sm text-gray-600">
         <div className="font-medium mb-1">Navigation:</div>
         <div className="space-y-1 text-xs">
-          <div>• Two-finger hover: Pan mode</div>
-          <div>• Double-click/tap: Pan mode</div>
+          <div>• Two-finger scroll: Pan</div>
+          <div>• Double-click canvas: Pan mode</div>
           <div>• Space + drag: Pan</div>
           <div>• Cmd/Ctrl + scroll: Zoom</div>
-          <div>• Pinch: Zoom</div>
+          <div>• Middle-click drag: Pan</div>
         </div>
         <div className="font-medium mb-1 mt-2">Selection:</div>
         <div className="space-y-1 text-xs">
@@ -1152,10 +1251,25 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
               Mouse: ({Math.round(mousePosition.x)},{" "}
               {Math.round(mousePosition.y)})
             </div>
+            <div>
+              Canvas: (
+              {Math.round((mousePosition.x - transform.x) / transform.k)},{" "}
+              {Math.round((mousePosition.y - transform.y) / transform.k)})
+            </div>
+            <div>
+              Transform: x:{Math.round(transform.x)}, y:
+              {Math.round(transform.y)}, k:{transform.k.toFixed(2)}
+            </div>
             {zoomCenter && (
               <div>
                 Zoom Center: ({Math.round(zoomCenter.x)},{" "}
                 {Math.round(zoomCenter.y)})
+              </div>
+            )}
+            {dropIndicator && (
+              <div>
+                Drop Target: ({Math.round(dropIndicator.x)},{" "}
+                {Math.round(dropIndicator.y)})
               </div>
             )}
           </div>
@@ -1177,6 +1291,30 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
       {showZoomIndicator && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/80 text-white px-4 py-2 rounded-lg text-lg font-mono pointer-events-none">
           {Math.round(transform.k * 100)}%
+        </div>
+      )}
+
+      {/* Drop indicator - shows where component will be placed */}
+      {dropIndicator && (
+        <div
+          className="absolute pointer-events-none z-40"
+          style={{
+            transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.k})`,
+          }}
+        >
+          <div
+            className="absolute border-2 border-green-500 bg-green-100/30 rounded"
+            style={{
+              left: dropIndicator.x,
+              top: dropIndicator.y,
+              width: 100,
+              height: 80,
+            }}
+          >
+            <div className="text-xs text-green-700 p-1 font-mono">
+              ({Math.round(dropIndicator.x)}, {Math.round(dropIndicator.y)})
+            </div>
+          </div>
         </div>
       )}
     </div>
