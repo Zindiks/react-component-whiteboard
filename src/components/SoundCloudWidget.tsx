@@ -9,6 +9,7 @@ interface SoundCloudWidgetProps {
   width?: number;
   height?: number;
   onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const SoundCloudWidget: React.FC<SoundCloudWidgetProps> = ({
@@ -16,6 +17,7 @@ export const SoundCloudWidget: React.FC<SoundCloudWidgetProps> = ({
   width = 400,
   height = 300,
   onHeaderMouseDown,
+  onDelete,
 }) => {
   const [url, setUrl] = useState<string>(initialUrl);
   const [isEditing, setIsEditing] = useState<boolean>(!initialUrl);
@@ -71,6 +73,7 @@ export const SoundCloudWidget: React.FC<SoundCloudWidgetProps> = ({
         icon={CloudRain}
         iconColor="bg-orange-500"
         onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
         actions={
           <div className="flex items-center space-x-1">
             <button

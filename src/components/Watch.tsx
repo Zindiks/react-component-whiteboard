@@ -6,6 +6,7 @@ interface WatchProps {
   width?: number;
   height?: number;
   onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 const timeZones = [
@@ -26,10 +27,11 @@ const formats = [
   { label: "24-hour", value: "24" },
 ];
 
-export const Watch: React.FC<WatchProps> = ({ 
-  width = 280, 
-  height = 200, 
-  onHeaderMouseDown 
+export const Watch: React.FC<WatchProps> = ({
+  width = 280,
+  height = 200,
+  onHeaderMouseDown,
+  onDelete,
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [timeZone, setTimeZone] = useState("local");
@@ -113,6 +115,7 @@ export const Watch: React.FC<WatchProps> = ({
         icon={Clock}
         iconColor="bg-blue-500"
         onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
         actions={
           <button
             onClick={() => setShowSettings(!showSettings)}

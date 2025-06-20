@@ -28,12 +28,14 @@ interface FlowCanvasProps {
   width?: number;
   height?: number;
   onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const FlowCanvas: React.FC<FlowCanvasProps> = ({
   width = 800,
   height = 600,
   onHeaderMouseDown,
+  onDelete,
 }) => {
   // Get state and actions from the whiteboard store
   const components = useWhiteboardStore((state) => state.components);
@@ -585,6 +587,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
         icon={Share2}
         iconColor="bg-blue-500"
         onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
         actions={
           <div className="flex items-center space-x-1">
             <button

@@ -8,12 +8,14 @@ interface TextNoteProps {
   initialContent?: string;
   onContentChange?: (content: string) => void;
   onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const TextNote: React.FC<TextNoteProps> = ({
   initialContent = "# Hello World\n\nThis is a **markdown** note. You can edit it!",
   onContentChange,
   onHeaderMouseDown,
+  onDelete,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(initialContent);
@@ -106,6 +108,7 @@ export const TextNote: React.FC<TextNoteProps> = ({
         icon={FileText}
         iconColor="bg-green-500"
         onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
         actions={
           <button
             onClick={() => setIsEditing(!isEditing)}

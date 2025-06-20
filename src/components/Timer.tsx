@@ -6,12 +6,14 @@ interface TimerProps {
   onTimeUpdate?: (time: number) => void;
   initialTime?: number;
   onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const Timer: React.FC<TimerProps> = ({
   onTimeUpdate,
   initialTime = 0,
   onHeaderMouseDown,
+  onDelete,
 }) => {
   const [time, setTime] = useState(initialTime);
   const [isRunning, setIsRunning] = useState(false);
@@ -80,6 +82,7 @@ export const Timer: React.FC<TimerProps> = ({
         icon={Clock}
         iconColor="bg-green-500"
         onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
         actions={
           <div className="flex space-x-1">
             {!isRunning ? (

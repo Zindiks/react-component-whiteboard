@@ -7,12 +7,14 @@ interface ConfettiButtonProps {
   width?: number;
   height?: number;
   onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const ConfettiButton: React.FC<ConfettiButtonProps> = ({
   width = 250,
   height = 200,
   onHeaderMouseDown,
+  onDelete,
 }) => {
   const [clickCount, setClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState<Date | null>(null);
@@ -160,6 +162,7 @@ export const ConfettiButton: React.FC<ConfettiButtonProps> = ({
         icon={Sparkles}
         iconColor="bg-purple-500"
         onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
         actions={
           <div className="text-right">
             <p className="text-lg font-bold text-purple-600">{clickCount}</p>
@@ -167,40 +170,39 @@ export const ConfettiButton: React.FC<ConfettiButtonProps> = ({
           </div>
         }
       />
-      
+
       <div className="p-4">
-
-      {/* Main Confetti Button */}
-      <div className="flex justify-center mb-4">
-        <button
-          onClick={triggerRandomConfetti}
-          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-full transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg"
-        >
-          🎉 Celebrate! 🎉
-        </button>
-      </div>
-
-      {/* Effect Options */}
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        {confettiEffects.slice(0, 6).map((effect, index) => (
+        {/* Main Confetti Button */}
+        <div className="flex justify-center mb-4">
           <button
-            key={index}
-            onClick={() => triggerSpecificConfetti(effect.effect)}
-            className="flex flex-col items-center justify-center p-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 text-xs"
-            title={effect.name}
+            onClick={triggerRandomConfetti}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-full transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg"
           >
-            <div className="text-purple-500 mb-1">{effect.icon}</div>
-            <span className="text-gray-600 text-xs">{effect.name}</span>
+            🎉 Celebrate! 🎉
           </button>
-        ))}
-      </div>
+        </div>
 
-      {/* Stats */}
-      <div className="text-center text-xs text-gray-500">
-        {lastClickTime && (
-          <span>Last celebration: {lastClickTime.toLocaleTimeString()}</span>
-        )}
-      </div>
+        {/* Effect Options */}
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          {confettiEffects.slice(0, 6).map((effect, index) => (
+            <button
+              key={index}
+              onClick={() => triggerSpecificConfetti(effect.effect)}
+              className="flex flex-col items-center justify-center p-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 text-xs"
+              title={effect.name}
+            >
+              <div className="text-purple-500 mb-1">{effect.icon}</div>
+              <span className="text-gray-600 text-xs">{effect.name}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Stats */}
+        <div className="text-center text-xs text-gray-500">
+          {lastClickTime && (
+            <span>Last celebration: {lastClickTime.toLocaleTimeString()}</span>
+          )}
+        </div>
       </div>
     </div>
   );

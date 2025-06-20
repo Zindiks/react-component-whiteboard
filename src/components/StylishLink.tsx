@@ -16,6 +16,7 @@ interface StylishLinkProps {
   width?: number;
   height?: number;
   onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const StylishLink: React.FC<StylishLinkProps> = ({
@@ -24,6 +25,7 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
   width = 400,
   height = 180,
   onHeaderMouseDown,
+  onDelete,
 }) => {
   const [url, setUrl] = useState<string>(initialUrl);
   const [title, setTitle] = useState<string>(initialTitle || "Untitled Link");
@@ -108,6 +110,7 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
         icon={LinkIcon}
         iconColor="bg-indigo-500"
         onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
         actions={
           <button
             className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${

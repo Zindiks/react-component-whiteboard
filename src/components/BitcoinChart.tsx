@@ -35,6 +35,7 @@ interface CryptoChartProps {
   height?: number;
   initialCrypto?: CryptoId;
   onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const BitcoinChart: React.FC<CryptoChartProps> = ({
@@ -42,6 +43,7 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
   height = 300,
   initialCrypto = "bitcoin",
   onHeaderMouseDown,
+  onDelete,
 }) => {
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoId>(initialCrypto);
   const [data, setData] = useState<CryptoData[]>([]);
@@ -147,6 +149,7 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
           icon={TrendingUp}
           iconColor="bg-gray-500"
           onMouseDown={onHeaderMouseDown}
+          onDelete={onDelete}
         />
         <div className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
@@ -174,6 +177,7 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
           icon={TrendingUp}
           iconColor="bg-red-500"
           onMouseDown={onHeaderMouseDown}
+          onDelete={onDelete}
         />
         <div className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
@@ -201,6 +205,7 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
         icon={TrendingUp}
         iconColor={CRYPTOCURRENCIES[selectedCrypto].color}
         onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
         actions={
           <div className="flex items-center space-x-1">
             <div className="relative">
@@ -245,12 +250,14 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
               className="p-1 rounded-full hover:bg-gray-200 text-gray-600"
               title="Refresh Data"
             >
-              <RotateCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              <RotateCw
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              />
             </button>
           </div>
         }
       />
-      
+
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="text-left flex flex-col items-start">
@@ -274,57 +281,57 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
           </div>
         </div>
 
-      {/* Chart */}
-      <div style={{ width: "100%", height: height - 80 }}>
-        <ResponsiveContainer>
-          <LineChart
-            data={data}
-            margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis
-              dataKey="time"
-              tick={{ fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              tick={{ fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-              domain={["dataMin - 100", "dataMax + 100"]}
-              tickFormatter={(value) => `$${value.toLocaleString()}`}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Line
-              type="monotone"
-              dataKey="price"
-              stroke={CRYPTOCURRENCIES[selectedCrypto].color}
-              strokeWidth={2}
-              dot={{
-                fill: CRYPTOCURRENCIES[selectedCrypto].color,
-                strokeWidth: 2,
-                r: 3,
-              }}
-              activeDot={{
-                r: 5,
-                stroke: CRYPTOCURRENCIES[selectedCrypto].color,
-                strokeWidth: 2,
-              }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+        {/* Chart */}
+        <div style={{ width: "100%", height: height - 80 }}>
+          <ResponsiveContainer>
+            <LineChart
+              data={data}
+              margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis
+                dataKey="time"
+                tick={{ fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                domain={["dataMin - 100", "dataMax + 100"]}
+                tickFormatter={(value) => `$${value.toLocaleString()}`}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Line
+                type="monotone"
+                dataKey="price"
+                stroke={CRYPTOCURRENCIES[selectedCrypto].color}
+                strokeWidth={2}
+                dot={{
+                  fill: CRYPTOCURRENCIES[selectedCrypto].color,
+                  strokeWidth: 2,
+                  r: 3,
+                }}
+                activeDot={{
+                  r: 5,
+                  stroke: CRYPTOCURRENCIES[selectedCrypto].color,
+                  strokeWidth: 2,
+                }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
 
-      {/* Footer */}
-      <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
-        <span>Live updates every 30s</span>
-        <span>
-          {data.length} data point{data.length !== 1 ? "s" : ""}
-          {data.length > 0 &&
-            ` • ${CRYPTOCURRENCIES[selectedCrypto].symbol}/USD`}
-        </span>
-      </div>
+        {/* Footer */}
+        <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
+          <span>Live updates every 30s</span>
+          <span>
+            {data.length} data point{data.length !== 1 ? "s" : ""}
+            {data.length > 0 &&
+              ` • ${CRYPTOCURRENCIES[selectedCrypto].symbol}/USD`}
+          </span>
+        </div>
       </div>
     </div>
   );

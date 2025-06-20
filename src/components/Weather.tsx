@@ -23,6 +23,7 @@ interface WeatherProps {
   longitude?: number;
   location?: string;
   onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const Weather: React.FC<WeatherProps> = ({
@@ -30,6 +31,7 @@ export const Weather: React.FC<WeatherProps> = ({
   longitude = -74.006,
   location = "New York",
   onHeaderMouseDown,
+  onDelete,
 }) => {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -123,6 +125,7 @@ export const Weather: React.FC<WeatherProps> = ({
           icon={CloudSun}
           iconColor="bg-gray-500"
           onMouseDown={onHeaderMouseDown}
+          onDelete={onDelete}
         />
         <div className="p-4 animate-pulse">
           <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
@@ -141,6 +144,7 @@ export const Weather: React.FC<WeatherProps> = ({
           icon={CloudSun}
           iconColor="bg-red-500"
           onMouseDown={onHeaderMouseDown}
+          onDelete={onDelete}
         />
         <div className="p-4 text-center">
           <Cloud className="w-8 h-8 text-gray-400 mx-auto mb-2" />
@@ -166,6 +170,7 @@ export const Weather: React.FC<WeatherProps> = ({
         icon={CloudSun}
         iconColor="bg-blue-500"
         onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
         actions={
           <button
             onClick={fetchWeather}

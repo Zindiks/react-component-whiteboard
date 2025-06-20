@@ -15,6 +15,7 @@ interface ScrollingTextProps {
   width?: number;
   height?: number;
   onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const ScrollingText: React.FC<ScrollingTextProps> = ({
@@ -22,6 +23,7 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
   width = 400,
   height = 100,
   onHeaderMouseDown,
+  onDelete,
 }) => {
   // States
   const [text, setText] = useState(initialText);
@@ -128,6 +130,7 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
         icon={ScrollText}
         iconColor="bg-pink-500"
         onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
         actions={
           <div className="flex items-center space-x-1">
             <button

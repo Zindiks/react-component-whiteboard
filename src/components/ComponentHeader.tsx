@@ -1,5 +1,5 @@
 import React from "react";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, X } from "lucide-react";
 
 interface ComponentHeaderProps {
   title: string;
@@ -7,6 +7,7 @@ interface ComponentHeaderProps {
   iconColor?: string;
   actions?: React.ReactNode;
   onMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
   className?: string;
 }
 
@@ -16,6 +17,7 @@ export const ComponentHeader: React.FC<ComponentHeaderProps> = ({
   iconColor = "bg-blue-500",
   actions,
   onMouseDown,
+  onDelete,
   className = "",
 }) => {
   return (
@@ -31,7 +33,19 @@ export const ComponentHeader: React.FC<ComponentHeaderProps> = ({
         </div>
         <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
       </div>
-      {actions && <div className="flex items-center space-x-1">{actions}</div>}
+      <div className="flex items-center space-x-1">
+        {actions}
+        {onDelete && (
+          <button
+            className="p-1 rounded-full hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors"
+            onClick={onDelete}
+            onMouseDown={(e) => e.stopPropagation()}
+            title="Delete component"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
     </div>
   );
 };

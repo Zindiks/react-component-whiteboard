@@ -9,6 +9,7 @@ interface YouTubeVideoProps {
   width?: number;
   height?: number;
   onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const YouTubeVideo: React.FC<YouTubeVideoProps> = ({
@@ -16,6 +17,7 @@ export const YouTubeVideo: React.FC<YouTubeVideoProps> = ({
   width = 400,
   height = 300,
   onHeaderMouseDown,
+  onDelete,
 }) => {
   const [url, setUrl] = useState<string>(initialUrl);
   const [isEditing, setIsEditing] = useState<boolean>(!initialUrl);
@@ -55,6 +57,7 @@ export const YouTubeVideo: React.FC<YouTubeVideoProps> = ({
         icon={Video}
         iconColor="bg-red-600"
         onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
         actions={
           <div className="flex items-center space-x-1">
             <button

@@ -341,31 +341,96 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
   const renderComponent = () => {
     switch (type) {
       case "timer":
-        return <Timer onHeaderMouseDown={handleHeaderMouseDown} />;
+        return (
+          <Timer
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
       case "weather":
-        return <Weather onHeaderMouseDown={handleHeaderMouseDown} />;
+        return (
+          <Weather
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
       case "bitcoin":
-        return <BitcoinChart onHeaderMouseDown={handleHeaderMouseDown} />;
+        return (
+          <BitcoinChart
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
       case "currency":
-        return <CurrencyConverter onHeaderMouseDown={handleHeaderMouseDown} />;
+        return (
+          <CurrencyConverter
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
       case "note":
-        return <TextNote onHeaderMouseDown={handleHeaderMouseDown} />;
+        return (
+          <TextNote
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
       case "confetti":
-        return <ConfettiButton onHeaderMouseDown={handleHeaderMouseDown} />;
+        return (
+          <ConfettiButton
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
       case "watch":
-        return <Watch onHeaderMouseDown={handleHeaderMouseDown} />;
+        return (
+          <Watch
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
       case "scrollingtext":
-        return <ScrollingText onHeaderMouseDown={handleHeaderMouseDown} />;
+        return (
+          <ScrollingText
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
       case "youtubeVideo":
-        return <YouTubeVideo onHeaderMouseDown={handleHeaderMouseDown} />;
+        return (
+          <YouTubeVideo
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
       case "soundcloud":
-        return <SoundCloudWidget onHeaderMouseDown={handleHeaderMouseDown} />;
+        return (
+          <SoundCloudWidget
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
       case "spotify":
-        return <SpotifyWidget onHeaderMouseDown={handleHeaderMouseDown} />;
+        return (
+          <SpotifyWidget
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
       case "stylishlink":
-        return <StylishLink onHeaderMouseDown={handleHeaderMouseDown} />;
+        return (
+          <StylishLink
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
       case "flowCanvas":
-        return <FlowCanvas onHeaderMouseDown={handleHeaderMouseDown} />;
+        return (
+          <FlowCanvas
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
       default:
         return (
           <div className="w-20 bg-slate-800 rounded-md p-2">
@@ -387,16 +452,6 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
       }}
     >
       {renderComponent()}
-
-      {/* Delete button - appears on hover */}
-      <button
-        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center hover:bg-red-600 z-10"
-        onClick={handleDeleteClick}
-        onMouseDown={(e) => e.stopPropagation()}
-        title="Delete component"
-      >
-        ×
-      </button>
     </div>
   );
 };

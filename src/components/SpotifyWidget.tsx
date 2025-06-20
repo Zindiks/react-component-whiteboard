@@ -9,6 +9,7 @@ interface SpotifyWidgetProps {
   width?: number;
   height?: number;
   onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
@@ -16,6 +17,7 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
   width = 400,
   height = 300,
   onHeaderMouseDown,
+  onDelete,
 }) => {
   const [url, setUrl] = useState<string>(initialUrl);
   const [isEditing, setIsEditing] = useState<boolean>(!initialUrl);
@@ -101,6 +103,7 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
         icon={Music}
         iconColor="bg-green-500"
         onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
         actions={
           <div className="flex items-center space-x-1">
             <button

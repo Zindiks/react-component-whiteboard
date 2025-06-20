@@ -10,6 +10,7 @@ interface CurrencyConverterProps {
   width?: number;
   height?: number;
   onHeaderMouseDown?: (event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 }
 
 const currencies = [
@@ -29,6 +30,7 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
   width = 320,
   height = 280,
   onHeaderMouseDown,
+  onDelete,
 }) => {
   const [amount, setAmount] = useState<string>("100");
   const [fromCurrency, setFromCurrency] = useState<string>("USD");
@@ -112,6 +114,7 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
           icon={DollarSign}
           iconColor="bg-gray-500"
           onMouseDown={onHeaderMouseDown}
+          onDelete={onDelete}
         />
         <div className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
@@ -134,6 +137,7 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
           icon={DollarSign}
           iconColor="bg-red-500"
           onMouseDown={onHeaderMouseDown}
+          onDelete={onDelete}
         />
         <div className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
@@ -161,6 +165,7 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
         icon={DollarSign}
         iconColor="bg-green-500"
         onMouseDown={onHeaderMouseDown}
+        onDelete={onDelete}
         actions={
           <button
             onClick={fetchExchangeRates}
