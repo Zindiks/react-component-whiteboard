@@ -1,4 +1,12 @@
-import { Clock, Cloud, Type, Video, Music, Link as LinkIcon, Share2 } from "lucide-react";
+import {
+  Clock,
+  Cloud,
+  Type,
+  Video,
+  Music,
+  Link as LinkIcon,
+  Share2,
+} from "lucide-react";
 import { Timer } from "@/components/Timer";
 import { Weather } from "@/components/Weather";
 import { ScrollingText } from "@/components/ScrollingText";
@@ -98,10 +106,12 @@ export const COMPONENT_REGISTRY: ComponentRegistry = {
 
   flowCanvas: {
     name: "Flow Connections",
-    component: FlowCanvas as unknown as React.ComponentType<Record<string, unknown>>,
+    component: FlowCanvas as unknown as React.ComponentType<
+      Record<string, unknown>
+    >,
     defaultProps: {
       width: 600,
-      height: 300
+      height: 300,
     },
     icon: <Share2 className="w-5 h-5 text-blue-500" />,
     category: "Utilities",

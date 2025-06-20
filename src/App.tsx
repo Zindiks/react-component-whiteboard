@@ -42,7 +42,15 @@ const CustomGrid = () => {
     { id: 10, x: 800, y: 200, type: "soundcloud", zIndex: 10 },
     { id: 11, x: 300, y: 600, type: "spotify", zIndex: 11 },
     { id: 12, x: 600, y: 600, type: "stylishlink", zIndex: 12 },
-    { id: 13, x: 800, y: 600, type: "flowCanvas", width: 600, height: 300, zIndex: 13 },
+    {
+      id: 13,
+      x: 800,
+      y: 600,
+      type: "flowCanvas",
+      width: 600,
+      height: 300,
+      zIndex: 13,
+    },
   ]);
   const [selectedComponents, setSelectedComponents] = useState<number[]>([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
@@ -107,7 +115,7 @@ const CustomGrid = () => {
   const handleDragStart = (id: number) => {
     // Bring the component to the front when starting to drag
     bringToFront(id);
-    
+
     if (isMultiSelectMode && selectedComponents.includes(id)) {
       const positions = selectedComponents.map((selectedId) => {
         const component = components.find((c) => c.id === selectedId);
@@ -182,7 +190,7 @@ const CustomGrid = () => {
   const addNewComponent = (type: string) => {
     const newId = Math.max(...components.map((c) => c.id)) + 1;
     const highestZIndex = Math.max(...components.map((c) => c.zIndex || 0), 0);
-    
+
     console.log(`Adding new ${type} component with ID: ${newId}`);
     setComponents((prev) => [
       ...prev,
@@ -234,14 +242,14 @@ const CustomGrid = () => {
               type={component.type}
               onDrag={handleDrag}
               onDragStart={handleDragStart}
-            onSelect={handleSelect}
-            onDelete={handleDeleteComponent}
-            selected={selectedComponents.includes(component.id)}
-            transform={transform}
-            isMultiSelectMode={isMultiSelectMode}
-            zIndex={component.zIndex || 0}
-          />
-        ))}
+              onSelect={handleSelect}
+              onDelete={handleDeleteComponent}
+              selected={selectedComponents.includes(component.id)}
+              transform={transform}
+              isMultiSelectMode={isMultiSelectMode}
+              zIndex={component.zIndex || 0}
+            />
+          ))}
       </div>
       <ControlPanel onZoom={handleZoom} isMultiSelectMode={isMultiSelectMode} />
       <Shelf onAddComponent={addNewComponent} />
@@ -281,7 +289,8 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
 
-  const handleMouseDown = (event: React.MouseEvent) => {
+  // Header-specific mouse down handler for dragging
+  const handleHeaderMouseDown = (event: React.MouseEvent) => {
     if (isMultiSelectMode && !selected) {
       onSelect(id);
     } else {
@@ -332,15 +341,15 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
   const renderComponent = () => {
     switch (type) {
       case "timer":
-        return <Timer />;
+        return <Timer onHeaderMouseDown={handleHeaderMouseDown} />;
       case "weather":
-        return <Weather />;
+        return <Weather onHeaderMouseDown={handleHeaderMouseDown} />;
       case "bitcoin":
-        return <BitcoinChart />;
+        return <BitcoinChart onHeaderMouseDown={handleHeaderMouseDown} />;
       case "currency":
-        return <CurrencyConverter />;
+        return <CurrencyConverter onHeaderMouseDown={handleHeaderMouseDown} />;
       case "note":
-        return <TextNote />;
+        return <TextNote onHeaderMouseDown={handleHeaderMouseDown} />;
       case "confetti":
         return <ConfettiButton />;
       case "watch":
@@ -368,7 +377,7 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
 
   return (
     <div
-      className={`absolute pointer-events-auto cursor-move ${
+      className={`absolute pointer-events-auto ${
         selected ? "ring-2 ring-blue-500" : ""
       } group`}
       style={{
@@ -376,7 +385,6 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
         top: `${y}px`,
         zIndex: zIndex,
       }}
-      onMouseDown={handleMouseDown}
     >
       {renderComponent()}
 

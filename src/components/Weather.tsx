@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Cloud,
   Sun,
@@ -6,8 +6,9 @@ import {
   Snowflake,
   MapPin,
   RefreshCw,
+  CloudSun,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ComponentHeader } from "./ComponentHeader";
 
 interface WeatherData {
   temperature: number;
@@ -21,19 +22,21 @@ interface WeatherProps {
   latitude?: number;
   longitude?: number;
   location?: string;
+  onHeaderMouseDown?: (event: React.MouseEvent) => void;
 }
 
 export const Weather: React.FC<WeatherProps> = ({
   latitude = 40.7128,
   longitude = -74.006,
   location = "New York",
+  onHeaderMouseDown,
 }) => {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const fetchWeather = async () => {
+  const fetchWeather = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -64,7 +67,7 @@ export const Weather: React.FC<WeatherProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [latitude, longitude, location]);
 
   useEffect(() => {
     fetchWeather();
@@ -73,7 +76,7 @@ export const Weather: React.FC<WeatherProps> = ({
     const interval = setInterval(fetchWeather, 10 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [latitude, longitude]);
+  }, [fetchWeather]);
 
   const getWeatherIcon = (code: number) => {
     // WMO Weather interpretation codes
@@ -114,8 +117,14 @@ export const Weather: React.FC<WeatherProps> = ({
 
   if (loading && !weather) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200 min-w-[250px]">
-        <div className="animate-pulse">
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 min-w-[250px]">
+        <ComponentHeader
+          title="Weather"
+          icon={CloudSun}
+          iconColor="bg-gray-500"
+          onMouseDown={onHeaderMouseDown}
+        />
+        <div className="p-4 animate-pulse">
           <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
           <div className="h-8 bg-gray-200 rounded mb-2"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -126,14 +135,23 @@ export const Weather: React.FC<WeatherProps> = ({
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-4 border border-red-200 min-w-[250px]">
-        <div className="text-center">
+      <div className="bg-white rounded-lg shadow-md border border-red-200 min-w-[250px]">
+        <ComponentHeader
+          title="Weather"
+          icon={CloudSun}
+          iconColor="bg-red-500"
+          onMouseDown={onHeaderMouseDown}
+        />
+        <div className="p-4 text-center">
           <Cloud className="w-8 h-8 text-gray-400 mx-auto mb-2" />
           <div className="text-sm text-red-600 mb-2">{error}</div>
-          <Button onClick={fetchWeather} size="sm" variant="outline">
-            <RefreshCw className="w-4 h-4 mr-1" />
+          <button
+            onClick={fetchWeather}
+            className="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-sm"
+          >
+            <RefreshCw className="w-4 h-4 mr-1 inline" />
             Retry
-          </Button>
+          </button>
         </div>
       </div>
     );
@@ -142,53 +160,63 @@ export const Weather: React.FC<WeatherProps> = ({
   if (!weather) return null;
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200 min-w-[250px]">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <MapPin className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">
-            {weather.location}
-          </span>
-        </div>
-        <Button
-          onClick={fetchWeather}
-          size="sm"
-          variant="ghost"
-          disabled={loading}
-          className="p-1 h-auto"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-        </Button>
-      </div>
+    <div className="bg-white rounded-lg shadow-md border border-gray-200 min-w-[250px]">
+      <ComponentHeader
+        title="Weather"
+        icon={CloudSun}
+        iconColor="bg-blue-500"
+        onMouseDown={onHeaderMouseDown}
+        actions={
+          <button
+            onClick={fetchWeather}
+            disabled={loading}
+            className="p-1 rounded-full hover:bg-gray-200 text-gray-600"
+            title="Refresh Weather"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+          </button>
+        }
+      />
 
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <div className="text-3xl font-bold text-gray-800">
-            {weather.temperature}°C
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2">
+            <MapPin className="w-4 h-4 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">
+              {weather.location}
+            </span>
           </div>
-          <div className="text-sm text-gray-600">
-            {getWeatherDescription(weather.weatherCode)}
+        </div>
+
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-3xl font-bold text-gray-800">
+              {weather.temperature}°C
+            </div>
+            <div className="text-sm text-gray-600">
+              {getWeatherDescription(weather.weatherCode)}
+            </div>
+          </div>
+          <div className="flex-shrink-0">
+            {getWeatherIcon(weather.weatherCode)}
           </div>
         </div>
-        <div className="flex-shrink-0">
-          {getWeatherIcon(weather.weatherCode)}
-        </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-        <div>
-          <span className="font-medium">Wind:</span> {weather.windSpeed} km/h
+        <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+          <div>
+            <span className="font-medium">Wind:</span> {weather.windSpeed} km/h
+          </div>
+          <div>
+            <span className="font-medium">Humidity:</span> {weather.humidity}%
+          </div>
         </div>
-        <div>
-          <span className="font-medium">Humidity:</span> {weather.humidity}%
-        </div>
-      </div>
 
-      {lastUpdated && (
-        <div className="text-xs text-gray-400 mt-2 text-center">
-          Updated: {lastUpdated.toLocaleTimeString()}
-        </div>
-      )}
+        {lastUpdated && (
+          <div className="text-xs text-gray-400 mt-2 text-center">
+            Updated: {lastUpdated.toLocaleTimeString()}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
