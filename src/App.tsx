@@ -15,6 +15,7 @@ import { SoundCloudWidget } from "./components/SoundCloudWidget";
 import { SpotifyWidget } from "./components/SpotifyWidget";
 import { StylishLink } from "./components/StylishLink";
 import { FlowCanvas } from "./components/FlowCanvas";
+import { FlowNode } from "./components/FlowNode";
 
 const CustomGrid = () => {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -51,6 +52,11 @@ const CustomGrid = () => {
       height: 300,
       zIndex: 13,
     },
+    // Flow nodes for demonstration
+    { id: 14, x: 1400, y: 100, type: "flowNodeStart", zIndex: 14 },
+    { id: 15, x: 1550, y: 100, type: "flowNodeProcess", zIndex: 15 },
+    { id: 16, x: 1700, y: 100, type: "flowNodeDecision", zIndex: 16 },
+    { id: 17, x: 1850, y: 100, type: "flowNodeEnd", zIndex: 17 },
   ]);
   const [selectedComponents, setSelectedComponents] = useState<number[]>([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
@@ -427,6 +433,46 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({
       case "flowCanvas":
         return (
           <FlowCanvas
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
+      case "flowNodeStart":
+        return (
+          <FlowNode
+            nodeType="start"
+            label="Start"
+            color="#10b981"
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
+      case "flowNodeProcess":
+        return (
+          <FlowNode
+            nodeType="process"
+            label="Process"
+            color="#3b82f6"
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
+      case "flowNodeDecision":
+        return (
+          <FlowNode
+            nodeType="decision"
+            label="Decision"
+            color="#f59e0b"
+            onHeaderMouseDown={handleHeaderMouseDown}
+            onDelete={handleDeleteClick}
+          />
+        );
+      case "flowNodeEnd":
+        return (
+          <FlowNode
+            nodeType="end"
+            label="End"
+            color="#ef4444"
             onHeaderMouseDown={handleHeaderMouseDown}
             onDelete={handleDeleteClick}
           />

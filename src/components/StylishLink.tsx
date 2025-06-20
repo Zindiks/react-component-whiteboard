@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Card, CardContent } from "./ui/card";
 import { ComponentHeader } from "./ComponentHeader";
 
 interface StylishLinkProps {
@@ -101,8 +103,8 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
   };
 
   return (
-    <div
-      className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col"
+    <Card
+      className="border-gray-200 overflow-hidden flex flex-col"
       style={{ width, height }}
     >
       <ComponentHeader
@@ -112,27 +114,27 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
         onMouseDown={onHeaderMouseDown}
         onDelete={onDelete}
         actions={
-          <button
-            className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
-              isEditing ? "bg-blue-100 text-blue-600" : ""
-            }`}
+          <Button
+            variant={isEditing ? "default" : "ghost"}
+            size="sm"
+            className="h-6 w-6 p-0"
             onClick={() => setIsEditing(!isEditing)}
-            title={isEditing ? "Save" : "Edit link"}
           >
             <Edit3 className="h-4 w-4" />
-          </button>
+          </Button>
         }
       />
 
       {/* Content */}
-      <div className="flex-grow relative">
+      <CardContent className="flex-grow relative p-0">
         {isEditing ? (
           <div className="p-4 h-full flex flex-col">
             <div className="mb-3">
-              <label className="text-xs text-gray-600 mb-1 block">
+              <Label htmlFor="link-title" className="text-xs mb-1">
                 Link Title:
-              </label>
+              </Label>
               <Input
+                id="link-title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -142,8 +144,11 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
             </div>
 
             <div className="mb-4">
-              <label className="text-xs text-gray-600 mb-1 block">URL:</label>
+              <Label htmlFor="link-url" className="text-xs mb-1">
+                URL:
+              </Label>
               <Input
+                id="link-url"
                 type="text"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
@@ -166,7 +171,7 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
           >
             <div className="flex-grow flex flex-col items-center justify-center">
               <div
-                className="w-full bg-white rounded-lg border border-gray-100 shadow-sm p-4 transition-all duration-300 hover:shadow-md"
+                className="w-full bg-card rounded-lg border shadow-sm p-4 transition-all duration-300 hover:shadow-md cursor-pointer"
                 style={{ transform: isHovered ? "translateY(-2px)" : "none" }}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
@@ -194,27 +199,28 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
                   >
                     {title || "Visit Link"}
                   </span>
-                  <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="text-xs text-gray-500 truncate max-w-[80%]">
+                  <div className="text-xs text-muted-foreground truncate max-w-[80%]">
                     {getDomainFromUrl(url)}
                   </div>
-                  <button
-                    className="text-gray-400 hover:text-gray-600 p-1 rounded-full"
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleCopyUrl();
                     }}
-                    title="Copy link"
                   >
                     {copied ? (
-                      <span className="text-xs text-green-500">Copied!</span>
+                      <span className="text-xs text-green-500">✓</span>
                     ) : (
                       <Copy className="w-3 h-3" />
                     )}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -236,8 +242,8 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

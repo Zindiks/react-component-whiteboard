@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Music, Edit3, ExternalLink } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Card, CardContent } from "./ui/card";
 import { ComponentHeader } from "./ComponentHeader";
 
 interface SpotifyWidgetProps {
@@ -94,8 +96,8 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
   };
 
   return (
-    <div
-      className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col"
+    <Card
+      className="border-gray-200 overflow-hidden flex flex-col"
       style={{ width, height }}
     >
       <ComponentHeader
@@ -106,37 +108,38 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
         onDelete={onDelete}
         actions={
           <div className="flex items-center space-x-1">
-            <button
-              className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
-                isEditing ? "bg-blue-100 text-blue-600" : ""
-              }`}
+            <Button
+              variant={isEditing ? "default" : "ghost"}
+              size="sm"
+              className="h-6 w-6 p-0"
               onClick={() => setIsEditing(!isEditing)}
-              title={isEditing ? "Save" : "Edit URL"}
             >
               <Edit3 className="h-4 w-4" />
-            </button>
+            </Button>
             {url && !isEditing && (
-              <button
-                className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
                 onClick={handleOpenInNewTab}
-                title="Open in Spotify"
               >
                 <ExternalLink className="h-4 w-4" />
-              </button>
+              </Button>
             )}
           </div>
         }
       />
 
       {/* Content */}
-      <div className="flex-grow relative">
+      <CardContent className="flex-grow relative p-0">
         {isEditing ? (
           <div className="p-4 h-full flex flex-col">
-            <label className="text-sm text-gray-600 mb-2">
+            <Label htmlFor="spotify-url" className="text-sm mb-2">
               Enter Spotify URL:
-            </label>
+            </Label>
             <div className="flex gap-2 mb-2">
               <Input
+                id="spotify-url"
                 type="text"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
@@ -147,15 +150,13 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
                 Save
               </Button>
             </div>
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-muted-foreground mt-1">
               Paste a Spotify track, album, playlist, or artist URL
             </div>
             {embedUrl && (
               <div className="mt-4">
-                <p className="text-xs font-medium text-gray-700 mb-1">
-                  Preview:
-                </p>
-                <div className="border border-gray-200 rounded h-20 overflow-hidden">
+                <p className="text-xs font-medium mb-1">Preview:</p>
+                <div className="border rounded h-20 overflow-hidden">
                   <iframe
                     src={embedUrl}
                     width="100%"
@@ -179,14 +180,14 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
             className="absolute top-0 left-0 w-full h-full border-0"
           ></iframe>
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-            <p className="text-gray-500">
+          <div className="absolute inset-0 flex items-center justify-center bg-muted">
+            <p className="text-muted-foreground">
               No track set. Click the edit button to add a Spotify URL.
             </p>
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

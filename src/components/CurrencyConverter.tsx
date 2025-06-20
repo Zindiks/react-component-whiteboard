@@ -1,6 +1,17 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ArrowLeftRight, RefreshCw, DollarSign } from "lucide-react";
 import { ComponentHeader } from "./ComponentHeader";
+import { Card, CardContent } from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 interface ExchangeRates {
   [key: string]: number;
@@ -105,10 +116,7 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
 
   if (loading && Object.keys(exchangeRates).length === 0) {
     return (
-      <div
-        className="bg-white border border-gray-200 rounded-lg shadow-sm"
-        style={{ width, height }}
-      >
+      <Card className="border-gray-200" style={{ width, height }}>
         <ComponentHeader
           title="Currency Converter"
           icon={DollarSign}
@@ -116,50 +124,45 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
           onMouseDown={onHeaderMouseDown}
           onDelete={onDelete}
         />
-        <div className="p-4 flex items-center justify-center h-full">
+        <CardContent className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
-            <RefreshCw className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Loading exchange rates...</p>
+            <RefreshCw className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">
+              Loading exchange rates...
+            </p>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div
-        className="bg-white border border-red-200 rounded-lg shadow-sm"
-        style={{ width, height }}
-      >
+      <Card className="border-destructive/50" style={{ width, height }}>
         <ComponentHeader
           title="Currency Converter"
           icon={DollarSign}
-          iconColor="bg-red-500"
+          iconColor="bg-destructive"
           onMouseDown={onHeaderMouseDown}
           onDelete={onDelete}
         />
-        <div className="p-4 flex items-center justify-center h-full">
+        <CardContent className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
-            <p className="text-sm text-red-600 mb-2">Error loading rates:</p>
-            <p className="text-xs text-red-500 mb-3">{error}</p>
-            <button
-              onClick={fetchExchangeRates}
-              className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
-            >
+            <p className="text-sm text-destructive mb-2">
+              Error loading rates:
+            </p>
+            <p className="text-xs text-muted-foreground mb-3">{error}</p>
+            <Button onClick={fetchExchangeRates} size="sm">
               Retry
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div
-      className="bg-white border border-gray-200 rounded-lg shadow-sm"
-      style={{ width, height }}
-    >
+    <Card className="border-gray-200" style={{ width, height }}>
       <ComponentHeader
         title="Currency Converter"
         icon={DollarSign}
@@ -167,27 +170,29 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
         onMouseDown={onHeaderMouseDown}
         onDelete={onDelete}
         actions={
-          <button
+          <Button
             onClick={fetchExchangeRates}
-            className="p-1 rounded-full hover:bg-gray-200 text-gray-600"
-            title="Refresh rates"
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          </button>
+          </Button>
         }
       />
 
-      <div className="p-4">
+      <CardContent className="p-4">
         {/* Amount Input */}
         <div className="mb-3">
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <Label htmlFor="amount" className="text-xs font-medium">
             Amount
-          </label>
-          <input
+          </Label>
+          <Input
+            id="amount"
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="text-sm"
             placeholder="Enter amount"
           />
         </div>
@@ -195,71 +200,78 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
         {/* Currency Selection */}
         <div className="grid grid-cols-2 gap-2 mb-3">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              From
-            </label>
-            <select
-              value={fromCurrency}
-              onChange={(e) => setFromCurrency(e.target.value)}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              {currencies.map((currency) => (
-                <option key={currency.code} value={currency.code}>
-                  {currency.code} - {currency.name}
-                </option>
-              ))}
-            </select>
+            <Label className="text-xs font-medium">From</Label>
+            <Select value={fromCurrency} onValueChange={setFromCurrency}>
+              <SelectTrigger className="text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {currencies.map((currency) => (
+                  <SelectItem
+                    key={currency.code}
+                    value={currency.code}
+                    className="text-xs"
+                  >
+                    {currency.code} - {currency.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              To
-            </label>
-            <select
-              value={toCurrency}
-              onChange={(e) => setToCurrency(e.target.value)}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              {currencies.map((currency) => (
-                <option key={currency.code} value={currency.code}>
-                  {currency.code} - {currency.name}
-                </option>
-              ))}
-            </select>
+            <Label className="text-xs font-medium">To</Label>
+            <Select value={toCurrency} onValueChange={setToCurrency}>
+              <SelectTrigger className="text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {currencies.map((currency) => (
+                  <SelectItem
+                    key={currency.code}
+                    value={currency.code}
+                    className="text-xs"
+                  >
+                    {currency.code} - {currency.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         {/* Swap Button */}
         <div className="flex justify-center mb-3">
-          <button
+          <Button
             onClick={swapCurrencies}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-            title="Swap currencies"
+            variant="ghost"
+            size="sm"
+            className="p-2 h-8 w-8"
           >
             <ArrowLeftRight className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         {/* Result */}
-        <div className="bg-gray-50 rounded-lg p-3 mb-3">
+        <div className="bg-muted rounded-lg p-3 mb-3">
           <div className="text-center">
-            <p className="text-lg font-bold text-gray-900">
+            <p className="text-lg font-bold">
               {convertedAmount !== null
                 ? formatCurrency(convertedAmount, toCurrency)
                 : "---"}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               1 {fromCurrency} = {getExchangeRate().toFixed(4)} {toCurrency}
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="text-xs text-gray-500 text-center">
+        <div className="text-xs text-muted-foreground text-center">
           {lastUpdated && (
             <span>Updated: {lastUpdated.toLocaleTimeString()}</span>
           )}
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

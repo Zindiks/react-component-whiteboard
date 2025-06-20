@@ -3,15 +3,15 @@ import {
   Share2,
   Plus,
   Trash2,
-  Circle,
   Square,
-  Diamond,
   ArrowRight,
   Download,
   Upload,
 } from "lucide-react";
 import { useWhiteboardStore, Connection } from "@/store/whiteboard";
 import { ComponentHeader } from "./ComponentHeader";
+import { Card } from "./ui/card";
+import { Button } from "./ui/button";
 
 interface Position {
   x: number;
@@ -107,7 +107,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
 
   const [showTemplates, setShowTemplates] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [showNodePalette, setShowNodePalette] = useState(false);
+  // Remove showNodePalette since nodes are now individual draggable components
   const [showStats, setShowStats] = useState(false);
   const [showMinimap, setShowMinimap] = useState(false);
 
@@ -449,20 +449,6 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
     );
   };
 
-  // Add flow node to canvas
-  const addFlowNode = (type: "start" | "process" | "decision" | "end") => {
-    const newNode = {
-      id: `node-${Date.now()}`,
-      x: Math.random() * (width - 100) + 50,
-      y: Math.random() * (height - 200) + 100,
-      type,
-      label: type.charAt(0).toUpperCase() + type.slice(1),
-    };
-
-    // Here you could add the node to your component store
-    console.log("Adding flow node:", newNode);
-  };
-
   // Connection validation
   const validateConnection = (fromId: string, toId: string): boolean => {
     // Prevent self-connections
@@ -577,9 +563,9 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
   };
 
   return (
-    <div
+    <Card
       ref={containerRef}
-      className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col"
+      className="border-gray-200 flex flex-col"
       style={{ width, height }}
     >
       <ComponentHeader
@@ -590,68 +576,61 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
         onDelete={onDelete}
         actions={
           <div className="flex items-center space-x-1">
-            <button
-              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
-              onClick={() => setShowNodePalette(!showNodePalette)}
-              title="Flow Nodes"
-            >
-              <Circle className="h-4 w-4" />
-            </button>
-            <button
-              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
               onClick={() => setShowStats(!showStats)}
-              title="Connection Statistics"
             >
               <ArrowRight className="h-4 w-4" />
-            </button>
-            <button
-              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
               onClick={() => setShowMinimap(!showMinimap)}
-              title="Connection Minimap"
             >
               <Square className="h-3 w-3" />
-            </button>
-            <button
-              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
               onClick={() => setShowTemplates(!showTemplates)}
-              title="Flow Templates"
             >
               <Square className="h-4 w-4" />
-            </button>
-            <label
-              className="p-1 rounded-full hover:bg-gray-200 text-gray-500 cursor-pointer"
-              title="Import Flow"
-            >
-              <Upload className="h-4 w-4" />
+            </Button>
+            <label className="cursor-pointer">
               <input
                 type="file"
                 accept=".json"
                 onChange={importFlowData}
                 className="hidden"
               />
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                <Upload className="h-4 w-4" />
+              </Button>
             </label>
-            <button
-              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
               onClick={exportFlowData}
-              title="Export Flow"
             >
               <Download className="h-4 w-4" />
-            </button>
-            <button
-              className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
-                isCreatingConnection ? "text-blue-600 bg-blue-100" : ""
-              }`}
+            </Button>
+            <Button
+              variant={isCreatingConnection ? "default" : "ghost"}
+              size="sm"
+              className="h-6 w-6 p-0"
               onClick={() => {
                 if (isCreatingConnection) {
                   cancelConnection();
                 }
               }}
-              title={
-                isCreatingConnection ? "Cancel connection" : "Connection mode"
-              }
             >
               <Plus className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         }
       />
@@ -678,49 +657,6 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
             </div>
             <button
               onClick={() => setShowTemplates(false)}
-              className="mt-2 text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded w-full"
-            >
-              Close
-            </button>
-          </div>
-        )}
-
-        {/* Node Palette Panel */}
-        {showNodePalette && (
-          <div className="absolute top-4 left-4 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20 w-48">
-            <h4 className="text-sm font-semibold mb-2">Flow Nodes</h4>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => addFlowNode("start")}
-                className="p-2 border border-gray-200 rounded hover:bg-green-50 hover:border-green-300 text-center"
-              >
-                <Circle className="w-6 h-6 mx-auto mb-1 text-green-600" />
-                <div className="text-xs">Start</div>
-              </button>
-              <button
-                onClick={() => addFlowNode("process")}
-                className="p-2 border border-gray-200 rounded hover:bg-blue-50 hover:border-blue-300 text-center"
-              >
-                <Square className="w-6 h-6 mx-auto mb-1 text-blue-600" />
-                <div className="text-xs">Process</div>
-              </button>
-              <button
-                onClick={() => addFlowNode("decision")}
-                className="p-2 border border-gray-200 rounded hover:bg-yellow-50 hover:border-yellow-300 text-center"
-              >
-                <Diamond className="w-6 h-6 mx-auto mb-1 text-yellow-600" />
-                <div className="text-xs">Decision</div>
-              </button>
-              <button
-                onClick={() => addFlowNode("end")}
-                className="p-2 border border-gray-200 rounded hover:bg-red-50 hover:border-red-300 text-center"
-              >
-                <Circle className="w-6 h-6 mx-auto mb-1 text-red-600" />
-                <div className="text-xs">End</div>
-              </button>
-            </div>
-            <button
-              onClick={() => setShowNodePalette(false)}
               className="mt-2 text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded w-full"
             >
               Close
@@ -1134,7 +1070,7 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
         {/* Minimap component */}
         <ConnectionMinimap width={200} height={150} />
       </div>
-    </div>
+    </Card>
   );
 };
 

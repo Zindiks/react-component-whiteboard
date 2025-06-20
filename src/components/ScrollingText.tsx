@@ -7,8 +7,13 @@ import {
   ChevronRight,
   RefreshCw,
   ScrollText,
+  Minus,
+  Plus,
 } from "lucide-react";
 import { ComponentHeader } from "./ComponentHeader";
+import { Card } from "./ui/card";
+import { Button } from "./ui/button";
+import { Textarea } from "./ui/textarea";
 
 interface ScrollingTextProps {
   initialText?: string;
@@ -121,10 +126,7 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
   };
 
   return (
-    <div
-      className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
-      style={{ width, height }}
-    >
+    <Card className="border-gray-200 overflow-hidden" style={{ width, height }}>
       <ComponentHeader
         title="Scrolling Text"
         icon={ScrollText}
@@ -133,41 +135,40 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
         onDelete={onDelete}
         actions={
           <div className="flex items-center space-x-1">
-            <button
-              className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
-                isEditing ? "bg-blue-100 text-blue-600" : ""
-              }`}
+            <Button
+              variant={isEditing ? "default" : "ghost"}
+              size="sm"
+              className="h-6 w-6 p-0"
               onClick={handleEditToggle}
-              title={isEditing ? "Save" : "Edit text"}
             >
               <Edit3 className="h-4 w-4" />
-            </button>
-            <button
-              className={`p-1 rounded-full hover:bg-gray-200 text-gray-500 ${
-                isPaused ? "bg-gray-200" : ""
-              }`}
+            </Button>
+            <Button
+              variant={isPaused ? "default" : "ghost"}
+              size="sm"
+              className="h-6 w-6 p-0"
               onClick={handlePauseToggle}
               disabled={isEditing}
-              title={isPaused ? "Play" : "Pause"}
             >
               {isPaused ? (
                 <Play className="h-4 w-4" />
               ) : (
                 <Pause className="h-4 w-4" />
               )}
-            </button>
-            <button
-              className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
               onClick={handleDirectionToggle}
               disabled={isEditing}
-              title="Change direction"
             >
               {direction === "rtl" ? (
                 <ChevronLeft className="h-4 w-4" />
               ) : (
                 <ChevronRight className="h-4 w-4" />
               )}
-            </button>
+            </Button>
           </div>
         }
       />
@@ -179,25 +180,21 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
         ref={containerRef}
       >
         {isEditing ? (
-          <textarea
+          <Textarea
             ref={textareaRef}
             defaultValue={text}
-            className="w-full h-full p-3 text-sm border-none resize-none focus:outline-none"
+            className="w-full h-full border-none resize-none text-base rounded-none"
             placeholder="Enter text to display..."
-            style={{ fontSize: "16px" }}
           />
         ) : (
           <>
             <div
               ref={textRef}
-              className="absolute whitespace-nowrap"
+              className="absolute whitespace-nowrap text-lg font-medium"
               style={{
                 left: `${position}px`,
                 top: "50%",
                 transform: "translateY(-50%)",
-                fontSize: "18px",
-                fontWeight: 500,
-                color: "#333",
               }}
             >
               {text || "Enter some text..."}
@@ -208,26 +205,32 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
 
       {/* Speed Controls */}
       {!isEditing && (
-        <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-2 py-1">
+        <div className="flex items-center justify-between border-t bg-muted px-2 py-1">
           <div className="flex items-center space-x-1">
-            <button
-              className="p-1 rounded hover:bg-gray-200 text-gray-500"
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
               onClick={() => handleSpeedChange(speed - 1)}
               disabled={speed <= 1}
             >
-              <span className="text-xs font-bold">-</span>
-            </button>
-            <div className="text-xs text-gray-600">Speed: {speed}</div>
-            <button
-              className="p-1 rounded hover:bg-gray-200 text-gray-500"
+              <Minus className="h-3 w-3" />
+            </Button>
+            <div className="text-xs text-muted-foreground">Speed: {speed}</div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
               onClick={() => handleSpeedChange(speed + 1)}
               disabled={speed >= 10}
             >
-              <span className="text-xs font-bold">+</span>
-            </button>
+              <Plus className="h-3 w-3" />
+            </Button>
           </div>
-          <button
-            className="p-1 rounded-full hover:bg-gray-200 text-gray-500"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0"
             onClick={() => {
               setPosition(
                 direction === "rtl"
@@ -235,12 +238,11 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({
                   : -textWidthRef.current
               );
             }}
-            title="Reset position"
           >
             <RefreshCw className="h-3 w-3" />
-          </button>
+          </Button>
         </div>
       )}
-    </div>
+    </Card>
   );
 };
