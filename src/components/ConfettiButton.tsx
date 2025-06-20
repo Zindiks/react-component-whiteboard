@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import confetti from "canvas-confetti";
 import { Sparkles, Star, Heart, Zap } from "lucide-react";
 import { ComponentHeader } from "./ComponentHeader";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface ConfettiButtonProps {
   width?: number;
@@ -153,10 +156,7 @@ export const ConfettiButton: React.FC<ConfettiButtonProps> = ({
   };
 
   return (
-    <div
-      className="bg-white border border-gray-200 rounded-lg shadow-sm"
-      style={{ width, height }}
-    >
+    <Card className="overflow-hidden" style={{ width, height }}>
       <ComponentHeader
         title="Confetti Button"
         icon={Sparkles}
@@ -166,44 +166,50 @@ export const ConfettiButton: React.FC<ConfettiButtonProps> = ({
         actions={
           <div className="text-right">
             <p className="text-lg font-bold text-purple-600">{clickCount}</p>
-            <p className="text-xs text-gray-500">clicks</p>
+            <p className="text-xs text-muted-foreground">clicks</p>
           </div>
         }
       />
 
-      <div className="p-4">
+      <CardContent className="p-4">
         {/* Main Confetti Button */}
         <div className="flex justify-center mb-4">
-          <button
+          <Button
             onClick={triggerRandomConfetti}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-full transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg"
+            className={cn(
+              "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600",
+              "text-white font-bold py-3 px-6 rounded-full transition-all duration-200",
+              "transform hover:scale-105 active:scale-95 shadow-lg"
+            )}
           >
             🎉 Celebrate! 🎉
-          </button>
+          </Button>
         </div>
 
         {/* Effect Options */}
         <div className="grid grid-cols-3 gap-2 mb-3">
           {confettiEffects.slice(0, 6).map((effect, index) => (
-            <button
+            <Button
               key={index}
+              variant="outline"
+              size="sm"
               onClick={() => triggerSpecificConfetti(effect.effect)}
-              className="flex flex-col items-center justify-center p-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 text-xs"
+              className="flex flex-col items-center justify-center h-auto p-2 text-xs"
               title={effect.name}
             >
               <div className="text-purple-500 mb-1">{effect.icon}</div>
-              <span className="text-gray-600 text-xs">{effect.name}</span>
-            </button>
+              <span className="text-muted-foreground">{effect.name}</span>
+            </Button>
           ))}
         </div>
 
         {/* Stats */}
-        <div className="text-center text-xs text-gray-500">
+        <div className="text-center text-xs text-muted-foreground">
           {lastClickTime && (
             <span>Last celebration: {lastClickTime.toLocaleTimeString()}</span>
           )}
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

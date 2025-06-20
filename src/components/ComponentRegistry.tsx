@@ -6,6 +6,9 @@ import {
   Music,
   Link as LinkIcon,
   Share2,
+  Circle,
+  Square,
+  Diamond,
 } from "lucide-react";
 import { Timer } from "@/components/Timer";
 import { Weather } from "@/components/Weather";
@@ -15,6 +18,7 @@ import { SoundCloudWidget } from "@/components/SoundCloudWidget";
 import { SpotifyWidget } from "@/components/SpotifyWidget";
 import { StylishLink } from "@/components/StylishLink";
 import { FlowCanvas } from "@/components/FlowCanvas";
+import { FlowNode } from "@/components/FlowNode";
 import { ComponentRegistry } from "@/store/whiteboard";
 
 /**
@@ -102,6 +106,54 @@ export const COMPONENT_REGISTRY: ComponentRegistry = {
     },
     icon: <LinkIcon className="w-5 h-5 text-indigo-500" />,
     category: "Content",
+  },
+
+  flowNodeStart: {
+    name: "Start Node",
+    component: FlowNode,
+    defaultProps: {
+      nodeType: "start",
+      label: "Start",
+      color: "#10b981",
+    },
+    icon: <Circle className="w-5 h-5 text-green-500" />,
+    category: "Flow",
+  },
+
+  flowNodeProcess: {
+    name: "Process Node",
+    component: FlowNode,
+    defaultProps: {
+      nodeType: "process",
+      label: "Process",
+      color: "#3b82f6",
+    },
+    icon: <Square className="w-5 h-5 text-blue-500" />,
+    category: "Flow",
+  },
+
+  flowNodeDecision: {
+    name: "Decision Node",
+    component: FlowNode,
+    defaultProps: {
+      nodeType: "decision",
+      label: "Decision",
+      color: "#f59e0b",
+    },
+    icon: <Diamond className="w-5 h-5 text-yellow-500" />,
+    category: "Flow",
+  },
+
+  flowNodeEnd: {
+    name: "End Node",
+    component: FlowNode,
+    defaultProps: {
+      nodeType: "end",
+      label: "End",
+      color: "#ef4444",
+    },
+    icon: <Circle className="w-5 h-5 text-red-500" />,
+    category: "Flow",
   },
 
   flowCanvas: {

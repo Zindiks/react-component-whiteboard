@@ -7,8 +7,12 @@ import {
   MapPin,
   RefreshCw,
   CloudSun,
+  Loader2,
 } from "lucide-react";
 import { ComponentHeader } from "./ComponentHeader";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface WeatherData {
   temperature: number;
@@ -119,52 +123,56 @@ export const Weather: React.FC<WeatherProps> = ({
 
   if (loading && !weather) {
     return (
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 min-w-[250px]">
+      <Card className="min-w-[250px]">
         <ComponentHeader
           title="Weather"
           icon={CloudSun}
-          iconColor="bg-gray-500"
+          iconColor="bg-muted"
           onMouseDown={onHeaderMouseDown}
           onDelete={onDelete}
         />
-        <div className="p-4 animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-          <div className="h-8 bg-gray-200 rounded mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </div>
-      </div>
+        <CardContent className="p-4">
+          <div className="animate-pulse space-y-3">
+            <div className="h-4 bg-muted rounded w-3/4"></div>
+            <div className="h-8 bg-muted rounded"></div>
+            <div className="h-4 bg-muted rounded w-1/2"></div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-md border border-red-200 min-w-[250px]">
+      <Card className="min-w-[250px] border-destructive">
         <ComponentHeader
           title="Weather"
           icon={CloudSun}
-          iconColor="bg-red-500"
+          iconColor="bg-destructive"
           onMouseDown={onHeaderMouseDown}
           onDelete={onDelete}
         />
-        <div className="p-4 text-center">
-          <Cloud className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-          <div className="text-sm text-red-600 mb-2">{error}</div>
-          <button
+        <CardContent className="p-4 text-center">
+          <Cloud className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+          <div className="text-sm text-destructive mb-3">{error}</div>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={fetchWeather}
-            className="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-sm"
+            className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
           >
-            <RefreshCw className="w-4 h-4 mr-1 inline" />
+            <RefreshCw className="w-4 h-4 mr-2" />
             Retry
-          </button>
-        </div>
-      </div>
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
   if (!weather) return null;
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 min-w-[250px]">
+    <Card className="min-w-[250px]">
       <ComponentHeader
         title="Weather"
         icon={CloudSun}
@@ -172,22 +180,24 @@ export const Weather: React.FC<WeatherProps> = ({
         onMouseDown={onHeaderMouseDown}
         onDelete={onDelete}
         actions={
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={fetchWeather}
             disabled={loading}
-            className="p-1 rounded-full hover:bg-gray-200 text-gray-600"
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
             title="Refresh Weather"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          </button>
+            <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+          </Button>
         }
       />
 
-      <div className="p-4">
+      <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <MapPin className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">
+            <MapPin className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">
               {weather.location}
             </span>
           </div>
@@ -195,10 +205,10 @@ export const Weather: React.FC<WeatherProps> = ({
 
         <div className="flex items-center justify-between mb-3">
           <div>
-            <div className="text-3xl font-bold text-gray-800">
+            <div className="text-3xl font-bold text-foreground">
               {weather.temperature}°C
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               {getWeatherDescription(weather.weatherCode)}
             </div>
           </div>
@@ -207,7 +217,7 @@ export const Weather: React.FC<WeatherProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
           <div>
             <span className="font-medium">Wind:</span> {weather.windSpeed} km/h
           </div>
@@ -217,12 +227,12 @@ export const Weather: React.FC<WeatherProps> = ({
         </div>
 
         {lastUpdated && (
-          <div className="text-xs text-gray-400 mt-2 text-center">
+          <div className="text-xs text-muted-foreground mt-2 text-center">
             Updated: {lastUpdated.toLocaleTimeString()}
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

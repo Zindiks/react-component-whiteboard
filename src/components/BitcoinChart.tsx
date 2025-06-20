@@ -8,8 +8,18 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { ChevronDown, RotateCw, TrendingUp } from "lucide-react";
+import { RotateCw, TrendingUp } from "lucide-react";
 import { ComponentHeader } from "./ComponentHeader";
+import { Card, CardContent } from "./ui/card";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 // List of supported cryptocurrencies
 const CRYPTOCURRENCIES = {
@@ -51,7 +61,6 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
   const [priceChange24h, setPriceChange24h] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Get the name for the selected crypto
   const cryptoName = CRYPTOCURRENCIES[selectedCrypto].name;
@@ -127,9 +136,9 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
   }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg">
-          <p className="text-sm text-gray-600">{`Time: ${label}`}</p>
-          <p className="text-sm font-semibold text-orange-600">
+        <div className="bg-popover border border-border rounded-lg shadow-md p-3">
+          <p className="text-sm text-muted-foreground">{`Time: ${label}`}</p>
+          <p className="text-sm font-semibold text-foreground">
             {`Price: $${payload[0].value.toLocaleString()}`}
           </p>
         </div>
@@ -140,10 +149,7 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
 
   if (loading && data.length === 0) {
     return (
-      <div
-        className="bg-white border border-gray-200 rounded-lg shadow-sm"
-        style={{ width, height }}
-      >
+      <Card className="border-gray-200" style={{ width, height }}>
         <ComponentHeader
           title={`${CRYPTOCURRENCIES[selectedCrypto].name} (${CRYPTOCURRENCIES[selectedCrypto].symbol})`}
           icon={TrendingUp}
@@ -151,55 +157,46 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
           onMouseDown={onHeaderMouseDown}
           onDelete={onDelete}
         />
-        <div className="p-4 flex items-center justify-center h-full">
+        <CardContent className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
             <div
               className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-2"
               style={{ borderColor: CRYPTOCURRENCIES[selectedCrypto].color }}
             ></div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Loading {CRYPTOCURRENCIES[selectedCrypto].name} data...
             </p>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div
-        className="bg-white border border-red-200 rounded-lg shadow-sm"
-        style={{ width, height }}
-      >
+      <Card className="border-destructive/50" style={{ width, height }}>
         <ComponentHeader
           title={`${CRYPTOCURRENCIES[selectedCrypto].name} (${CRYPTOCURRENCIES[selectedCrypto].symbol})`}
           icon={TrendingUp}
-          iconColor="bg-red-500"
+          iconColor="bg-destructive"
           onMouseDown={onHeaderMouseDown}
           onDelete={onDelete}
         />
-        <div className="p-4 flex items-center justify-center h-full">
+        <CardContent className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
-            <p className="text-sm text-red-600 mb-2">Error loading data:</p>
-            <p className="text-xs text-red-500">{error}</p>
-            <button
-              onClick={fetchCryptoData}
-              className="mt-2 px-3 py-1 bg-orange-500 text-white text-xs rounded hover:bg-orange-600"
-            >
+            <p className="text-sm text-destructive mb-2">Error loading data:</p>
+            <p className="text-xs text-muted-foreground">{error}</p>
+            <Button onClick={fetchCryptoData} size="sm" className="mt-2">
               Retry
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div
-      className="bg-white border border-gray-200 rounded-lg shadow-sm"
-      style={{ width, height }}
-    >
+    <Card className="border-gray-200" style={{ width, height }}>
       <ComponentHeader
         title={`${CRYPTOCURRENCIES[selectedCrypto].name} (${CRYPTOCURRENCIES[selectedCrypto].symbol})`}
         icon={TrendingUp}
@@ -208,73 +205,58 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
         onDelete={onDelete}
         actions={
           <div className="flex items-center space-x-1">
-            <div className="relative">
-              <button
-                className="p-1 rounded-full hover:bg-gray-200 text-gray-600 flex items-center space-x-1"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                title="Select Cryptocurrency"
-              >
-                <ChevronDown className="w-4 h-4" />
-              </button>
-
-              {/* Dropdown for cryptocurrency selection */}
-              {isDropdownOpen && (
-                <div className="absolute top-full right-0 mt-1 bg-white rounded-md shadow-lg border border-gray-200 z-10 w-48">
-                  {Object.entries(CRYPTOCURRENCIES).map(([id, crypto]) => (
-                    <div
-                      key={id}
-                      className={`flex items-center space-x-2 px-3 py-2 cursor-pointer hover:bg-gray-100 
-                                  ${selectedCrypto === id ? "bg-gray-50" : ""}`}
-                      onClick={() => {
-                        setSelectedCrypto(id as CryptoId);
-                        setIsDropdownOpen(false);
-                      }}
-                    >
+            <Select
+              value={selectedCrypto}
+              onValueChange={(value: CryptoId) => setSelectedCrypto(value)}
+            >
+              <SelectTrigger className="w-16 h-6 border-none shadow-none p-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(CRYPTOCURRENCIES).map(([id, crypto]) => (
+                  <SelectItem key={id} value={id}>
+                    <div className="flex items-center space-x-2">
                       <div
-                        className="w-4 h-4 rounded-full flex items-center justify-center"
+                        className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: crypto.color }}
-                      >
-                        <span className="text-white text-[10px] font-bold">
-                          {crypto.symbol.charAt(0)}
-                        </span>
-                      </div>
-                      <span className="text-sm">{crypto.name}</span>
+                      />
+                      <span>{crypto.name}</span>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <button
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
               onClick={() => fetchCryptoData()}
               disabled={loading}
-              className="p-1 rounded-full hover:bg-gray-200 text-gray-600"
-              title="Refresh Data"
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
             >
               <RotateCw
                 className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
               />
-            </button>
+            </Button>
           </div>
         }
       />
 
-      <div className="p-4">
+      <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="text-left flex flex-col items-start">
             {currentPrice && (
               <>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-lg font-bold">
                   ${currentPrice.toLocaleString()}
                 </p>
                 {priceChange24h !== null && (
-                  <p
-                    className={`text-xs ${
-                      priceChange24h >= 0 ? "text-green-500" : "text-red-500"
-                    }`}
+                  <Badge
+                    variant={priceChange24h >= 0 ? "default" : "destructive"}
+                    className="text-xs"
                   >
                     {priceChange24h >= 0 ? "▲" : "▼"}{" "}
                     {Math.abs(priceChange24h).toFixed(2)}%
-                  </p>
+                  </Badge>
                 )}
               </>
             )}
@@ -288,15 +270,18 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
               data={data}
               margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
+              />
               <XAxis
                 dataKey="time"
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={false}
                 tickLine={false}
                 domain={["dataMin - 100", "dataMax + 100"]}
@@ -324,7 +309,7 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
+        <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
           <span>Live updates every 30s</span>
           <span>
             {data.length} data point{data.length !== 1 ? "s" : ""}
@@ -332,7 +317,7 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
               ` • ${CRYPTOCURRENCIES[selectedCrypto].symbol}/USD`}
           </span>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

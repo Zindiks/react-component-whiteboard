@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Play, Pause, Square, RotateCcw, Clock } from "lucide-react";
 import { ComponentHeader } from "./ComponentHeader";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface TimerProps {
   onTimeUpdate?: (time: number) => void;
@@ -76,7 +79,7 @@ export const Timer: React.FC<TimerProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 min-w-[200px]">
+    <Card className="min-w-[200px] overflow-hidden">
       <ComponentHeader
         title="Timer"
         icon={Clock}
@@ -86,51 +89,64 @@ export const Timer: React.FC<TimerProps> = ({
         actions={
           <div className="flex space-x-1">
             {!isRunning ? (
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleStart}
-                className="p-1 rounded-full hover:bg-gray-200 text-green-600"
+                className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-100"
                 title="Start Timer"
               >
                 <Play className="w-4 h-4" />
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handlePause}
-                className="p-1 rounded-full hover:bg-gray-200 text-yellow-600"
+                className="h-8 w-8 p-0 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-100"
                 title="Pause Timer"
               >
                 <Pause className="w-4 h-4" />
-              </button>
+              </Button>
             )}
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleStop}
-              className="p-1 rounded-full hover:bg-gray-200 text-red-600"
+              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-100"
               title="Stop Timer"
             >
               <Square className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleReset}
-              className="p-1 rounded-full hover:bg-gray-200 text-gray-600"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
               title="Reset Timer"
             >
               <RotateCcw className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         }
       />
 
-      <div className="p-4">
-        <div className="text-center mb-4">
-          <div className="text-2xl font-mono font-bold text-gray-800">
+      <CardContent className="p-6">
+        <div className="text-center">
+          <div
+            className={cn(
+              "text-3xl font-mono font-bold mb-2 transition-colors",
+              isRunning ? "text-green-600" : "text-muted-foreground"
+            )}
+          >
             {formatTime(time)}
           </div>
-          <div className="text-sm text-gray-500 mt-1">
+          <div className="text-sm text-muted-foreground">
             {isRunning ? "Running" : "Stopped"}
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

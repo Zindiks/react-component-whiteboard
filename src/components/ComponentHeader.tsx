@@ -1,5 +1,7 @@
 import React from "react";
 import { LucideIcon, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface ComponentHeaderProps {
   title: string;
@@ -14,7 +16,7 @@ interface ComponentHeaderProps {
 export const ComponentHeader: React.FC<ComponentHeaderProps> = ({
   title,
   icon: Icon,
-  iconColor = "bg-blue-500",
+  iconColor = "bg-primary",
   actions,
   onMouseDown,
   onDelete,
@@ -22,28 +24,36 @@ export const ComponentHeader: React.FC<ComponentHeaderProps> = ({
 }) => {
   return (
     <div
-      className={`flex items-center justify-between p-2 border-b border-gray-200 bg-gray-50 cursor-move select-none ${className}`}
+      className={cn(
+        "flex items-center justify-between p-3 border-b bg-muted/50 cursor-move select-none rounded-t-lg",
+        className
+      )}
       onMouseDown={onMouseDown}
     >
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-3">
         <div
-          className={`w-6 h-6 ${iconColor} rounded-full flex items-center justify-center`}
+          className={cn(
+            "w-8 h-8 rounded-full flex items-center justify-center",
+            iconColor
+          )}
         >
-          <Icon className="w-3 h-3 text-white" />
+          <Icon className="w-4 h-4 text-white" />
         </div>
-        <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       </div>
       <div className="flex items-center space-x-1">
         {actions}
         {onDelete && (
-          <button
-            className="p-1 rounded-full hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             onClick={onDelete}
             onMouseDown={(e) => e.stopPropagation()}
             title="Delete component"
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         )}
       </div>
     </div>

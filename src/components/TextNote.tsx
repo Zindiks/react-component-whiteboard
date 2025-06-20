@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Edit, Eye, FileText } from "lucide-react";
+import { Edit, Eye, FileText, Save, X } from "lucide-react";
 import { ComponentHeader } from "./ComponentHeader";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 interface TextNoteProps {
   initialContent?: string;
@@ -98,9 +102,9 @@ export const TextNote: React.FC<TextNoteProps> = ({
   );
 
   return (
-    <div
+    <Card
       ref={noteRef}
-      className="bg-white border border-gray-200 rounded-lg shadow-sm resize overflow-auto min-w-[300px] min-h-[200px] max-w-[600px] max-h-[400px]"
+      className="resize overflow-auto min-w-[300px] min-h-[200px] max-w-[600px] max-h-[400px]"
       style={{ width: currentWidth, height: currentHeight }}
     >
       <ComponentHeader
@@ -110,9 +114,11 @@ export const TextNote: React.FC<TextNoteProps> = ({
         onMouseDown={onHeaderMouseDown}
         onDelete={onDelete}
         actions={
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setIsEditing(!isEditing)}
-            className="p-1 rounded-full hover:bg-gray-200 text-gray-600"
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
             title={isEditing ? "Preview" : "Edit"}
           >
             {isEditing ? (
@@ -120,20 +126,20 @@ export const TextNote: React.FC<TextNoteProps> = ({
             ) : (
               <Edit className="w-4 h-4" />
             )}
-          </button>
+          </Button>
         }
       />
 
-      <div className="p-4">
+      <CardContent className="p-4">
         {/* Content */}
         <div className="relative" style={{ height: currentHeight - 60 }}>
           {isEditing ? (
-            <textarea
+            <Textarea
               ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full h-full p-3 text-sm border-none resize-none focus:outline-none font-mono"
+              className="w-full h-full resize-none font-mono text-sm"
               placeholder="Start writing your markdown note..."
               style={{ minHeight: "100%" }}
             />
@@ -255,7 +261,7 @@ export const TextNote: React.FC<TextNoteProps> = ({
           onMouseDown={(e) => handleResizeStart("e", e)}
           title="Resize width"
         ></div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
