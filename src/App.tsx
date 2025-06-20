@@ -32,6 +32,12 @@ const CustomGrid = () => {
   const [isSpacePressed, setIsSpacePressed] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
 
+  // Zoom indicator state
+  const [showZoomIndicator, setShowZoomIndicator] = useState(false);
+  const [isActivelyZooming, setIsActivelyZooming] = useState(false);
+  const zoomIndicatorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const previousZoomScale = useRef<number>(1);
+
   interface Component {
     id: number;
     x: number;
@@ -101,6 +107,23 @@ const CustomGrid = () => {
     x: event.clientX,
     y: event.clientY,
   });
+
+  const showZoomIndicatorTemporarily = useCallback(() => {
+    // Only show for actual zoom gestures, not manual buttons
+    setIsActivelyZooming(true);
+    setShowZoomIndicator(true);
+
+    // Clear existing timeout
+    if (zoomIndicatorTimeoutRef.current) {
+      clearTimeout(zoomIndicatorTimeoutRef.current);
+    }
+
+    // Set new timeout to hide indicator after 800ms (shorter for better UX)
+    zoomIndicatorTimeoutRef.current = setTimeout(() => {
+      setIsActivelyZooming(false);
+      setShowZoomIndicator(false);
+    }, 800);
+  }, []);
 
   const applyTransform = (newTransform: d3.ZoomTransform) => {
     if (!svgRef.current || !zoomBehavior.current) return;
@@ -275,7 +298,17 @@ const CustomGrid = () => {
       })
       .on("zoom", (event) => {
         if (!isMarqueeActive) {
+          const currentScale = event.transform.k;
+          const scaleChanged =
+            Math.abs(currentScale - previousZoomScale.current) > 0.001;
+
           setTransform(event.transform);
+
+          // Only show indicator if scale changed (actual zoom), not just pan
+          if (scaleChanged) {
+            showZoomIndicatorTemporarily();
+            previousZoomScale.current = currentScale;
+          }
         }
       });
 
@@ -528,7 +561,17 @@ const CustomGrid = () => {
     resetZoom,
     zoomToFit,
     zoomToSelection,
+    showZoomIndicatorTemporarily,
   ]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (zoomIndicatorTimeoutRef.current) {
+        clearTimeout(zoomIndicatorTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleDragStart = (id: number) => {
     // Bring the component to the front when starting to drag
@@ -602,6 +645,7 @@ const CustomGrid = () => {
     if (!svgRef.current || !zoomBehavior.current) return;
     const svg = d3.select(svgRef.current);
     zoomBehavior.current.scaleBy(svg, factor);
+    // Don't show indicator for manual button clicks
   }, []);
 
   const addNewComponent = (type: string) => {
@@ -662,6 +706,35 @@ const CustomGrid = () => {
             zIndex: 9999,
           }}
         />
+      )}
+
+      {/* Zoom indicator overlay */}
+      {showZoomIndicator && (
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            color: "white",
+            padding: "8px 16px",
+            borderRadius: "12px",
+            fontSize: "16px",
+            fontWeight: "500",
+            fontFamily: "monospace",
+            pointerEvents: "none",
+            zIndex: 10000,
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+            backdropFilter: "blur(4px)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            animation: isActivelyZooming
+              ? "zoomFadeIn 0.2s ease-out"
+              : "zoomFadeOut 0.3s ease-in",
+          }}
+        >
+          {Math.round(transform.k * 100)}%
+        </div>
       )}
 
       <div
