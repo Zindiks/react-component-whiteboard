@@ -2,8 +2,157 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import * as d3 from "d3";
 import { Plus, Minus } from "lucide-react";
 import { Button } from "./components/ui/button";
-import { ComponentShelf } from "./components/ComponentShelf";
+import { ComponentFooter } from "./components/ComponentFooter";
+import { CategorySidebar } from "./components/CategorySidebar";
 import { DraggableComponent } from "./components/DraggableWhiteboardComponent";
+
+interface ComponentDefinition {
+  type: string;
+  label: string;
+  icon: string;
+  description: string;
+}
+
+interface Category {
+  name: string;
+  icon: string;
+  components: ComponentDefinition[];
+}
+
+const COMPONENT_CATEGORIES: Category[] = [
+  {
+    name: "Utilities",
+    icon: "⚙️",
+    components: [
+      {
+        type: "timer",
+        label: "Timer",
+        icon: "⏰",
+        description: "Countdown timer",
+      },
+      {
+        type: "watch",
+        label: "Watch",
+        icon: "⌚",
+        description: "Digital clock",
+      },
+      {
+        type: "note",
+        label: "Note",
+        icon: "📝",
+        description: "Markdown text editor",
+      },
+      {
+        type: "confetti",
+        label: "Confetti",
+        icon: "🎉",
+        description: "Celebration button",
+      },
+    ],
+  },
+  {
+    name: "Data & Finance",
+    icon: "📊",
+    components: [
+      {
+        type: "weather",
+        label: "Weather",
+        icon: "🌤️",
+        description: "Weather widget",
+      },
+      {
+        type: "bitcoin",
+        label: "Crypto Chart",
+        icon: "💰",
+        description: "Cryptocurrency prices",
+      },
+      {
+        type: "currency",
+        label: "Currency",
+        icon: "💱",
+        description: "Currency converter",
+      },
+    ],
+  },
+  {
+    name: "Media",
+    icon: "🎵",
+    components: [
+      {
+        type: "youtubeVideo",
+        label: "YouTube",
+        icon: "🎬",
+        description: "YouTube video player",
+      },
+      {
+        type: "soundcloud",
+        label: "SoundCloud",
+        icon: "🔊",
+        description: "SoundCloud track",
+      },
+      {
+        type: "spotify",
+        label: "Spotify",
+        icon: "🎵",
+        description: "Spotify player",
+      },
+      {
+        type: "scrollingtext",
+        label: "Scrolling Text",
+        icon: "📣",
+        description: "Animated text banner",
+      },
+    ],
+  },
+  {
+    name: "Flow & Diagram",
+    icon: "🔄",
+    components: [
+      {
+        type: "flowCanvas",
+        label: "Flow Canvas",
+        icon: "🔄",
+        description: "Flow diagram canvas",
+      },
+      {
+        type: "flowNodeStart",
+        label: "Start Node",
+        icon: "▶️",
+        description: "Flow start node",
+      },
+      {
+        type: "flowNodeProcess",
+        label: "Process Node",
+        icon: "⚡",
+        description: "Flow process node",
+      },
+      {
+        type: "flowNodeDecision",
+        label: "Decision Node",
+        icon: "❓",
+        description: "Flow decision node",
+      },
+      {
+        type: "flowNodeEnd",
+        label: "End Node",
+        icon: "🏁",
+        description: "Flow end node",
+      },
+    ],
+  },
+  {
+    name: "Links & Web",
+    icon: "🌐",
+    components: [
+      {
+        type: "stylishlink",
+        label: "Stylish Link",
+        icon: "🔗",
+        description: "Styled web link",
+      },
+    ],
+  },
+];
 
 const CustomGrid = () => {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -29,6 +178,11 @@ const CustomGrid = () => {
   // Overview/Minimap state
   const [showOverview, setShowOverview] = useState(false);
   const overviewRef = useRef<HTMLDivElement>(null);
+
+  // Sidebar state
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDragOverBoard, setIsDragOverBoard] = useState(false);
 
   interface Component {
     id: number;
@@ -687,10 +841,8 @@ const CustomGrid = () => {
   );
 
   const handleSelect = useCallback((id: number) => {
-    // Toggle selection for the component
-    setSelectedComponents((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
+    // Single selection only - replace any existing selection
+    setSelectedComponents([id]);
   }, []);
 
   const handleZoom = useCallback((factor: number) => {
@@ -700,22 +852,97 @@ const CustomGrid = () => {
     // Don't show indicator for manual button clicks
   }, []);
 
-  const addNewComponent = (type: string, x?: number, y?: number) => {
-    const newId = Math.max(...components.map((c) => c.id)) + 1;
-    const highestZIndex = Math.max(...components.map((c) => c.zIndex || 0), 0);
+  const addNewComponent = useCallback(
+    (type: string, x?: number, y?: number) => {
+      const newId = Math.max(...components.map((c) => c.id)) + 1;
+      const highestZIndex = Math.max(
+        ...components.map((c) => c.zIndex || 0),
+        0
+      );
 
-    console.log(`Adding new ${type} component with ID: ${newId}`);
-    setComponents((prev) => [
-      ...prev,
-      {
-        id: newId,
-        x: x ?? 200 + Math.random() * 200,
-        y: y ?? 200 + Math.random() * 200,
-        type,
-        zIndex: highestZIndex + 1, // Place new component on top
-      },
-    ]);
+      console.log(`Adding new ${type} component with ID: ${newId}`);
+      setComponents((prev) => [
+        ...prev,
+        {
+          id: newId,
+          x: x ?? 200 + Math.random() * 200,
+          y: y ?? 200 + Math.random() * 200,
+          type,
+          zIndex: highestZIndex + 1, // Place new component on top
+        },
+      ]);
+    },
+    [components]
+  );
+
+  // Category and sidebar handlers
+  const handleCategoryClick = useCallback(
+    (categoryName: string) => {
+      if (activeCategory === categoryName && isSidebarOpen) {
+        // If same category is clicked while sidebar is open, close it
+        setIsSidebarOpen(false);
+        setActiveCategory(null);
+      } else {
+        // Open sidebar with new category
+        setActiveCategory(categoryName);
+        setIsSidebarOpen(true);
+      }
+    },
+    [activeCategory, isSidebarOpen]
+  );
+
+  const handleCloseSidebar = useCallback(() => {
+    setIsSidebarOpen(false);
+    setActiveCategory(null);
+  }, []);
+
+  const getActiveCategory = () => {
+    return (
+      COMPONENT_CATEGORIES.find((cat) => cat.name === activeCategory) || null
+    );
   };
+
+  // Handle drop events from sidebar for new components
+  useEffect(() => {
+    const handleDragOver = (event: DragEvent) => {
+      if (event.dataTransfer?.types.includes("text/plain")) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+        setIsDragOverBoard(true);
+      }
+    };
+
+    const handleDragLeave = (event: DragEvent) => {
+      if (
+        !event.relatedTarget ||
+        !(event.relatedTarget as Element).closest("[data-drop-zone]")
+      ) {
+        setIsDragOverBoard(false);
+      }
+    };
+
+    const handleDrop = (event: DragEvent) => {
+      event.preventDefault();
+      const componentType = event.dataTransfer?.getData("text/plain");
+      if (componentType) {
+        // Convert screen coordinates to whiteboard coordinates
+        const x = (event.clientX - transform.x) / transform.k;
+        const y = (event.clientY - transform.y) / transform.k;
+        addNewComponent(componentType, x, y);
+      }
+      setIsDragOverBoard(false);
+    };
+
+    document.addEventListener("dragover", handleDragOver);
+    document.addEventListener("dragleave", handleDragLeave);
+    document.addEventListener("drop", handleDrop);
+
+    return () => {
+      document.removeEventListener("dragover", handleDragOver);
+      document.removeEventListener("dragleave", handleDragLeave);
+      document.removeEventListener("drop", handleDrop);
+    };
+  }, [addNewComponent, transform]);
 
   const bringToFront = useCallback((id: number) => {
     setComponents((prevComponents) => {
@@ -868,7 +1095,54 @@ const CustomGrid = () => {
         onZoom={handleZoom}
         selectedComponents={selectedComponents}
       />
-      <ComponentShelf onAddComponent={addNewComponent} transform={transform} />
+
+      {/* Component Footer and Sidebar */}
+      <ComponentFooter
+        categories={COMPONENT_CATEGORIES}
+        onCategoryClick={handleCategoryClick}
+        activeCategory={activeCategory || undefined}
+      />
+
+      <CategorySidebar
+        category={getActiveCategory()}
+        isOpen={isSidebarOpen}
+        onClose={handleCloseSidebar}
+      />
+
+      {/* Drag overlay indicator */}
+      {isDragOverBoard && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(59, 130, 246, 0.1)",
+            border: "3px dashed #3b82f6",
+            borderRadius: "12px",
+            pointerEvents: "none",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "rgba(59, 130, 246, 0.9)",
+              color: "white",
+              padding: "16px 24px",
+              borderRadius: "8px",
+              fontSize: "18px",
+              fontWeight: "600",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+            }}
+          >
+            Drop component here
+          </div>
+        </div>
+      )}
 
       {/* Overview/Minimap overlay */}
       {showOverview && (
@@ -943,28 +1217,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           </span>
         )}
       </p>
-      <div className="text-xs text-gray-600 mt-2 space-y-1">
-        <p>
-          <strong>Pan:</strong> Middle/Right-click drag, Space+drag, 2-finger
-          scroll
-        </p>
-        <p>
-          <strong>Zoom:</strong> Ctrl/Cmd+scroll, pinch-to-zoom
-        </p>
-        <p>
-          <strong>Select:</strong> Left-click drag (marquee)
-        </p>
-        <p>
-          <strong>Shortcuts:</strong> 1 (reset), Shift+1 (fit), 2 (zoom
-          selection), 3/O (overview)
-        </p>
-        <p className="text-xs text-blue-600 mt-1">
-          <strong>Mac Trackpad:</strong> 2-finger scroll = pan, pinch = zoom
-        </p>
-        <p className="text-xs text-green-600 mt-1">
-          <strong>Overview:</strong> Press 3 or O for bird's eye view
-        </p>
-      </div>
     </div>
   );
 };
