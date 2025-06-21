@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import { useWhiteboardStore, Connection } from "@/store/whiteboard";
 import { ComponentHeader } from "./ComponentHeader";
-import { Card } from "./ui/card";
-import { Button } from "./ui/button";
+import { Card } from "../ui/card";
+import { Button } from "../ui/button";
 
 interface Position {
   x: number;

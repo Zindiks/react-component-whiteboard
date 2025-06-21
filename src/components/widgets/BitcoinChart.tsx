@@ -10,16 +10,16 @@ import {
 } from "recharts";
 import { RotateCw, TrendingUp } from "lucide-react";
 import { ComponentHeader } from "./ComponentHeader";
-import { Card, CardContent } from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
+import { Card, CardContent } from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "../ui/select";
 
 // List of supported cryptocurrencies
 const CRYPTOCURRENCIES = {

@@ -1,19 +1,19 @@
 import React, { useState, useCallback, useEffect } from "react";
 import * as d3 from "d3";
-import { Timer } from "./Timer";
-import { Weather } from "./Weather";
-import { BitcoinChart } from "./BitcoinChart";
-import { CurrencyConverter } from "./CurrencyConverter";
-import { TextNote } from "./TextNote";
-import { ConfettiButton } from "./ConfettiButton";
-import { Watch } from "./Watch";
-import { ScrollingText } from "./ScrollingText";
-import { YouTubeVideo } from "./YouTubeVideo";
-import { SoundCloudWidget } from "./SoundCloudWidget";
-import { SpotifyWidget } from "./SpotifyWidget";
-import { StylishLink } from "./StylishLink";
-import { FlowCanvas } from "./FlowCanvas";
-import { FlowNode } from "./FlowNode";
+import { Timer } from "./widgets/Timer";
+import { Weather } from "./widgets/Weather";
+import { BitcoinChart } from "./widgets/BitcoinChart";
+import { CurrencyConverter } from "./widgets/CurrencyConverter";
+import { TextNote } from "./widgets/TextNote";
+import { ConfettiButton } from "./widgets/ConfettiButton";
+import { Watch } from "./widgets/Watch";
+import { ScrollingText } from "./widgets/ScrollingText";
+import { YouTubeVideo } from "./widgets/YouTubeVideo";
+import { SoundCloudWidget } from "./widgets/SoundCloudWidget";
+import { SpotifyWidget } from "./widgets/SpotifyWidget";
+import { StylishLink } from "./widgets/StylishLink";
+import { FlowCanvas } from "./widgets/FlowCanvas";
+import { FlowNode } from "./widgets/FlowNode";
 
 interface DraggableComponentProps {
   x: number;
