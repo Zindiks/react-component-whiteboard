@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Edit, Eye, FileText, Save, X } from "lucide-react";
+import { Edit, Eye, FileText } from "lucide-react";
 import { ComponentHeader } from "./ComponentHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 
 interface TextNoteProps {
   initialContent?: string;
@@ -36,10 +35,6 @@ export const TextNote: React.FC<TextNoteProps> = ({
     }
   }, [isEditing]);
 
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
-
   const handleSave = () => {
     setSavedContent(content);
     setIsEditing(false);
@@ -62,8 +57,6 @@ export const TextNote: React.FC<TextNoteProps> = ({
       handleCancel();
     }
   };
-
-  const hasChanges = content !== savedContent;
 
   // Resize handlers
   const handleResizeStart = useCallback(

@@ -2,7 +2,6 @@ import React from "react";
 import { Circle, Square, Diamond } from "lucide-react";
 import { ComponentHeader } from "./ComponentHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 
 interface FlowNodeProps {
   nodeType?: "start" | "process" | "decision" | "end";

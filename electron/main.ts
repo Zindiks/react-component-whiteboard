@@ -1,10 +1,16 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow } from "electron";
 import * as path from "path";
-import * as isDev from "electron-is-dev";
+import isDev from "electron-is-dev";
+import { fileURLToPath } from "url";
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Enable live reload for Electron in development
 if (isDev) {
-  require("electron-reloader")(module);
+  // Electron reloader disabled for ES module compatibility
+  console.log("Development mode - live reload disabled");
 }
 
 let mainWindow: BrowserWindow;
@@ -19,8 +25,7 @@ const createWindow = (): void => {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      enableRemoteModule: false,
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, "preload.mjs"),
     },
     titleBarStyle: "hiddenInset",
     show: false,
@@ -43,9 +48,9 @@ const createWindow = (): void => {
     }
   });
 
-  mainWindow.on("closed", () => {
-    mainWindow = null as any;
-  });
+  // mainWindow.on("closed", () => {
+  //   mainWindow = ;
+  // });
 };
 
 // This method will be called when Electron has finished initialization
@@ -65,9 +70,9 @@ app.on("activate", () => {
   }
 });
 
-// Security: Prevent new window creation
-app.on("web-contents-created", (event, contents) => {
-  contents.on("new-window", (event, navigationUrl) => {
-    event.preventDefault();
-  });
-});
+// // Security: Prevent new window creation
+// app.on("web-contents-created", (event, contents) => {
+//   contents.on("new-window", (event) => {
+//     event.preventDefault();
+//   });
+// });
