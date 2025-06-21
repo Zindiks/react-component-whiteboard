@@ -163,7 +163,7 @@ const CustomGrid = () => {
     const scale = Math.min(
       window.innerWidth / width,
       window.innerHeight / height,
-      2 // Max zoom level
+      7 // Max zoom level (700%)
     );
 
     const svg = d3.select(svgRef.current);
@@ -209,7 +209,7 @@ const CustomGrid = () => {
     const scale = Math.min(
       window.innerWidth / width,
       window.innerHeight / height,
-      2 // Max zoom level
+      7 // Max zoom level (700%)
     );
 
     const svg = d3.select(svgRef.current);
@@ -257,21 +257,13 @@ const CustomGrid = () => {
     // Enhanced zoom behavior with better filtering for Mac trackpad
     zoomBehavior.current = d3
       .zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.1, 7]) // Min 10%, Max 700%
       .filter((event) => {
         // Prevent zoom during marquee selection or component dragging
         if (isMarqueeActive) return false;
 
-        // Handle wheel events (mouse wheel and trackpad)
+        // Disable wheel events for D3 zoom - we handle these globally now
         if (event.type === "wheel") {
-          // Mac trackpad pinch-to-zoom detection:
-          // - ctrlKey is automatically set by browser for pinch gestures
-          // - Small deltaY values with ctrlKey indicate pinch
-          // - Large deltaY without ctrlKey is typically scroll
-          if (event.ctrlKey || event.metaKey) {
-            // This is a zoom gesture (pinch or Ctrl+scroll)
-            return true;
-          }
-          // Regular scroll without modifiers should not trigger zoom
           return false;
         }
 
@@ -313,6 +305,165 @@ const CustomGrid = () => {
       });
 
     svg.call(zoomBehavior.current);
+
+    // Global zoom event handlers to capture zoom gestures everywhere within the whiteboard
+    const handleGlobalWheel = (event: WheelEvent) => {
+      // Only handle zoom gestures (Ctrl/Cmd + wheel or pinch) and only when inside our container
+      if ((event.ctrlKey || event.metaKey) && containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const isInsideContainer =
+          event.clientX >= rect.left &&
+          event.clientX <= rect.right &&
+          event.clientY >= rect.top &&
+          event.clientY <= rect.bottom;
+
+        if (!isInsideContainer) return; // Don't handle zoom outside our container
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Calculate zoom center point relative to the container
+        const centerX = event.clientX - rect.left;
+        const centerY = event.clientY - rect.top;
+
+        // Determine zoom direction and factor
+        const zoomIntensity = 0.007;
+        const delta = -event.deltaY * zoomIntensity;
+        const scaleFactor = Math.exp(delta);
+
+        // Calculate new scale with limits
+        const currentScale = transform.k;
+        const newScale = Math.max(0.1, Math.min(7, currentScale * scaleFactor));
+
+        if (
+          newScale !== currentScale &&
+          svgRef.current &&
+          zoomBehavior.current
+        ) {
+          // Calculate the point in transform space
+          const pointInTransformSpace = {
+            x: (centerX - transform.x) / transform.k,
+            y: (centerY - transform.y) / transform.k,
+          };
+
+          // Apply zoom centered on mouse position
+          const newTransform = d3.zoomIdentity
+            .translate(centerX, centerY)
+            .scale(newScale)
+            .translate(-pointInTransformSpace.x, -pointInTransformSpace.y);
+
+          const svg = d3.select(svgRef.current);
+          svg.call(zoomBehavior.current.transform, newTransform);
+        }
+      }
+    };
+
+    // Touch handlers for pinch-to-zoom
+    let globalTouchStartDistance = 0;
+    let globalTouchStartTransform = transform;
+    let globalTouchCenter = { x: 0, y: 0 };
+
+    const handleGlobalTouchStart = (event: TouchEvent) => {
+      if (event.touches.length === 2 && containerRef.current) {
+        // Check if the touch is within our container
+        const rect = containerRef.current.getBoundingClientRect();
+        const touch1 = event.touches[0];
+        const touch2 = event.touches[1];
+        const centerX = (touch1.clientX + touch2.clientX) / 2;
+        const centerY = (touch1.clientY + touch2.clientY) / 2;
+
+        const isInsideContainer =
+          centerX >= rect.left &&
+          centerX <= rect.right &&
+          centerY >= rect.top &&
+          centerY <= rect.bottom;
+
+        if (!isInsideContainer) return; // Don't handle touches outside our container
+
+        globalTouchStartDistance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+        globalTouchCenter = { x: centerX, y: centerY };
+        globalTouchStartTransform = transform;
+        event.preventDefault();
+      }
+    };
+
+    const handleGlobalTouchMove = (event: TouchEvent) => {
+      if (
+        event.touches.length === 2 &&
+        globalTouchStartDistance > 0 &&
+        containerRef.current
+      ) {
+        // Check if we're still inside the container
+        const rect = containerRef.current.getBoundingClientRect();
+        const touch1 = event.touches[0];
+        const touch2 = event.touches[1];
+        const centerX = (touch1.clientX + touch2.clientX) / 2;
+        const centerY = (touch1.clientY + touch2.clientY) / 2;
+
+        const isInsideContainer =
+          centerX >= rect.left &&
+          centerX <= rect.right &&
+          centerY >= rect.top &&
+          centerY <= rect.bottom;
+
+        if (!isInsideContainer) return;
+
+        const currentDistance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+
+        const scale = currentDistance / globalTouchStartDistance;
+        const newScale = Math.max(
+          0.1,
+          Math.min(7, globalTouchStartTransform.k * scale)
+        );
+
+        // Calculate the center point in transform space
+        const centerInTransformSpace = {
+          x:
+            (globalTouchCenter.x - rect.left - globalTouchStartTransform.x) /
+            globalTouchStartTransform.k,
+          y:
+            (globalTouchCenter.y - rect.top - globalTouchStartTransform.y) /
+            globalTouchStartTransform.k,
+        };
+
+        // Apply zoom centered on pinch center
+        const newTransform = d3.zoomIdentity
+          .translate(
+            globalTouchCenter.x - rect.left,
+            globalTouchCenter.y - rect.top
+          )
+          .scale(newScale)
+          .translate(-centerInTransformSpace.x, -centerInTransformSpace.y);
+
+        if (svgRef.current && zoomBehavior.current) {
+          const svg = d3.select(svgRef.current);
+          svg.call(zoomBehavior.current.transform, newTransform);
+        }
+        event.preventDefault();
+      }
+    };
+
+    const handleGlobalTouchEnd = (event: TouchEvent) => {
+      if (event.touches.length < 2) {
+        globalTouchStartDistance = 0;
+      }
+    };
+
+    // Add global event listeners to capture zoom gestures everywhere
+    document.addEventListener("wheel", handleGlobalWheel, { passive: false });
+    document.addEventListener("touchstart", handleGlobalTouchStart, {
+      passive: false,
+    });
+    document.addEventListener("touchmove", handleGlobalTouchMove, {
+      passive: false,
+    });
+    document.addEventListener("touchend", handleGlobalTouchEnd);
 
     // Enhanced keyboard event handling
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -403,119 +554,6 @@ const CustomGrid = () => {
       }
     };
 
-    // Enhanced trackpad gesture handling for Mac
-    const handleWheel = (event: WheelEvent) => {
-      // Distinguish between trackpad scroll and pinch gestures
-      if (event.ctrlKey || event.metaKey) {
-        // This is a pinch-to-zoom gesture (browser sets ctrlKey automatically)
-        // Let D3 zoom behavior handle this
-        return;
-      }
-
-      // This is a two-finger scroll gesture - use for panning
-      event.preventDefault();
-
-      // Apply momentum-based scaling for natural feel
-      const deltaX = -event.deltaX * 0.5; // Reduce sensitivity and invert direction
-      const deltaY = -event.deltaY * 0.5;
-
-      const newTransform = transform.translate(
-        deltaX / transform.k,
-        deltaY / transform.k
-      );
-      applyTransform(newTransform);
-    };
-
-    // Enhanced touch handling for mobile devices
-    let touchStartDistance = 0;
-    let touchStartTransform = transform;
-    let touchCenter = { x: 0, y: 0 };
-
-    const handleTouchStart = (event: TouchEvent) => {
-      if (event.touches.length === 1) {
-        // Single finger - start panning
-        const touch = event.touches[0];
-        setIsPanning(true);
-        setLastPanPoint({ x: touch.clientX, y: touch.clientY });
-      } else if (event.touches.length === 2) {
-        // Two fingers - prepare for pinch zoom
-        const touch1 = event.touches[0];
-        const touch2 = event.touches[1];
-        touchStartDistance = Math.hypot(
-          touch2.clientX - touch1.clientX,
-          touch2.clientY - touch1.clientY
-        );
-        touchCenter = {
-          x: (touch1.clientX + touch2.clientX) / 2,
-          y: (touch1.clientY + touch2.clientY) / 2,
-        };
-        touchStartTransform = transform;
-        setIsPanning(false); // Stop panning when second finger is added
-        event.preventDefault(); // Prevent default pinch behavior
-      }
-    };
-
-    const handleTouchMove = (event: TouchEvent) => {
-      if (event.touches.length === 1 && isPanning) {
-        // Single finger pan
-        const touch = event.touches[0];
-        const coords = { x: touch.clientX, y: touch.clientY };
-        const deltaX = coords.x - lastPanPoint.x;
-        const deltaY = coords.y - lastPanPoint.y;
-
-        const newTransform = transform.translate(
-          deltaX / transform.k,
-          deltaY / transform.k
-        );
-        applyTransform(newTransform);
-        setLastPanPoint(coords);
-        event.preventDefault();
-      } else if (event.touches.length === 2) {
-        // Two finger pinch zoom
-        const touch1 = event.touches[0];
-        const touch2 = event.touches[1];
-        const currentDistance = Math.hypot(
-          touch2.clientX - touch1.clientX,
-          touch2.clientY - touch1.clientY
-        );
-
-        if (touchStartDistance > 0) {
-          const scale = currentDistance / touchStartDistance;
-          const newScale = Math.max(
-            0.1,
-            Math.min(5, touchStartTransform.k * scale)
-          ); // Limit zoom range
-
-          // Calculate the center point in transform space
-          const centerInTransformSpace = {
-            x: (touchCenter.x - touchStartTransform.x) / touchStartTransform.k,
-            y: (touchCenter.y - touchStartTransform.y) / touchStartTransform.k,
-          };
-
-          // Apply zoom centered on pinch center
-          const newTransform = d3.zoomIdentity
-            .translate(touchCenter.x, touchCenter.y)
-            .scale(newScale)
-            .translate(-centerInTransformSpace.x, -centerInTransformSpace.y);
-
-          applyTransform(newTransform);
-        }
-        event.preventDefault();
-      }
-    };
-
-    const handleTouchEnd = (event: TouchEvent) => {
-      if (event.touches.length === 0) {
-        setIsPanning(false);
-        touchStartDistance = 0;
-      } else if (event.touches.length === 1) {
-        // Transition back to single finger pan
-        const touch = event.touches[0];
-        setLastPanPoint({ x: touch.clientX, y: touch.clientY });
-        setIsPanning(true);
-      }
-    };
-
     // Context menu prevention for right-click pan
     const handleContextMenu = (event: MouseEvent) => {
       if (event.button === 2) {
@@ -529,24 +567,24 @@ const CustomGrid = () => {
     window.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
-    window.addEventListener("wheel", handleWheel, { passive: false });
     window.addEventListener("contextmenu", handleContextMenu);
-    window.addEventListener("touchstart", handleTouchStart, { passive: false });
-    window.addEventListener("touchmove", handleTouchMove, { passive: false });
-    window.addEventListener("touchend", handleTouchEnd);
 
     return () => {
       svg.selectAll("*").remove();
+
+      // Cleanup global event listeners
+      document.removeEventListener("wheel", handleGlobalWheel);
+      document.removeEventListener("touchstart", handleGlobalTouchStart);
+      document.removeEventListener("touchmove", handleGlobalTouchMove);
+      document.removeEventListener("touchend", handleGlobalTouchEnd);
+
+      // Cleanup window event listeners
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("wheel", handleWheel);
       window.removeEventListener("contextmenu", handleContextMenu);
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchmove", handleTouchMove);
-      window.removeEventListener("touchend", handleTouchEnd);
     };
   }, [
     handleDeleteSelected,
