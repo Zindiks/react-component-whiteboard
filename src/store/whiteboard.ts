@@ -92,11 +92,6 @@ interface WhiteboardState {
   setConnectionColor: (color: string) => void;
 }
 
-// Helper function to snap to grid
-const snapToGrid = (value: number, gridSize: number): number => {
-  return Math.round(value / gridSize) * gridSize;
-};
-
 // Generate unique ID
 const generateId = (): string => {
   return `component_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

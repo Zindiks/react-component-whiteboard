@@ -61,7 +61,6 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
   const cancelConnectionCreation = useWhiteboardStore(
     (state) => state.cancelConnectionCreation
   );
-  const addConnection = useWhiteboardStore((state) => state.addConnection);
   const updateConnection = useWhiteboardStore(
     (state) => state.updateConnection
   );
@@ -106,7 +105,6 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
   ];
 
   const [showTemplates, setShowTemplates] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   // Remove showNodePalette since nodes are now individual draggable components
   const [showStats, setShowStats] = useState(false);
   const [showMinimap, setShowMinimap] = useState(false);
@@ -352,7 +350,6 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
     const template = flowTemplates.find((t) => t.id === templateId);
     if (template) {
       // Apply template logic here
-      setSelectedTemplate(templateId);
       console.log("Applying template:", template.name);
     }
   };
@@ -372,98 +369,6 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
   };
 
   const stats = getConnectionStats();
-
-  // Flow diagram node components
-  const FlowNode: React.FC<{
-    id: string;
-    x: number;
-    y: number;
-    type: "start" | "process" | "decision" | "end";
-    label: string;
-    color?: string;
-  }> = ({ id, x, y, type, label, color = "#3b82f6" }) => {
-    const nodeSize = 80;
-
-    const renderShape = () => {
-      switch (type) {
-        case "start":
-        case "end":
-          return (
-            <circle
-              cx={x + nodeSize / 2}
-              cy={y + nodeSize / 2}
-              r={nodeSize / 2 - 2}
-              fill={color}
-              stroke="#fff"
-              strokeWidth="2"
-              className="cursor-pointer hover:opacity-80"
-            />
-          );
-        case "decision":
-          return (
-            <polygon
-              points={`${x + nodeSize / 2},${y + 2} ${x + nodeSize - 2},${
-                y + nodeSize / 2
-              } ${x + nodeSize / 2},${y + nodeSize - 2} ${x + 2},${
-                y + nodeSize / 2
-              }`}
-              fill={color}
-              stroke="#fff"
-              strokeWidth="2"
-              className="cursor-pointer hover:opacity-80"
-            />
-          );
-        default: // process
-          return (
-            <rect
-              x={x + 2}
-              y={y + 2}
-              width={nodeSize - 4}
-              height={nodeSize - 4}
-              rx="8"
-              fill={color}
-              stroke="#fff"
-              strokeWidth="2"
-              className="cursor-pointer hover:opacity-80"
-            />
-          );
-      }
-    };
-
-    return (
-      <g>
-        {renderShape()}
-        <text
-          x={x + nodeSize / 2}
-          y={y + nodeSize / 2}
-          textAnchor="middle"
-          dominantBaseline="central"
-          fill="white"
-          fontSize="12"
-          fontWeight="500"
-          className="pointer-events-none select-none"
-        >
-          {label}
-        </text>
-      </g>
-    );
-  };
-
-  // Connection validation
-  const validateConnection = (fromId: string, toId: string): boolean => {
-    // Prevent self-connections
-    if (fromId === toId) return false;
-
-    // Prevent duplicate connections
-    const existingConnection = connections.find(
-      (conn) =>
-        (conn.fromId === fromId && conn.toId === toId) ||
-        (conn.fromId === toId && conn.toId === fromId)
-    );
-    if (existingConnection) return false;
-
-    return true;
-  };
 
   // Bulk operations for connections
   const selectAllConnections = () => {

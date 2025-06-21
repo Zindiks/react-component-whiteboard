@@ -7,7 +7,6 @@ import {
   MapPin,
   RefreshCw,
   CloudSun,
-  Loader2,
 } from "lucide-react";
 import { ComponentHeader } from "./ComponentHeader";
 import { Card, CardContent } from "@/components/ui/card";
