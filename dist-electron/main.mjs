@@ -1,7 +1,7 @@
 // electron/main.ts
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
-import * as isDev from "electron-is-dev";
+import isDev from "electron-is-dev";
 import { fileURLToPath } from "url";
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path.dirname(__filename);
@@ -31,9 +31,6 @@ var createWindow = () => {
       mainWindow.webContents.openDevTools();
     }
   });
-  mainWindow.on("closed", () => {
-    mainWindow = null;
-  });
 };
 app.whenReady().then(createWindow);
 app.on("window-all-closed", () => {
@@ -45,10 +42,5 @@ app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
-});
-app.on("web-contents-created", (event, contents) => {
-  contents.on("new-window", (event2, navigationUrl) => {
-    event2.preventDefault();
-  });
 });
 //# sourceMappingURL=main.mjs.map

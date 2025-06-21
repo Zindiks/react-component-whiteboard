@@ -99,146 +99,135 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     };
   }, [isDragging, handleMouseMove]);
 
+  const componentMap = {
+    timer: () => (
+      <Timer
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    weather: () => (
+      <Weather
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    bitcoin: () => (
+      <BitcoinChart
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    currency: () => (
+      <CurrencyConverter
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    note: () => (
+      <TextNote
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    confetti: () => (
+      <ConfettiButton
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    watch: () => (
+      <Watch
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    scrollingtext: () => (
+      <ScrollingText
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    youtubeVideo: () => (
+      <YouTubeVideo
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    soundcloud: () => (
+      <SoundCloudWidget
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    spotify: () => (
+      <SpotifyWidget
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    stylishlink: () => (
+      <StylishLink
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    flowCanvas: () => (
+      <FlowCanvas
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    flowNodeStart: () => (
+      <FlowNode
+        nodeType="start"
+        label="Start"
+        color="#10b981"
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    flowNodeProcess: () => (
+      <FlowNode
+        nodeType="process"
+        label="Process"
+        color="#3b82f6"
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    flowNodeDecision: () => (
+      <FlowNode
+        nodeType="decision"
+        label="Decision"
+        color="#f59e0b"
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+    flowNodeEnd: () => (
+      <FlowNode
+        nodeType="end"
+        label="End"
+        color="#ef4444"
+        onHeaderMouseDown={handleHeaderMouseDown}
+        onDelete={handleDeleteClick}
+      />
+    ),
+  };
+
   const renderComponent = () => {
-    switch (type) {
-      case "timer":
-        return (
-          <Timer
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "weather":
-        return (
-          <Weather
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "bitcoin":
-        return (
-          <BitcoinChart
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "currency":
-        return (
-          <CurrencyConverter
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "note":
-        return (
-          <TextNote
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "confetti":
-        return (
-          <ConfettiButton
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "watch":
-        return (
-          <Watch
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "scrollingtext":
-        return (
-          <ScrollingText
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "youtubeVideo":
-        return (
-          <YouTubeVideo
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "soundcloud":
-        return (
-          <SoundCloudWidget
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "spotify":
-        return (
-          <SpotifyWidget
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "stylishlink":
-        return (
-          <StylishLink
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "flowCanvas":
-        return (
-          <FlowCanvas
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "flowNodeStart":
-        return (
-          <FlowNode
-            nodeType="start"
-            label="Start"
-            color="#10b981"
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "flowNodeProcess":
-        return (
-          <FlowNode
-            nodeType="process"
-            label="Process"
-            color="#3b82f6"
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "flowNodeDecision":
-        return (
-          <FlowNode
-            nodeType="decision"
-            label="Decision"
-            color="#f59e0b"
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      case "flowNodeEnd":
-        return (
-          <FlowNode
-            nodeType="end"
-            label="End"
-            color="#ef4444"
-            onHeaderMouseDown={handleHeaderMouseDown}
-            onDelete={handleDeleteClick}
-          />
-        );
-      default:
-        return (
-          <div className="w-20 bg-slate-800 rounded-md p-2">
-            <p className="text-white text-center">{id}</p>
-          </div>
-        );
+    const componentFactory = componentMap[type as keyof typeof componentMap];
+
+    if (componentFactory) {
+      return componentFactory();
     }
+
+    return (
+      <div className="w-20 bg-slate-800 rounded-md p-2">
+        <p className="text-white text-center">{id}</p>
+      </div>
+    );
   };
 
   return (

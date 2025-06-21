@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
-import * as isDev from "electron-is-dev";
+import isDev from "electron-is-dev";
 import { fileURLToPath } from "url";
 
 // ES module equivalent of __dirname
@@ -48,9 +48,9 @@ const createWindow = (): void => {
     }
   });
 
-  mainWindow.on("closed", () => {
-    mainWindow = null as any;
-  });
+  // mainWindow.on("closed", () => {
+  //   mainWindow = ;
+  // });
 };
 
 // This method will be called when Electron has finished initialization
@@ -70,9 +70,9 @@ app.on("activate", () => {
   }
 });
 
-// Security: Prevent new window creation
-app.on("web-contents-created", (event, contents) => {
-  contents.on("new-window", (event, navigationUrl) => {
-    event.preventDefault();
-  });
-});
+// // Security: Prevent new window creation
+// app.on("web-contents-created", (event, contents) => {
+//   contents.on("new-window", (event) => {
+//     event.preventDefault();
+//   });
+// });
