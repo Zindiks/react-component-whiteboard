@@ -1,16 +1,17 @@
-const { build } = require("esbuild");
-const path = require("path");
+import { build } from "esbuild";
+import path from "path";
 
 // Build the main Electron process
 build({
   entryPoints: ["electron/main.ts"],
   bundle: true,
   platform: "node",
-  target: "node16",
-  external: ["electron"],
+  target: "node18",
+  external: ["electron", "fsevents", "electron-is-dev", "electron-reloader"],
   outdir: "dist-electron",
   sourcemap: true,
-  format: "cjs",
+  format: "esm",
+  outExtension: { ".js": ".mjs" },
 }).catch((err) => {
   console.error("Build failed:", err);
   process.exit(1);
@@ -21,11 +22,12 @@ build({
   entryPoints: ["electron/preload.ts"],
   bundle: true,
   platform: "node",
-  target: "node16",
-  external: ["electron"],
+  target: "node18",
+  external: ["electron", "fsevents"],
   outdir: "dist-electron",
   sourcemap: true,
-  format: "cjs",
+  format: "esm",
+  outExtension: { ".js": ".mjs" },
 }).catch((err) => {
   console.error("Preload build failed:", err);
   process.exit(1);

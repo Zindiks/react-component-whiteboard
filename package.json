@@ -9,7 +9,7 @@
     "build:electron": "node scripts/build-electron.js",
     "lint": "eslint .",
     "preview": "vite preview",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && npm run build:electron && electron dist-electron/main.js\"",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && npm run build:electron && electron dist-electron/main.mjs\"",
     "electron:pack": "npm run build && npm run build:electron && electron-builder",
     "electron:dist": "npm run build && npm run build:electron && electron-builder --publish=never",
     "postinstall": "electron-builder install-app-deps"
@@ -62,7 +62,7 @@
     "vite": "^5.4.1",
     "wait-on": "^8.0.3"
   },
-  "main": "dist-electron/main.js",
+  "main": "dist-electron/main.mjs",
   "homepage": "./",
   "build": {
     "appId": "com.example.whiteboard",
