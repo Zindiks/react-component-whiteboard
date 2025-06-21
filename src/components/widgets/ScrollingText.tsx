@@ -11,9 +11,9 @@ import {
   Plus,
 } from "lucide-react";
 import { ComponentHeader } from "./ComponentHeader";
-import { Card } from "./ui/card";
-import { Button } from "./ui/button";
-import { Textarea } from "./ui/textarea";
+import { Card } from "../ui/card";
+import { Button } from "../ui/button";
+import { Textarea } from "../ui/textarea";
 
 interface ScrollingTextProps {
   initialText?: string;

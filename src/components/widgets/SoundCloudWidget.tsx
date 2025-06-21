@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Edit3, ExternalLink, CloudRain } from "lucide-react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Card, CardContent } from "./ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Card, CardContent } from "../ui/card";
 import { ComponentHeader } from "./ComponentHeader";
 
 interface SoundCloudWidgetProps {

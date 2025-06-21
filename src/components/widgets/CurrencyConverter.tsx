@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ArrowLeftRight, RefreshCw, DollarSign } from "lucide-react";
 import { ComponentHeader } from "./ComponentHeader";
-import { Card, CardContent } from "./ui/card";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Card, CardContent } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "../ui/select";
 
 interface ExchangeRates {
   [key: string]: number;
