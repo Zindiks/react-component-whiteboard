@@ -38,6 +38,10 @@ const CustomGrid = () => {
   const zoomIndicatorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const previousZoomScale = useRef<number>(1);
 
+  // Overview/Minimap state
+  const [showOverview, setShowOverview] = useState(false);
+  const overviewRef = useRef<HTMLDivElement>(null);
+
   interface Component {
     id: number;
     x: number;
@@ -481,6 +485,14 @@ const CustomGrid = () => {
       } else if (event.key === "2") {
         event.preventDefault();
         zoomToSelection();
+      } else if (event.key === "3" || event.key === "o" || event.key === "O") {
+        event.preventDefault();
+        setShowOverview(!showOverview);
+      } else if (event.key === "Escape") {
+        // Close overview if open
+        if (showOverview) {
+          setShowOverview(false);
+        }
       } else if (event.key === "Delete" || event.key === "Backspace") {
         handleDeleteSelected();
       }
@@ -613,6 +625,7 @@ const CustomGrid = () => {
     zoomToFit,
     zoomToSelection,
     showZoomIndicatorTemporarily,
+    showOverview,
   ]);
 
   // Cleanup timeout on unmount
@@ -730,6 +743,52 @@ const CustomGrid = () => {
     });
   }, []);
 
+  // Overview/Minimap functionality
+  const getWhiteboardBounds = useCallback(() => {
+    if (components.length === 0) {
+      return { minX: 0, minY: 0, maxX: 1000, maxY: 1000 };
+    }
+
+    const padding = 200;
+    const bounds = components.reduce(
+      (acc, comp) => ({
+        minX: Math.min(acc.minX, comp.x),
+        minY: Math.min(acc.minY, comp.y),
+        maxX: Math.max(acc.maxX, comp.x + (comp.width || 200)),
+        maxY: Math.max(acc.maxY, comp.y + (comp.height || 200)),
+      }),
+      { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
+    );
+
+    return {
+      minX: bounds.minX - padding,
+      minY: bounds.minY - padding,
+      maxX: bounds.maxX + padding,
+      maxY: bounds.maxY + padding,
+    };
+  }, [components]);
+
+  const navigateToComponent = useCallback((component: Component) => {
+    if (!svgRef.current || !zoomBehavior.current) return;
+
+    const svg = d3.select(svgRef.current);
+    const targetX = component.x + (component.width || 200) / 2;
+    const targetY = component.y + (component.height || 200) / 2;
+
+    svg
+      .transition()
+      .duration(750)
+      .call(
+        zoomBehavior.current.transform,
+        d3.zoomIdentity
+          .translate(window.innerWidth / 2, window.innerHeight / 2)
+          .scale(1)
+          .translate(-targetX, -targetY)
+      );
+
+    setShowOverview(false);
+  }, []);
+
   return (
     <div
       ref={containerRef}
@@ -822,6 +881,36 @@ const CustomGrid = () => {
         selectedComponents={selectedComponents}
       />
       <Shelf onAddComponent={addNewComponent} transform={transform} />
+
+      {/* Overview/Minimap overlay */}
+      {showOverview && (
+        <div
+          ref={overviewRef}
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "white",
+            borderRadius: "12px",
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+            border: "1px solid #e2e8f0",
+            zIndex: 10001,
+            maxWidth: "80vw",
+            maxHeight: "80vh",
+            overflow: "hidden",
+          }}
+        >
+          <Overview
+            components={components}
+            selectedComponents={selectedComponents}
+            transform={transform}
+            onNavigateToComponent={navigateToComponent}
+            onClose={() => setShowOverview(false)}
+            getWhiteboardBounds={getWhiteboardBounds}
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -1122,10 +1211,13 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         </p>
         <p>
           <strong>Shortcuts:</strong> 1 (reset), Shift+1 (fit), 2 (zoom
-          selection)
+          selection), 3/O (overview)
         </p>
         <p className="text-xs text-blue-600 mt-1">
           <strong>Mac Trackpad:</strong> 2-finger scroll = pan, pinch = zoom
+        </p>
+        <p className="text-xs text-green-600 mt-1">
+          <strong>Overview:</strong> Press 3 or O for bird's eye view
         </p>
       </div>
     </div>
@@ -1540,6 +1632,268 @@ const Shelf: React.FC<ShelfProps> = ({ onAddComponent, transform }) => {
         </div>
       )}
     </>
+  );
+};
+
+interface OverviewProps {
+  components: {
+    id: number;
+    x: number;
+    y: number;
+    type: string;
+    width?: number;
+    height?: number;
+    zIndex?: number;
+  }[];
+  selectedComponents: number[];
+  transform: d3.ZoomTransform;
+  onNavigateToComponent: (component: {
+    id: number;
+    x: number;
+    y: number;
+    type: string;
+    width?: number;
+    height?: number;
+    zIndex?: number;
+  }) => void;
+  onClose: () => void;
+  getWhiteboardBounds: () => {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+  };
+}
+
+const Overview: React.FC<OverviewProps> = ({
+  components,
+  selectedComponents,
+  transform,
+  onNavigateToComponent,
+  onClose,
+  getWhiteboardBounds,
+}) => {
+  const bounds = getWhiteboardBounds();
+  const boundsWidth = bounds.maxX - bounds.minX;
+  const boundsHeight = bounds.maxY - bounds.minY;
+
+  // Calculate overview dimensions
+  const maxOverviewWidth = 600;
+  const maxOverviewHeight = 400;
+  const aspectRatio = boundsWidth / boundsHeight;
+
+  let overviewWidth = maxOverviewWidth;
+  let overviewHeight = maxOverviewWidth / aspectRatio;
+
+  if (overviewHeight > maxOverviewHeight) {
+    overviewHeight = maxOverviewHeight;
+    overviewWidth = maxOverviewHeight * aspectRatio;
+  }
+
+  const scale = overviewWidth / boundsWidth;
+
+  // Calculate current viewport rectangle in overview coordinates
+  const viewportLeft = (-transform.x / transform.k - bounds.minX) * scale;
+  const viewportTop = (-transform.y / transform.k - bounds.minY) * scale;
+  const viewportWidth = (window.innerWidth / transform.k) * scale;
+  const viewportHeight = (window.innerHeight / transform.k) * scale;
+
+  const getComponentColor = (type: string) => {
+    switch (type) {
+      case "timer":
+        return "#f59e0b";
+      case "weather":
+        return "#06b6d4";
+      case "bitcoin":
+        return "#f97316";
+      case "currency":
+        return "#10b981";
+      case "note":
+        return "#8b5cf6";
+      case "confetti":
+        return "#ec4899";
+      case "watch":
+        return "#6366f1";
+      case "scrollingtext":
+        return "#14b8a6";
+      case "youtubeVideo":
+        return "#ef4444";
+      case "soundcloud":
+        return "#f97316";
+      case "spotify":
+        return "#22c55e";
+      case "stylishlink":
+        return "#3b82f6";
+      case "flowCanvas":
+        return "#64748b";
+      case "flowNodeStart":
+        return "#10b981";
+      case "flowNodeProcess":
+        return "#3b82f6";
+      case "flowNodeDecision":
+        return "#f59e0b";
+      case "flowNodeEnd":
+        return "#ef4444";
+      default:
+        return "#64748b";
+    }
+  };
+
+  return (
+    <div className="flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800">
+            Whiteboard Overview
+          </h3>
+          <p className="text-sm text-gray-500">
+            {components.length} components • Click to navigate
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="Close overview"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Overview Canvas */}
+      <div className="p-4">
+        <div
+          className="relative border border-gray-300 rounded-lg overflow-hidden"
+          style={{
+            width: `${overviewWidth}px`,
+            height: `${overviewHeight}px`,
+            backgroundColor: "#f8fafc",
+          }}
+        >
+          {/* Grid pattern */}
+          <svg
+            className="absolute inset-0 pointer-events-none"
+            width="100%"
+            height="100%"
+          >
+            <defs>
+              <pattern
+                id="overview-grid"
+                width="20"
+                height="20"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 20 0 L 0 0 0 20"
+                  fill="none"
+                  stroke="#e2e8f0"
+                  strokeWidth="1"
+                />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#overview-grid)" />
+          </svg>
+
+          {/* Current viewport indicator */}
+          <div
+            className="absolute border-2 border-blue-500 bg-blue-500/20 pointer-events-none"
+            style={{
+              left: `${Math.max(0, viewportLeft)}px`,
+              top: `${Math.max(0, viewportTop)}px`,
+              width: `${Math.min(
+                overviewWidth - Math.max(0, viewportLeft),
+                viewportWidth
+              )}px`,
+              height: `${Math.min(
+                overviewHeight - Math.max(0, viewportTop),
+                viewportHeight
+              )}px`,
+            }}
+          />
+
+          {/* Components */}
+          {components.map((component) => {
+            const x = (component.x - bounds.minX) * scale;
+            const y = (component.y - bounds.minY) * scale;
+            const width = (component.width || 200) * scale;
+            const height = (component.height || 200) * scale;
+            const isSelected = selectedComponents.includes(component.id);
+
+            return (
+              <div
+                key={component.id}
+                className={`absolute cursor-pointer transition-all duration-200 hover:scale-110 hover:z-10 ${
+                  isSelected ? "ring-2 ring-blue-500 ring-offset-1" : ""
+                }`}
+                style={{
+                  left: `${x}px`,
+                  top: `${y}px`,
+                  width: `${Math.max(4, width)}px`,
+                  height: `${Math.max(4, height)}px`,
+                  backgroundColor: getComponentColor(component.type),
+                  borderRadius: "2px",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                }}
+                onClick={() => onNavigateToComponent(component)}
+                title={`${component.type} (ID: ${component.id})`}
+              />
+            );
+          })}
+        </div>
+
+        {/* Legend */}
+        <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-blue-500 rounded border"></div>
+            <span>Current View</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-blue-500 ring-2 ring-blue-500 rounded border"></div>
+            <span>Selected</span>
+          </div>
+        </div>
+
+        {/* Statistics */}
+        <div className="mt-4 grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg text-sm">
+          <div className="text-center">
+            <div className="font-semibold text-gray-800">
+              {components.length}
+            </div>
+            <div className="text-gray-500">Components</div>
+          </div>
+          <div className="text-center">
+            <div className="font-semibold text-gray-800">
+              {selectedComponents.length}
+            </div>
+            <div className="text-gray-500">Selected</div>
+          </div>
+          <div className="text-center">
+            <div className="font-semibold text-gray-800">
+              {Math.round(transform.k * 100)}%
+            </div>
+            <div className="text-gray-500">Zoom</div>
+          </div>
+        </div>
+
+        {/* Instructions */}
+        <div className="mt-3 text-xs text-gray-600 space-y-1">
+          <p>
+            <strong>Navigation:</strong>
+          </p>
+          <p>• Click any component to navigate to it</p>
+          <p>
+            • Press <kbd className="px-1 py-0.5 bg-gray-200 rounded">3</kbd> or{" "}
+            <kbd className="px-1 py-0.5 bg-gray-200 rounded">O</kbd> to toggle
+            overview
+          </p>
+          <p>
+            • Press{" "}
+            <kbd className="px-1 py-0.5 bg-gray-200 rounded">Escape</kbd> to
+            close
+          </p>
+        </div>
+      </div>
+    </div>
   );
 };
 
