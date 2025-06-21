@@ -500,7 +500,18 @@ const CustomGrid = () => {
       const target = event.target as HTMLElement;
       const isComponentClick = target.closest("[data-component]") !== null;
 
-      if (event.button === 0 && !isSpacePressed && !isComponentClick) {
+      // Check if we clicked on the sidebar or control panel (prevent marquee when clicking UI)
+      const isSidebarClick = target.closest("[data-sidebar]") !== null;
+      const isControlPanelClick =
+        target.closest("[data-control-panel]") !== null;
+      const isUIClick = isSidebarClick || isControlPanelClick;
+
+      if (
+        event.button === 0 &&
+        !isSpacePressed &&
+        !isComponentClick &&
+        !isUIClick
+      ) {
         // Left click without space on empty area - start marquee selection
         setIsMarqueeActive(true);
         setMarqueeStart(coords);
@@ -510,10 +521,12 @@ const CustomGrid = () => {
         event.button === 2 ||
         (event.button === 0 && isSpacePressed)
       ) {
-        // Middle, right, or space+left click - start panning
-        setIsPanning(true);
-        setLastPanPoint(coords);
-        event.preventDefault();
+        // Middle, right, or space+left click - start panning (but not on UI elements)
+        if (!isUIClick) {
+          setIsPanning(true);
+          setLastPanPoint(coords);
+          event.preventDefault();
+        }
       }
     };
 
@@ -1067,6 +1080,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
 }) => {
   return (
     <div
+      data-control-panel
       style={{
         position: "absolute",
         bottom: "10px",
@@ -1437,6 +1451,7 @@ const Shelf: React.FC<ShelfProps> = ({ onAddComponent, transform }) => {
   return (
     <>
       <div
+        data-sidebar
         style={{
           position: "absolute",
           top: "10px",
