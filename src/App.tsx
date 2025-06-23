@@ -6,8 +6,29 @@ import { ComponentFooter } from "./components/ComponentFooter";
 import { CategorySidebar } from "./components/CategorySidebar";
 import { DraggableComponent } from "./components/DraggableWhiteboardComponent";
 import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
+import { Component } from "./types/whiteboard";
+import { useWhiteboardState } from "./hooks/useWhiteboardState";
 
 const CustomGrid = () => {
+  // Use whiteboard state hook
+  const {
+    components,
+    selectedComponents,
+    copiedComponents,
+    setComponents,
+    setSelectedComponents,
+    setCopiedComponents,
+    handleDeleteComponent,
+    handleDeleteSelected,
+    addNewComponent,
+    handleResizeComponent,
+    handleTextChange,
+    handleImageChange,
+    handleDrag,
+    handleSelect,
+    handleDragStart,
+  } = useWhiteboardState();
+
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [transform, setTransform] = useState(d3.zoomIdentity);
@@ -40,62 +61,10 @@ const CustomGrid = () => {
 
   // Mouse position tracking for paste operations
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [copiedComponents, setCopiedComponents] = useState<Component[]>([]);
-
-  interface Component {
-    id: number;
-    x: number;
-    y: number;
-    type: string;
-    width?: number;
-    height?: number;
-    zIndex?: number;
-    imageSrc?: string; // For image components
-    text?: string; // For text components
-    youtubeUrl?: string; // For YouTube video components
-    soundcloudUrl?: string; // For SoundCloud components
-    spotifyUrl?: string; // For Spotify components
-  }
-
-  const [components, setComponents] = useState<Component[]>([
-    { id: 1, x: 100, y: 100, type: "timer", zIndex: 1 },
-    { id: 2, x: 300, y: 200, type: "weather", zIndex: 2 },
-    { id: 3, x: 600, y: 100, type: "bitcoin", zIndex: 3 },
-    { id: 4, x: 100, y: 400, type: "currency", zIndex: 4 },
-    { id: 5, x: 400, y: 400, type: "confetti", zIndex: 5 },
-    { id: 6, x: 700, y: 400, type: "note", zIndex: 6 },
-    { id: 7, x: 1000, y: 100, type: "watch", zIndex: 7 },
-    { id: 8, x: 1000, y: 400, type: "scrollingtext", zIndex: 8 },
-    { id: 9, x: 500, y: 200, type: "youtubeVideo", zIndex: 9 },
-    { id: 10, x: 800, y: 200, type: "soundcloud", zIndex: 10 },
-    { id: 11, x: 300, y: 600, type: "spotify", zIndex: 11 },
-    { id: 12, x: 600, y: 600, type: "stylishlink", zIndex: 12 },
-  ]);
-  const [selectedComponents, setSelectedComponents] = useState<number[]>([]);
-  const [initialPositions, setInitialPositions] = useState<
-    { id: number; x: number; y: number }[]
-  >([]);
 
   const zoomBehavior = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(
     null
   );
-
-  const handleDeleteComponent = useCallback((id: number) => {
-    console.log(`Deleting component with ID: ${id}`);
-    setComponents((prev) => prev.filter((component) => component.id !== id));
-    setSelectedComponents((prev) =>
-      prev.filter((selectedId) => selectedId !== id)
-    );
-  }, []);
-
-  const handleDeleteSelected = useCallback(() => {
-    if (selectedComponents.length > 0) {
-      setComponents((prev) =>
-        prev.filter((component) => !selectedComponents.includes(component.id))
-      );
-      setSelectedComponents([]);
-    }
-  }, [selectedComponents]);
 
   // Copy-paste functionality for all shape components
   const handleCopyComponents = useCallback(() => {
@@ -120,7 +89,7 @@ const CustomGrid = () => {
         `Copied ${selectedShapeComponents.length} shape component(s)`
       );
     }
-  }, [components, selectedComponents]);
+  }, [components, selectedComponents, setCopiedComponents]);
 
   // Helper function to check if a string is likely an image URL
   const isImageUrl = (url: string): boolean => {
@@ -340,7 +309,14 @@ const CustomGrid = () => {
         tempImg.src = imageSrc;
       });
     },
-    [components, mousePosition.x, mousePosition.y, transform]
+    [
+      components,
+      mousePosition.x,
+      mousePosition.y,
+      transform,
+      setComponents,
+      setSelectedComponents,
+    ]
   );
 
   // Helper function to detect YouTube URLs
@@ -414,7 +390,14 @@ const CustomGrid = () => {
       setSelectedComponents([newId]); // Select the new component
       console.log(`Created YouTube video component from URL: ${youtubeUrl}`);
     },
-    [components, mousePosition.x, mousePosition.y, transform]
+    [
+      components,
+      mousePosition.x,
+      mousePosition.y,
+      transform,
+      setComponents,
+      setSelectedComponents,
+    ]
   );
 
   // Helper function to detect SoundCloud URLs
@@ -478,7 +461,14 @@ const CustomGrid = () => {
       setSelectedComponents([newId]); // Select the new component
       console.log(`Created SoundCloud component from URL: ${soundcloudUrl}`);
     },
-    [components, mousePosition.x, mousePosition.y, transform]
+    [
+      components,
+      mousePosition.x,
+      mousePosition.y,
+      transform,
+      setComponents,
+      setSelectedComponents,
+    ]
   );
 
   // Helper function to detect Spotify URLs
@@ -545,7 +535,14 @@ const CustomGrid = () => {
       setSelectedComponents([newId]); // Select the new component
       console.log(`Created Spotify component from URL: ${spotifyUrl}`);
     },
-    [components, mousePosition.x, mousePosition.y, transform]
+    [
+      components,
+      mousePosition.x,
+      mousePosition.y,
+      transform,
+      setComponents,
+      setSelectedComponents,
+    ]
   );
 
   const handlePasteComponents = useCallback(async () => {
@@ -651,6 +648,8 @@ const CustomGrid = () => {
     createSoundCloudComponentAtMouse,
     isSpotifyUrl,
     createSpotifyComponentAtMouse,
+    setComponents,
+    setSelectedComponents,
   ]);
 
   // Function to force paste image from clipboard (ignoring copied components)
@@ -1239,6 +1238,7 @@ const CustomGrid = () => {
     handleCopyComponents,
     handlePasteComponents,
     handlePasteImageFromClipboard,
+    setSelectedComponents,
   ]);
 
   // Cleanup timeout on unmount
@@ -1250,118 +1250,12 @@ const CustomGrid = () => {
     };
   }, []);
 
-  const handleDragStart = (id: number) => {
-    // Bring the component to the front when starting to drag
-    bringToFront(id);
-
-    if (selectedComponents.length > 1 && selectedComponents.includes(id)) {
-      // Multiple selected components: dragging one moves all selected
-      const positions = selectedComponents.map((selectedId) => {
-        const component = components.find((c) => c.id === selectedId);
-        return { id: selectedId, x: component?.x || 0, y: component?.y || 0 };
-      });
-      setInitialPositions(positions);
-    } else {
-      // Single component drag - store initial position and select it
-      const component = components.find((c) => c.id === id);
-      if (component) {
-        setInitialPositions([{ id, x: component.x, y: component.y }]);
-        setSelectedComponents([id]);
-      }
-    }
-  };
-
-  const handleDrag = useCallback(
-    (id: number, deltaX: number, deltaY: number) => {
-      if (selectedComponents.length > 1 && selectedComponents.includes(id)) {
-        // Moving multiple selected components
-        setComponents((prevComponents) =>
-          prevComponents.map((component) => {
-            const initialPos = initialPositions.find(
-              (pos) => pos.id === component.id
-            );
-            if (initialPos && selectedComponents.includes(component.id)) {
-              return {
-                ...component,
-                x: initialPos.x + deltaX,
-                y: initialPos.y + deltaY,
-              };
-            }
-            return component;
-          })
-        );
-      } else {
-        // Single component drag
-        const initialPos = initialPositions.find((pos) => pos.id === id);
-        if (initialPos) {
-          setComponents((prevComponents) =>
-            prevComponents.map((component) =>
-              component.id === id
-                ? {
-                    ...component,
-                    x: initialPos.x + deltaX,
-                    y: initialPos.y + deltaY,
-                  }
-                : component
-            )
-          );
-        }
-      }
-    },
-    [selectedComponents, initialPositions]
-  );
-
-  const handleSelect = useCallback((id: number) => {
-    // Single selection only - replace any existing selection
-    setSelectedComponents([id]);
-  }, []);
-
   const handleZoom = useCallback((factor: number) => {
     if (!svgRef.current || !zoomBehavior.current) return;
     const svg = d3.select(svgRef.current);
     zoomBehavior.current.scaleBy(svg, factor);
     // Don't show indicator for manual button clicks
   }, []);
-
-  const addNewComponent = useCallback(
-    (type: string, x?: number, y?: number) => {
-      const newId = Math.max(...components.map((c) => c.id)) + 1;
-      const highestZIndex = Math.max(
-        ...components.map((c) => c.zIndex || 0),
-        0
-      );
-
-      console.log(`Adding new ${type} component with ID: ${newId}`);
-
-      // Create base component
-      const newComponent: Component = {
-        id: newId,
-        x: x ?? 200 + Math.random() * 200,
-        y: y ?? 200 + Math.random() * 200,
-        type,
-        zIndex: highestZIndex + 1, // Place new component on top
-      };
-
-      // Add default properties for shape components
-      if (["rectangle", "ellipse"].includes(type)) {
-        newComponent.width = 120;
-        newComponent.height = 80;
-      } else if (["arrow", "line"].includes(type)) {
-        newComponent.width = 150;
-        newComponent.height = 20;
-      } else if (type === "text") {
-        newComponent.width = 150;
-        newComponent.height = 50;
-        newComponent.text = "Double-click to edit";
-      } else if (type === "imageShape") {
-        newComponent.width = 200;
-        newComponent.height = 150;
-      }
-
-      setComponents((prev) => [...prev, newComponent]);
-    },
-    [components]
-  );
 
   // Category and sidebar handlers
   const handleCategoryClick = useCallback(
@@ -1790,21 +1684,8 @@ const CustomGrid = () => {
     isYouTubeUrl,
     isSoundCloudUrl,
     isSpotifyUrl,
+    setComponents,
   ]);
-
-  const bringToFront = useCallback((id: number) => {
-    setComponents((prevComponents) => {
-      const highestZIndex = Math.max(
-        ...prevComponents.map((comp) => comp.zIndex || 0),
-        0
-      );
-      return prevComponents.map((component) =>
-        component.id === id
-          ? { ...component, zIndex: highestZIndex + 1 }
-          : component
-      );
-    });
-  }, []);
 
   // Overview/Minimap functionality
   const getWhiteboardBounds = useCallback(() => {
@@ -1850,36 +1731,6 @@ const CustomGrid = () => {
       );
 
     setShowOverview(false);
-  }, []);
-
-  const handleResizeComponent = useCallback(
-    (id: number, width: number, height: number) => {
-      console.log(`Resizing component ${id} to ${width}x${height}`);
-      setComponents((prev) =>
-        prev.map((component) =>
-          component.id === id ? { ...component, width, height } : component
-        )
-      );
-    },
-    []
-  );
-
-  const handleTextChange = useCallback((id: number, text: string) => {
-    console.log(`Changing text for component ${id} to: ${text}`);
-    setComponents((prev) =>
-      prev.map((component) =>
-        component.id === id ? { ...component, text } : component
-      )
-    );
-  }, []);
-
-  const handleImageChange = useCallback((id: number, imageSrc: string) => {
-    console.log(`Changing image for component ${id}`);
-    setComponents((prev) =>
-      prev.map((component) =>
-        component.id === id ? { ...component, imageSrc } : component
-      )
-    );
   }, []);
 
   return (
