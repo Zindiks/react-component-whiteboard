@@ -8,6 +8,13 @@ import { DraggableComponent } from "./components/DraggableWhiteboardComponent";
 import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
 import { Component } from "./types/whiteboard";
 import { useWhiteboardState } from "./hooks/useWhiteboardState";
+import {
+  isImageUrl,
+  isYouTubeUrl,
+  isSoundCloudUrl,
+  isSpotifyUrl,
+  extractImageFromHtml,
+} from "./utils/urlDetection";
 
 const CustomGrid = () => {
   // Use whiteboard state hook
@@ -90,139 +97,6 @@ const CustomGrid = () => {
       );
     }
   }, [components, selectedComponents, setCopiedComponents]);
-
-  // Helper function to check if a string is likely an image URL
-  const isImageUrl = (url: string): boolean => {
-    try {
-      // Handle data URLs
-      if (url.startsWith("data:image/")) {
-        return true;
-      }
-
-      // Handle blob URLs
-      if (url.startsWith("blob:")) {
-        return true;
-      }
-
-      const urlObj = new URL(url);
-      const pathname = urlObj.pathname.toLowerCase();
-
-      // Check for explicit image file extensions
-      const imageExtensions = [
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".gif",
-        ".webp",
-        ".svg",
-        ".bmp",
-        ".ico",
-        ".tiff",
-        ".tif",
-        ".avif",
-      ];
-      if (imageExtensions.some((ext) => pathname.endsWith(ext))) {
-        return true;
-      }
-
-      // Check for URLs that contain image-related keywords
-      const imageKeywords = [
-        "image",
-        "img",
-        "photo",
-        "picture",
-        "pic",
-        "avatar",
-        "thumbnail",
-        "thumb",
-      ];
-      if (
-        imageKeywords.some((keyword) => url.toLowerCase().includes(keyword))
-      ) {
-        return true;
-      }
-
-      // Check for common image hosting domains
-      const imageHosts = [
-        "imgur.com",
-        "i.imgur.com",
-        "unsplash.com",
-        "images.unsplash.com",
-        "pexels.com",
-        "images.pexels.com",
-        "pixabay.com",
-        "flickr.com",
-        "live.staticflickr.com",
-        "googleusercontent.com",
-        "amazonaws.com",
-        "cloudinary.com",
-        "githubusercontent.com",
-      ];
-
-      if (imageHosts.some((host) => urlObj.hostname.includes(host))) {
-        return true;
-      }
-
-      return false;
-    } catch {
-      return false;
-    }
-  };
-
-  // Helper function to extract image URL from HTML content
-  const extractImageFromHtml = useCallback(
-    (htmlText: string): string | null => {
-      try {
-        // Create a temporary DOM element to parse HTML
-        const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = htmlText;
-
-        // Look for img tags
-        const imgTags = tempDiv.querySelectorAll("img");
-        for (const img of imgTags) {
-          const src = img.src || img.getAttribute("src");
-          if (src && isImageUrl(src)) {
-            return src;
-          }
-        }
-
-        // Look for background images in style attributes
-        const elementsWithStyle = tempDiv.querySelectorAll(
-          '[style*="background"]'
-        );
-        for (const element of elementsWithStyle) {
-          const style = element.getAttribute("style") || "";
-          const backgroundMatch = style.match(
-            /background-image:\s*url\(['"]?([^'"]+)['"]?\)/
-          );
-          if (
-            backgroundMatch &&
-            backgroundMatch[1] &&
-            isImageUrl(backgroundMatch[1])
-          ) {
-            return backgroundMatch[1];
-          }
-        }
-
-        // Look for any URLs in the text that might be images
-        const urlRegex = /https?:\/\/[^\s"'<>]+/g;
-        const urls = htmlText.match(urlRegex);
-        if (urls) {
-          for (const url of urls) {
-            if (isImageUrl(url)) {
-              return url;
-            }
-          }
-        }
-
-        return null;
-      } catch (error) {
-        console.error("Error extracting image from HTML:", error);
-        return null;
-      }
-    },
-    []
-  );
 
   // Helper function to create an image component at mouse position
   const createImageComponentAtMouse = useCallback(
@@ -319,42 +193,6 @@ const CustomGrid = () => {
     ]
   );
 
-  // Helper function to detect YouTube URLs
-  const isYouTubeUrl = useCallback((url: string): boolean => {
-    if (!url || typeof url !== "string") return false;
-
-    try {
-      const urlObj = new URL(url.trim());
-      const hostname = urlObj.hostname.toLowerCase();
-
-      // Check for various YouTube URL patterns
-      return (
-        hostname === "youtube.com" ||
-        hostname === "www.youtube.com" ||
-        hostname === "youtu.be" ||
-        hostname === "m.youtube.com" ||
-        hostname === "music.youtube.com" ||
-        // Also check for YouTube embeds
-        hostname === "youtube-nocookie.com" ||
-        hostname === "www.youtube-nocookie.com" ||
-        // Check if the URL contains youtube in path for some edge cases
-        urlObj.href.includes("youtube.com/watch") ||
-        urlObj.href.includes("youtube.com/embed") ||
-        urlObj.href.includes("youtu.be/")
-      );
-    } catch {
-      // If URL parsing fails, try simple string matching
-      const lowerUrl = url.toLowerCase();
-      return (
-        lowerUrl.includes("youtube.com/watch") ||
-        lowerUrl.includes("youtu.be/") ||
-        lowerUrl.includes("youtube.com/embed") ||
-        lowerUrl.includes("youtube.com/v/") ||
-        lowerUrl.includes("m.youtube.com/watch")
-      );
-    }
-  }, []);
-
   // Helper function to create a YouTube component at mouse position
   const createYouTubeComponentAtMouse = useCallback(
     (youtubeUrl: string): void => {
@@ -400,32 +238,6 @@ const CustomGrid = () => {
     ]
   );
 
-  // Helper function to detect SoundCloud URLs
-  const isSoundCloudUrl = useCallback((url: string): boolean => {
-    if (!url || typeof url !== "string") return false;
-
-    try {
-      const urlObj = new URL(url.trim());
-      const hostname = urlObj.hostname.toLowerCase();
-
-      // Check for SoundCloud URL patterns
-      return (
-        hostname === "soundcloud.com" ||
-        hostname === "www.soundcloud.com" ||
-        hostname === "m.soundcloud.com" ||
-        hostname === "on.soundcloud.com" ||
-        urlObj.href.includes("soundcloud.com/")
-      );
-    } catch {
-      // If URL parsing fails, try simple string matching
-      const lowerUrl = url.toLowerCase();
-      return (
-        lowerUrl.includes("soundcloud.com/") ||
-        lowerUrl.includes("on.soundcloud.com")
-      );
-    }
-  }, []);
-
   // Helper function to create a SoundCloud component at mouse position
   const createSoundCloudComponentAtMouse = useCallback(
     (soundcloudUrl: string): void => {
@@ -470,35 +282,6 @@ const CustomGrid = () => {
       setSelectedComponents,
     ]
   );
-
-  // Helper function to detect Spotify URLs
-  const isSpotifyUrl = useCallback((url: string): boolean => {
-    if (!url || typeof url !== "string") return false;
-
-    try {
-      const urlObj = new URL(url.trim());
-      const hostname = urlObj.hostname.toLowerCase();
-
-      // Check for Spotify URL patterns
-      return (
-        hostname === "spotify.com" ||
-        hostname === "www.spotify.com" ||
-        hostname === "open.spotify.com" ||
-        hostname === "play.spotify.com" ||
-        urlObj.href.includes("spotify.com/") ||
-        // Also check for spotify: protocol links
-        url.startsWith("spotify:")
-      );
-    } catch {
-      // If URL parsing fails, try simple string matching
-      const lowerUrl = url.toLowerCase();
-      return (
-        lowerUrl.includes("spotify.com/") ||
-        lowerUrl.includes("open.spotify.com") ||
-        lowerUrl.startsWith("spotify:")
-      );
-    }
-  }, []);
 
   // Helper function to create a Spotify component at mouse position
   const createSpotifyComponentAtMouse = useCallback(
@@ -641,12 +424,8 @@ const CustomGrid = () => {
     mousePosition.y,
     transform,
     createImageComponentAtMouse,
-    extractImageFromHtml,
-    isYouTubeUrl,
     createYouTubeComponentAtMouse,
-    isSoundCloudUrl,
     createSoundCloudComponentAtMouse,
-    isSpotifyUrl,
     createSpotifyComponentAtMouse,
     setComponents,
     setSelectedComponents,
@@ -694,7 +473,7 @@ const CustomGrid = () => {
     } catch (error) {
       console.log("Failed to paste image from clipboard:", error);
     }
-  }, [createImageComponentAtMouse, extractImageFromHtml]);
+  }, [createImageComponentAtMouse]);
 
   // Enhanced pan and zoom utilities
   const getEventCoordinates = (event: MouseEvent | React.MouseEvent) => ({
@@ -1677,15 +1456,7 @@ const CustomGrid = () => {
       document.removeEventListener("dragleave", handleDragLeave);
       document.removeEventListener("drop", handleDrop);
     };
-  }, [
-    addNewComponent,
-    transform,
-    components,
-    isYouTubeUrl,
-    isSoundCloudUrl,
-    isSpotifyUrl,
-    setComponents,
-  ]);
+  }, [addNewComponent, transform, components, setComponents]);
 
   // Overview/Minimap functionality
   const getWhiteboardBounds = useCallback(() => {
