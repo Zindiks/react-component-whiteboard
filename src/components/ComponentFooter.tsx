@@ -1,17 +1,5 @@
 import React from "react";
-
-interface ComponentDefinition {
-  type: string;
-  label: string;
-  icon: string;
-  description: string;
-}
-
-interface Category {
-  name: string;
-  icon: string;
-  components: ComponentDefinition[];
-}
+import { type Category } from "../constants/componentCategories";
 
 interface FooterProps {
   categories: Category[];
