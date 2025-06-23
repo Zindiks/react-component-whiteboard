@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Play, Pause, Square, RotateCcw, Clock } from "lucide-react";
-import { ComponentHeader } from "./ComponentHeader";
+import { Play, Pause, Square, RotateCcw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -8,15 +7,11 @@ import { cn } from "@/lib/utils";
 interface TimerProps {
   onTimeUpdate?: (time: number) => void;
   initialTime?: number;
-  onHeaderMouseDown?: (event: React.MouseEvent) => void;
-  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const Timer: React.FC<TimerProps> = ({
   onTimeUpdate,
   initialTime = 0,
-  onHeaderMouseDown,
-  onDelete,
 }) => {
   const [time, setTime] = useState(initialTime);
   const [isRunning, setIsRunning] = useState(false);
@@ -79,15 +74,21 @@ export const Timer: React.FC<TimerProps> = ({
   };
 
   return (
-    <Card className="min-w-[200px] overflow-hidden">
-      <ComponentHeader
-        title="Timer"
-        icon={Clock}
-        iconColor="bg-green-500"
-        onMouseDown={onHeaderMouseDown}
-        onDelete={onDelete}
-        actions={
-          <div className="flex space-x-1">
+    <Card className="min-w-[200px] overflow-hidden bg-white border border-gray-200 shadow-sm">
+      <CardContent className="p-6">
+        <div className="text-center">
+          <div
+            className={cn(
+              "text-3xl font-mono font-bold mb-4 transition-colors",
+              isRunning ? "text-green-600" : "text-muted-foreground"
+            )}
+          >
+            {formatTime(time)}
+          </div>
+          <div className="text-sm text-muted-foreground mb-4">
+            {isRunning ? "Running" : "Stopped"}
+          </div>
+          <div className="flex justify-center space-x-2">
             {!isRunning ? (
               <Button
                 variant="ghost"
@@ -127,22 +128,6 @@ export const Timer: React.FC<TimerProps> = ({
             >
               <RotateCcw className="w-4 h-4" />
             </Button>
-          </div>
-        }
-      />
-
-      <CardContent className="p-6">
-        <div className="text-center">
-          <div
-            className={cn(
-              "text-3xl font-mono font-bold mb-2 transition-colors",
-              isRunning ? "text-green-600" : "text-muted-foreground"
-            )}
-          >
-            {formatTime(time)}
-          </div>
-          <div className="text-sm text-muted-foreground">
-            {isRunning ? "Running" : "Stopped"}
           </div>
         </div>
       </CardContent>

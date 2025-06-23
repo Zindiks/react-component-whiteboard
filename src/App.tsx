@@ -105,42 +105,6 @@ const COMPONENT_CATEGORIES: Category[] = [
     ],
   },
   {
-    name: "Flow & Diagram",
-    icon: "🔄",
-    components: [
-      {
-        type: "flowCanvas",
-        label: "Flow Canvas",
-        icon: "🔄",
-        description: "Flow diagram canvas",
-      },
-      {
-        type: "flowNodeStart",
-        label: "Start Node",
-        icon: "▶️",
-        description: "Flow start node",
-      },
-      {
-        type: "flowNodeProcess",
-        label: "Process Node",
-        icon: "⚡",
-        description: "Flow process node",
-      },
-      {
-        type: "flowNodeDecision",
-        label: "Decision Node",
-        icon: "❓",
-        description: "Flow decision node",
-      },
-      {
-        type: "flowNodeEnd",
-        label: "End Node",
-        icon: "🏁",
-        description: "Flow end node",
-      },
-    ],
-  },
-  {
     name: "Links & Web",
     icon: "🌐",
     components: [
@@ -259,20 +223,6 @@ const CustomGrid = () => {
     { id: 10, x: 800, y: 200, type: "soundcloud", zIndex: 10 },
     { id: 11, x: 300, y: 600, type: "spotify", zIndex: 11 },
     { id: 12, x: 600, y: 600, type: "stylishlink", zIndex: 12 },
-    {
-      id: 13,
-      x: 800,
-      y: 600,
-      type: "flowCanvas",
-      width: 600,
-      height: 300,
-      zIndex: 13,
-    },
-    // Flow nodes for demonstration
-    { id: 14, x: 1400, y: 100, type: "flowNodeStart", zIndex: 14 },
-    { id: 15, x: 1550, y: 100, type: "flowNodeProcess", zIndex: 15 },
-    { id: 16, x: 1700, y: 100, type: "flowNodeDecision", zIndex: 16 },
-    { id: 17, x: 1850, y: 100, type: "flowNodeEnd", zIndex: 17 },
   ]);
   const [selectedComponents, setSelectedComponents] = useState<number[]>([]);
   const [initialPositions, setInitialPositions] = useState<
@@ -1125,7 +1075,7 @@ const CustomGrid = () => {
         const centerY = event.clientY - rect.top;
 
         // Determine zoom direction and factor
-        const zoomIntensity = 0.007;
+        const zoomIntensity = 0.015; // Increased from 0.007 for faster zoom
         const delta = -event.deltaY * zoomIntensity;
         const scaleFactor = Math.exp(delta);
 
@@ -1283,9 +1233,11 @@ const CustomGrid = () => {
         event.preventDefault();
         setShowOverview(!showOverview);
       } else if (event.key === "Escape") {
-        // Close overview if open
+        // Close overview if open, otherwise deselect all components
         if (showOverview) {
           setShowOverview(false);
+        } else {
+          setSelectedComponents([]);
         }
       } else if (event.key === "Delete" || event.key === "Backspace") {
         handleDeleteSelected();
@@ -2169,6 +2121,7 @@ const CustomGrid = () => {
               onTextChange={handleTextChange}
               onImageChange={handleImageChange}
               selected={selectedComponents.includes(component.id)}
+              selectedCount={selectedComponents.length}
               transform={transform}
               zIndex={component.zIndex || 0}
               imageSrc={component.imageSrc}
@@ -2294,10 +2247,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       className="flex flex-col gap-2"
     >
       <div className="flex gap-2">
-        <Button onClick={() => onZoom(1.2)} variant={"ghost"} size="sm">
+        <Button onClick={() => onZoom(1.4)} variant={"ghost"} size="sm">
           <Plus className="w-4 h-4" />
         </Button>
-        <Button onClick={() => onZoom(0.8)} variant={"ghost"} size="sm">
+        <Button onClick={() => onZoom(0.7)} variant={"ghost"} size="sm">
           <Minus className="w-4 h-4" />
         </Button>
       </div>
@@ -2402,16 +2355,6 @@ const Overview: React.FC<OverviewProps> = ({
         return "#22c55e";
       case "stylishlink":
         return "#3b82f6";
-      case "flowCanvas":
-        return "#64748b";
-      case "flowNodeStart":
-        return "#10b981";
-      case "flowNodeProcess":
-        return "#3b82f6";
-      case "flowNodeDecision":
-        return "#f59e0b";
-      case "flowNodeEnd":
-        return "#ef4444";
       default:
         return "#64748b";
     }

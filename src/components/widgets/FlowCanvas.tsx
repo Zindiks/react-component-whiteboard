@@ -1,17 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  Share2,
-  Plus,
-  Trash2,
-  Square,
-  ArrowRight,
-  Download,
-  Upload,
-} from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useWhiteboardStore, Connection } from "@/store/whiteboard";
-import { ComponentHeader } from "./ComponentHeader";
 import { Card } from "../ui/card";
-import { Button } from "../ui/button";
 
 interface Position {
   x: number;
@@ -27,15 +17,11 @@ interface ComponentPositions {
 interface FlowCanvasProps {
   width?: number;
   height?: number;
-  onHeaderMouseDown?: (event: React.MouseEvent) => void;
-  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const FlowCanvas: React.FC<FlowCanvasProps> = ({
   width = 800,
   height = 600,
-  onHeaderMouseDown,
-  onDelete,
 }) => {
   // Get state and actions from the whiteboard store
   const components = useWhiteboardStore((state) => state.components);
@@ -473,73 +459,6 @@ export const FlowCanvas: React.FC<FlowCanvasProps> = ({
       className="border-gray-200 flex flex-col"
       style={{ width, height }}
     >
-      <ComponentHeader
-        title="Flow Connections"
-        icon={Share2}
-        iconColor="bg-blue-500"
-        onMouseDown={onHeaderMouseDown}
-        onDelete={onDelete}
-        actions={
-          <div className="flex items-center space-x-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={() => setShowStats(!showStats)}
-            >
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={() => setShowMinimap(!showMinimap)}
-            >
-              <Square className="h-3 w-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={() => setShowTemplates(!showTemplates)}
-            >
-              <Square className="h-4 w-4" />
-            </Button>
-            <label className="cursor-pointer">
-              <input
-                type="file"
-                accept=".json"
-                onChange={importFlowData}
-                className="hidden"
-              />
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                <Upload className="h-4 w-4" />
-              </Button>
-            </label>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={exportFlowData}
-            >
-              <Download className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={isCreatingConnection ? "default" : "ghost"}
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={() => {
-                if (isCreatingConnection) {
-                  cancelConnection();
-                }
-              }}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-        }
-      />
-
       {/* SVG Connection Canvas */}
       <div className="relative flex-grow overflow-hidden">
         {/* Templates Panel */}

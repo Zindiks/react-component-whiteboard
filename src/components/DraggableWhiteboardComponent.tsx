@@ -12,8 +12,7 @@ import { YouTubeVideo } from "./widgets/YouTubeVideo";
 import { SoundCloudWidget } from "./widgets/SoundCloudWidget";
 import { SpotifyWidget } from "./widgets/SpotifyWidget";
 import { StylishLink } from "./widgets/StylishLink";
-import { FlowCanvas } from "./widgets/FlowCanvas";
-import { FlowNode } from "./widgets/FlowNode";
+
 import {
   RectangleShape,
   EllipseShape,
@@ -22,6 +21,21 @@ import {
   TextShape,
   ImageShape,
 } from "./shapes";
+import { FloatingHeader } from "./widgets/FloatingHeader";
+import {
+  Video,
+  Timer as TimerIcon,
+  Cloud,
+  TrendingUp,
+  DollarSign,
+  StickyNote,
+  Sparkles,
+  Watch as WatchIcon,
+  Type,
+  Music,
+  Headphones,
+  ExternalLink,
+} from "lucide-react";
 
 interface DraggableComponentProps {
   x: number;
@@ -33,6 +47,7 @@ interface DraggableComponentProps {
   onSelect: (id: number) => void;
   onDelete: (id: number) => void;
   selected: boolean;
+  selectedCount?: number; // Total number of selected components
   transform: d3.ZoomTransform;
   zIndex?: number;
   imageSrc?: string;
@@ -57,6 +72,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   onSelect,
   onDelete,
   selected,
+  selectedCount = 1,
   transform,
   zIndex,
   imageSrc,
@@ -73,8 +89,25 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
 
-  // Header-specific mouse down handler for dragging
-  const handleHeaderMouseDown = (event: React.MouseEvent) => {
+  // Mouse down handler for dragging (applies to entire component)
+  const handleComponentMouseDown = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!selected) {
+      // Clicking an unselected component selects it
+      onSelect(id);
+    } else {
+      // Clicking a selected component starts dragging all selected
+      setIsDragging(true);
+      const mousePos = { x: event.clientX, y: event.clientY };
+      setDragStartPos(mousePos);
+      onDragStart(id);
+    }
+  };
+
+  // Shape-specific mouse down handler for dragging
+  const handleShapeMouseDown = (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -128,129 +161,28 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   }, [isDragging, handleMouseMove]);
 
   const componentMap = {
-    timer: () => (
-      <Timer
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
-    ),
-    weather: () => (
-      <Weather
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
-    ),
-    bitcoin: () => (
-      <BitcoinChart
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
-    ),
-    currency: () => (
-      <CurrencyConverter
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
-    ),
-    note: () => (
-      <TextNote
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
-    ),
-    confetti: () => (
-      <ConfettiButton
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
-    ),
-    watch: () => (
-      <Watch
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
-    ),
-    scrollingtext: () => (
-      <ScrollingText
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
-    ),
+    timer: () => <Timer />,
+    weather: () => <Weather />,
+    bitcoin: () => <BitcoinChart width={width} height={height} />,
+    currency: () => <CurrencyConverter />,
+    note: () => <TextNote />,
+    confetti: () => <ConfettiButton />,
+    watch: () => <Watch />,
+    scrollingtext: () => <ScrollingText />,
     youtubeVideo: () => (
-      <YouTubeVideo
-        initialUrl={youtubeUrl}
-        width={width}
-        height={height}
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
+      <YouTubeVideo initialUrl={youtubeUrl} width={width} height={height} />
     ),
     soundcloud: () => (
       <SoundCloudWidget
         initialUrl={soundcloudUrl}
         width={width}
         height={height}
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
       />
     ),
     spotify: () => (
-      <SpotifyWidget
-        initialUrl={spotifyUrl}
-        width={width}
-        height={height}
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
+      <SpotifyWidget initialUrl={spotifyUrl} width={width} height={height} />
     ),
-    stylishlink: () => (
-      <StylishLink
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
-    ),
-    flowCanvas: () => (
-      <FlowCanvas
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
-    ),
-    flowNodeStart: () => (
-      <FlowNode
-        nodeType="start"
-        label="Start"
-        color="#10b981"
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
-    ),
-    flowNodeProcess: () => (
-      <FlowNode
-        nodeType="process"
-        label="Process"
-        color="#3b82f6"
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
-    ),
-    flowNodeDecision: () => (
-      <FlowNode
-        nodeType="decision"
-        label="Decision"
-        color="#f59e0b"
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
-    ),
-    flowNodeEnd: () => (
-      <FlowNode
-        nodeType="end"
-        label="End"
-        color="#ef4444"
-        onHeaderMouseDown={handleHeaderMouseDown}
-        onDelete={handleDeleteClick}
-      />
-    ),
+    stylishlink: () => <StylishLink />,
     // Shape components (no headers, resizable, connectable)
     rectangle: () => (
       <RectangleShape
@@ -351,37 +283,96 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     "imageShape",
   ].includes(type);
 
-  // Shape-specific mouse down handler for dragging
-  const handleShapeMouseDown = (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (!selected) {
-      // Clicking an unselected component selects it
-      onSelect(id);
-    } else {
-      // Clicking a selected component starts dragging all selected
-      setIsDragging(true);
-      const mousePos = { x: event.clientX, y: event.clientY };
-      setDragStartPos(mousePos);
-      onDragStart(id);
-    }
+  // Function to get component metadata for floating header
+  const getComponentMetadata = () => {
+    const metadata = {
+      timer: { title: "Timer", icon: TimerIcon, iconColor: "bg-green-600" },
+      youtubeVideo: {
+        title: "YouTube Video",
+        icon: Video,
+        iconColor: "bg-red-600",
+      },
+      weather: { title: "Weather", icon: Cloud, iconColor: "bg-blue-500" },
+      bitcoin: {
+        title: "Bitcoin Chart",
+        icon: TrendingUp,
+        iconColor: "bg-orange-500",
+      },
+      currency: {
+        title: "Currency Converter",
+        icon: DollarSign,
+        iconColor: "bg-green-500",
+      },
+      note: {
+        title: "Text Note",
+        icon: StickyNote,
+        iconColor: "bg-yellow-500",
+      },
+      confetti: {
+        title: "Confetti Button",
+        icon: Sparkles,
+        iconColor: "bg-purple-500",
+      },
+      watch: { title: "Watch", icon: WatchIcon, iconColor: "bg-gray-700" },
+      scrollingtext: {
+        title: "Scrolling Text",
+        icon: Type,
+        iconColor: "bg-indigo-500",
+      },
+      soundcloud: {
+        title: "SoundCloud",
+        icon: Music,
+        iconColor: "bg-orange-600",
+      },
+      spotify: {
+        title: "Spotify",
+        icon: Headphones,
+        iconColor: "bg-green-600",
+      },
+      stylishlink: {
+        title: "Stylish Link",
+        icon: ExternalLink,
+        iconColor: "bg-blue-600",
+      },
+      // Add more as needed
+    };
+    return (
+      metadata[type as keyof typeof metadata] || {
+        title: type,
+        icon: Video,
+        iconColor: "bg-gray-600",
+      }
+    );
   };
 
   return (
-    <div
-      data-component="true"
-      className={`absolute pointer-events-auto ${
-        selected ? "ring-2 ring-blue-500" : ""
-      } group`}
-      style={{
-        left: `${x}px`,
-        top: `${y}px`,
-        zIndex: zIndex,
-      }}
-      onMouseDown={isShapeComponent ? handleShapeMouseDown : undefined}
-    >
-      {renderComponent()}
-    </div>
+    <>
+      {/* Floating header for selected widget components - only show for single selection */}
+      {selected && !isShapeComponent && selectedCount === 1 && (
+        <FloatingHeader
+          {...getComponentMetadata()}
+          onDelete={handleDeleteClick}
+          x={x}
+          y={y}
+        />
+      )}
+
+      <div
+        data-component="true"
+        className={`absolute pointer-events-auto ${
+          selected ? "ring-2 ring-blue-500" : ""
+        } group`}
+        style={{
+          left: `${x}px`,
+          top: `${y}px`,
+          zIndex: zIndex,
+        }}
+        onMouseDown={
+          isShapeComponent ? handleShapeMouseDown : handleComponentMouseDown
+        }
+      >
+        {renderComponent()}
+      </div>
+    </>
   );
 };

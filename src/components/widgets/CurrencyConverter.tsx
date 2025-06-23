@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ArrowLeftRight, RefreshCw, DollarSign } from "lucide-react";
-import { ComponentHeader } from "./ComponentHeader";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -20,8 +19,6 @@ interface ExchangeRates {
 interface CurrencyConverterProps {
   width?: number;
   height?: number;
-  onHeaderMouseDown?: (event: React.MouseEvent) => void;
-  onDelete?: (event: React.MouseEvent) => void;
 }
 
 const currencies = [
@@ -40,8 +37,6 @@ const currencies = [
 export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
   width = 320,
   height = 280,
-  onHeaderMouseDown,
-  onDelete,
 }) => {
   const [amount, setAmount] = useState<string>("100");
   const [fromCurrency, setFromCurrency] = useState<string>("USD");
@@ -116,14 +111,10 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
 
   if (loading && Object.keys(exchangeRates).length === 0) {
     return (
-      <Card className="border-gray-200" style={{ width, height }}>
-        <ComponentHeader
-          title="Currency Converter"
-          icon={DollarSign}
-          iconColor="bg-gray-500"
-          onMouseDown={onHeaderMouseDown}
-          onDelete={onDelete}
-        />
+      <Card
+        className="border-gray-200 bg-white shadow-sm"
+        style={{ width, height }}
+      >
         <CardContent className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
             <RefreshCw className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
@@ -138,14 +129,10 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
 
   if (error) {
     return (
-      <Card className="border-destructive/50" style={{ width, height }}>
-        <ComponentHeader
-          title="Currency Converter"
-          icon={DollarSign}
-          iconColor="bg-destructive"
-          onMouseDown={onHeaderMouseDown}
-          onDelete={onDelete}
-        />
+      <Card
+        className="border-destructive/50 bg-white shadow-sm"
+        style={{ width, height }}
+      >
         <CardContent className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
             <p className="text-sm text-destructive mb-2">
@@ -162,26 +149,27 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
   }
 
   return (
-    <Card className="border-gray-200" style={{ width, height }}>
-      <ComponentHeader
-        title="Currency Converter"
-        icon={DollarSign}
-        iconColor="bg-green-500"
-        onMouseDown={onHeaderMouseDown}
-        onDelete={onDelete}
-        actions={
+    <Card
+      className="border-gray-200 bg-white shadow-sm"
+      style={{ width, height }}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <DollarSign size={20} className="text-green-600" />
+            <h3 className="font-semibold text-sm">Currency Converter</h3>
+          </div>
           <Button
             onClick={fetchExchangeRates}
+            disabled={loading}
             variant="ghost"
             size="sm"
             className="h-6 w-6 p-0"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </Button>
-        }
-      />
+        </div>
 
-      <CardContent className="p-4">
         {/* Amount Input */}
         <div className="mb-3">
           <Label htmlFor="amount" className="text-xs font-medium">

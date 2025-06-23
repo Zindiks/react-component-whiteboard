@@ -1,17 +1,14 @@
 import React, { useState } from "react";
-import { Video, Edit3, ExternalLink } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent } from "../ui/card";
-import { ComponentHeader } from "./ComponentHeader";
 
 interface YouTubeVideoProps {
   initialUrl?: string;
   width?: number;
   height?: number;
   onHeaderMouseDown?: (event: React.MouseEvent) => void;
-  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const YouTubeVideo: React.FC<YouTubeVideoProps> = ({
@@ -19,7 +16,6 @@ export const YouTubeVideo: React.FC<YouTubeVideoProps> = ({
   width = 400,
   height = 300,
   onHeaderMouseDown,
-  onDelete,
 }) => {
   const [url, setUrl] = useState<string>(initialUrl);
   const [isEditing, setIsEditing] = useState<boolean>(!initialUrl);
@@ -43,49 +39,14 @@ export const YouTubeVideo: React.FC<YouTubeVideoProps> = ({
     }
   };
 
-  const handleOpenInNewTab = () => {
-    if (videoId) {
-      window.open(`https://www.youtube.com/watch?v=${videoId}`, "_blank");
-    }
-  };
-
   return (
     <Card
-      className="border-gray-200 overflow-hidden flex flex-col"
+      className="border-gray-200 overflow-hidden flex flex-col cursor-move rounded-lg"
       style={{ width, height }}
+      onMouseDown={onHeaderMouseDown} // Now the entire component is draggable
     >
-      <ComponentHeader
-        title="YouTube Video"
-        icon={Video}
-        iconColor="bg-red-600"
-        onMouseDown={onHeaderMouseDown}
-        onDelete={onDelete}
-        actions={
-          <div className="flex items-center space-x-1">
-            <Button
-              variant={isEditing ? "default" : "ghost"}
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={() => setIsEditing(!isEditing)}
-            >
-              <Edit3 className="h-4 w-4" />
-            </Button>
-            {videoId && !isEditing && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                onClick={handleOpenInNewTab}
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        }
-      />
-
-      {/* Content */}
-      <CardContent className="flex-grow relative p-0">
+      {/* Content - no header, starts from top */}
+      <CardContent className="flex-grow relative p-0 rounded-lg overflow-hidden">
         {isEditing ? (
           <div className="p-4 h-full flex flex-col">
             <Label htmlFor="youtube-url" className="text-sm mb-2">
@@ -126,12 +87,12 @@ export const YouTubeVideo: React.FC<YouTubeVideoProps> = ({
             title="YouTube video player"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
-            className="absolute top-0 left-0 w-full h-full border-0"
+            className="absolute top-0 left-0 w-full h-full border-0 rounded-lg"
           ></iframe>
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-muted">
-            <p className="text-muted-foreground">
-              No video set. Click the edit button to add a YouTube URL.
+          <div className="absolute inset-0 flex items-center justify-center bg-muted rounded-lg">
+            <p className="text-muted-foreground text-center px-4">
+              No video set. Select this component to add a YouTube URL.
             </p>
           </div>
         )}

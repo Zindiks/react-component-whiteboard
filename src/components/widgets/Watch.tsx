@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Clock, Settings, Globe } from "lucide-react";
-import { ComponentHeader } from "./ComponentHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +11,6 @@ import {
 interface WatchProps {
   width?: number;
   height?: number;
-  onHeaderMouseDown?: (event: React.MouseEvent) => void;
-  onDelete?: (event: React.MouseEvent) => void;
 }
 
 const timeZones = [
@@ -34,12 +31,7 @@ const formats = [
   { label: "24-hour", value: "24" },
 ];
 
-export const Watch: React.FC<WatchProps> = ({
-  width = 280,
-  height = 200,
-  onHeaderMouseDown,
-  onDelete,
-}) => {
+export const Watch: React.FC<WatchProps> = ({ width = 280, height = 200 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [timeZone, setTimeZone] = useState("local");
   const [format, setFormat] = useState("12");
@@ -113,20 +105,21 @@ export const Watch: React.FC<WatchProps> = ({
   };
 
   return (
-    <Card className="relative" style={{ width, height }}>
-      <ComponentHeader
-        title={timeZones.find((tz) => tz.value === timeZone)?.label || "Watch"}
-        icon={Clock}
-        iconColor="bg-blue-500"
-        onMouseDown={onHeaderMouseDown}
-        onDelete={onDelete}
-        actions={
+    <Card className="relative bg-white shadow-sm" style={{ width, height }}>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <Clock size={20} className="text-blue-600" />
+            <h3 className="font-semibold text-sm">
+              {timeZones.find((tz) => tz.value === timeZone)?.label || "Watch"}
+            </h3>
+          </div>
           <Popover open={showSettings} onOpenChange={setShowSettings}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
                 title="Settings"
               >
                 <Settings className="w-4 h-4" />
@@ -197,10 +190,8 @@ export const Watch: React.FC<WatchProps> = ({
               </div>
             </PopoverContent>
           </Popover>
-        }
-      />
+        </div>
 
-      <CardContent className="p-4">
         {/* Time Display */}
         <div className="text-center">
           <div className="text-2xl font-mono font-bold text-foreground mb-1">
