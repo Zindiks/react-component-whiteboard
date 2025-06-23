@@ -1283,9 +1283,11 @@ const CustomGrid = () => {
         event.preventDefault();
         setShowOverview(!showOverview);
       } else if (event.key === "Escape") {
-        // Close overview if open
+        // Close overview if open, otherwise deselect all components
         if (showOverview) {
           setShowOverview(false);
+        } else {
+          setSelectedComponents([]);
         }
       } else if (event.key === "Delete" || event.key === "Backspace") {
         handleDeleteSelected();

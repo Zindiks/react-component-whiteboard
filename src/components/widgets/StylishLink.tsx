@@ -1,24 +1,15 @@
 import React, { useState, useEffect } from "react";
-import {
-  ExternalLink,
-  Edit3,
-  Link as LinkIcon,
-  Globe,
-  Copy,
-} from "lucide-react";
+import { ExternalLink, Globe, Copy } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent } from "../ui/card";
-import { ComponentHeader } from "./ComponentHeader";
 
 interface StylishLinkProps {
   initialUrl?: string;
   initialTitle?: string;
   width?: number;
   height?: number;
-  onHeaderMouseDown?: (event: React.MouseEvent) => void;
-  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const StylishLink: React.FC<StylishLinkProps> = ({
@@ -26,8 +17,6 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
   initialTitle = "",
   width = 400,
   height = 180,
-  onHeaderMouseDown,
-  onDelete,
 }) => {
   const [url, setUrl] = useState<string>(initialUrl);
   const [title, setTitle] = useState<string>(initialTitle || "Untitled Link");
@@ -107,24 +96,6 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
       className="border-gray-200 overflow-hidden flex flex-col"
       style={{ width, height }}
     >
-      <ComponentHeader
-        title="Stylish Link"
-        icon={LinkIcon}
-        iconColor="bg-indigo-500"
-        onMouseDown={onHeaderMouseDown}
-        onDelete={onDelete}
-        actions={
-          <Button
-            variant={isEditing ? "default" : "ghost"}
-            size="sm"
-            className="h-6 w-6 p-0"
-            onClick={() => setIsEditing(!isEditing)}
-          >
-            <Edit3 className="h-4 w-4" />
-          </Button>
-        }
-      />
-
       {/* Content */}
       <CardContent className="flex-grow relative p-0">
         {isEditing ? (

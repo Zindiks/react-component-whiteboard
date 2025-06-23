@@ -1,25 +1,19 @@
 import React, { useState } from "react";
-import { Music, Edit3, ExternalLink } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent } from "../ui/card";
-import { ComponentHeader } from "./ComponentHeader";
 
 interface SpotifyWidgetProps {
   initialUrl?: string;
   width?: number;
   height?: number;
-  onHeaderMouseDown?: (event: React.MouseEvent) => void;
-  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
   initialUrl = "",
   width = 400,
   height = 300,
-  onHeaderMouseDown,
-  onDelete,
 }) => {
   const [url, setUrl] = useState<string>(initialUrl);
   const [isEditing, setIsEditing] = useState<boolean>(!initialUrl);
@@ -89,47 +83,11 @@ export const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({
     }
   };
 
-  const handleOpenInNewTab = () => {
-    if (url) {
-      window.open(url, "_blank");
-    }
-  };
-
   return (
     <Card
       className="border-gray-200 overflow-hidden flex flex-col"
       style={{ width, height }}
     >
-      <ComponentHeader
-        title="Spotify"
-        icon={Music}
-        iconColor="bg-green-500"
-        onMouseDown={onHeaderMouseDown}
-        onDelete={onDelete}
-        actions={
-          <div className="flex items-center space-x-1">
-            <Button
-              variant={isEditing ? "default" : "ghost"}
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={() => setIsEditing(!isEditing)}
-            >
-              <Edit3 className="h-4 w-4" />
-            </Button>
-            {url && !isEditing && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                onClick={handleOpenInNewTab}
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        }
-      />
-
       {/* Content */}
       <CardContent className="flex-grow relative p-0">
         {isEditing ? (

@@ -1,6 +1,4 @@
 import React from "react";
-import { Circle, Square, Diamond } from "lucide-react";
-import { ComponentHeader } from "./ComponentHeader";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface FlowNodeProps {
@@ -9,8 +7,6 @@ interface FlowNodeProps {
   color?: string;
   width?: number;
   height?: number;
-  onHeaderMouseDown?: (event: React.MouseEvent) => void;
-  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const FlowNode: React.FC<FlowNodeProps> = ({
@@ -19,34 +15,32 @@ export const FlowNode: React.FC<FlowNodeProps> = ({
   color = "#3b82f6",
   width = 120,
   height = 120,
-  onHeaderMouseDown,
-  onDelete,
 }) => {
-  const getIcon = () => {
-    switch (nodeType) {
-      case "start":
-        return Circle;
-      case "end":
-        return Circle;
-      case "decision":
-        return Diamond;
-      default:
-        return Square;
-    }
-  };
+  // const getIcon = () => {
+  //   switch (nodeType) {
+  //     case "start":
+  //       return Circle;
+  //     case "end":
+  //       return Circle;
+  //     case "decision":
+  //       return Diamond;
+  //     default:
+  //       return Square;
+  //   }
+  // };
 
-  const getIconColor = () => {
-    switch (nodeType) {
-      case "start":
-        return "bg-green-500";
-      case "end":
-        return "bg-red-500";
-      case "decision":
-        return "bg-yellow-500";
-      default:
-        return "bg-blue-500";
-    }
-  };
+  // const getIconColor = () => {
+  //   switch (nodeType) {
+  //     case "start":
+  //       return "bg-green-500";
+  //     case "end":
+  //       return "bg-red-500";
+  //     case "decision":
+  //       return "bg-yellow-500";
+  //     default:
+  //       return "bg-blue-500";
+  //   }
+  // };
 
   const getShapeStyle = () => {
     const baseStyle = {
@@ -94,14 +88,6 @@ export const FlowNode: React.FC<FlowNodeProps> = ({
 
   return (
     <Card className="overflow-hidden" style={{ width, height }}>
-      <ComponentHeader
-        title={getTitle()}
-        icon={getIcon()}
-        iconColor={getIconColor()}
-        onMouseDown={onHeaderMouseDown}
-        onDelete={onDelete}
-      />
-
       <CardContent className="flex-grow flex flex-col items-center justify-center p-4">
         <div style={getShapeStyle()}>
           <span
