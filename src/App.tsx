@@ -9,12 +9,18 @@ import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
 import { Component } from "./types/whiteboard";
 import { useWhiteboardState } from "./hooks/useWhiteboardState";
 import {
-  isImageUrl,
   isYouTubeUrl,
   isSoundCloudUrl,
   isSpotifyUrl,
-  extractImageFromHtml,
 } from "./utils/urlDetection";
+import {
+  copySelectedComponents,
+  handleComponentPaste,
+  handleImagePasteFromClipboard,
+  ComponentCreators,
+  ComponentState,
+  ComponentStateSetters,
+} from "./utils/clipboardOperations";
 
 const CustomGrid = () => {
   // Use whiteboard state hook
@@ -75,27 +81,7 @@ const CustomGrid = () => {
 
   // Copy-paste functionality for all shape components
   const handleCopyComponents = useCallback(() => {
-    // Shape types that can be copied
-    const shapeTypes = [
-      "rectangle",
-      "ellipse",
-      "arrow",
-      "line",
-      "text",
-      "imageShape",
-    ];
-
-    // Filter selected components to include all shape types
-    const selectedShapeComponents = components.filter(
-      (c) => selectedComponents.includes(c.id) && shapeTypes.includes(c.type)
-    );
-
-    if (selectedShapeComponents.length > 0) {
-      setCopiedComponents(selectedShapeComponents);
-      console.log(
-        `Copied ${selectedShapeComponents.length} shape component(s)`
-      );
-    }
+    copySelectedComponents(components, selectedComponents, setCopiedComponents);
   }, [components, selectedComponents, setCopiedComponents]);
 
   // Helper function to create an image component at mouse position
@@ -329,99 +315,37 @@ const CustomGrid = () => {
   );
 
   const handlePasteComponents = useCallback(async () => {
-    // If we have copied components, paste them first (prioritize component copy/paste)
-    if (copiedComponents.length > 0) {
-      const newComponents = copiedComponents.map((component) => {
-        const newId =
-          Math.max(...components.map((c) => c.id), 0) + 1 + Math.random();
-        const highestZIndex = Math.max(
-          ...components.map((c) => c.zIndex || 0),
-          0
-        );
+    // Create the component creators object
+    const creators: ComponentCreators = {
+      createImageComponentAtMouse,
+      createYouTubeComponentAtMouse,
+      createSoundCloudComponentAtMouse,
+      createSpotifyComponentAtMouse,
+    };
 
-        return {
-          ...component,
-          id: Math.floor(newId),
-          x: (mousePosition.x - transform.x) / transform.k - 50, // Convert screen coords to whiteboard coords and offset slightly
-          y: (mousePosition.y - transform.y) / transform.k - 50,
-          zIndex: highestZIndex + 1,
-        };
-      });
+    // Create the component state object
+    const state: ComponentState = {
+      components,
+      selectedComponents,
+      copiedComponents,
+      mousePosition,
+      transform,
+    };
 
-      setComponents((prev) => [...prev, ...newComponents]);
+    // Create the setters object
+    const setters: ComponentStateSetters = {
+      setComponents,
+      setSelectedComponents,
+      setCopiedComponents,
+    };
 
-      // Select the newly pasted components
-      const newIds = newComponents.map((c) => c.id);
-      setSelectedComponents(newIds);
-
-      console.log(
-        `Pasted ${newComponents.length} shape component(s) at mouse position`
-      );
-      return;
-    }
-
-    // If no copied components, try to paste from clipboard
-    try {
-      // First, try to read clipboard items (for actual image data)
-      if (navigator.clipboard && navigator.clipboard.read) {
-        const clipboardItems = await navigator.clipboard.read();
-
-        for (const clipboardItem of clipboardItems) {
-          // Check for image data in clipboard
-          for (const type of clipboardItem.types) {
-            if (type.startsWith("image/")) {
-              const imageBlob = await clipboardItem.getType(type);
-              const imageSrc = URL.createObjectURL(imageBlob);
-              await createImageComponentAtMouse(imageSrc);
-              return;
-            }
-          }
-
-          // Check for HTML content that might contain images
-          if (clipboardItem.types.includes("text/html")) {
-            const htmlBlob = await clipboardItem.getType("text/html");
-            const htmlText = await htmlBlob.text();
-            const imageUrl = extractImageFromHtml(htmlText);
-            if (imageUrl) {
-              await createImageComponentAtMouse(imageUrl);
-              return;
-            }
-          }
-        }
-      }
-
-      // Fallback: try to read text for YouTube, SoundCloud, Spotify URLs or image URLs
-      const clipboardText = await navigator.clipboard.readText();
-      if (clipboardText) {
-        // First check for YouTube URLs
-        if (isYouTubeUrl(clipboardText)) {
-          createYouTubeComponentAtMouse(clipboardText);
-          return;
-        }
-        // Then check for SoundCloud URLs
-        if (isSoundCloudUrl(clipboardText)) {
-          createSoundCloudComponentAtMouse(clipboardText);
-          return;
-        }
-        // Then check for Spotify URLs
-        if (isSpotifyUrl(clipboardText)) {
-          createSpotifyComponentAtMouse(clipboardText);
-          return;
-        }
-        // Finally check for image URLs
-        if (isImageUrl(clipboardText)) {
-          await createImageComponentAtMouse(clipboardText);
-          return;
-        }
-      }
-    } catch (error) {
-      console.log("Clipboard access failed or no image content found:", error);
-    }
+    // Use the utility function
+    await handleComponentPaste(state, setters, creators);
   }, [
-    copiedComponents,
     components,
-    mousePosition.x,
-    mousePosition.y,
+    selectedComponents,
+    copiedComponents,
+    mousePosition,
     transform,
     createImageComponentAtMouse,
     createYouTubeComponentAtMouse,
@@ -429,50 +353,13 @@ const CustomGrid = () => {
     createSpotifyComponentAtMouse,
     setComponents,
     setSelectedComponents,
+    setCopiedComponents,
   ]);
 
   // Function to force paste image from clipboard (ignoring copied components)
   const handlePasteImageFromClipboard = useCallback(async () => {
-    try {
-      // Try to read clipboard items (for actual image data)
-      if (navigator.clipboard && navigator.clipboard.read) {
-        const clipboardItems = await navigator.clipboard.read();
-
-        for (const clipboardItem of clipboardItems) {
-          // Check for image data in clipboard
-          for (const type of clipboardItem.types) {
-            if (type.startsWith("image/")) {
-              const imageBlob = await clipboardItem.getType(type);
-              const imageSrc = URL.createObjectURL(imageBlob);
-              await createImageComponentAtMouse(imageSrc);
-              return;
-            }
-          }
-
-          // Check for HTML content that might contain images
-          if (clipboardItem.types.includes("text/html")) {
-            const htmlBlob = await clipboardItem.getType("text/html");
-            const htmlText = await htmlBlob.text();
-            const imageUrl = extractImageFromHtml(htmlText);
-            if (imageUrl) {
-              await createImageComponentAtMouse(imageUrl);
-              return;
-            }
-          }
-        }
-      }
-
-      // Fallback: try to read text for image URLs
-      const clipboardText = await navigator.clipboard.readText();
-      if (clipboardText && isImageUrl(clipboardText)) {
-        await createImageComponentAtMouse(clipboardText);
-        return;
-      }
-
-      console.log("No image content found in clipboard");
-    } catch (error) {
-      console.log("Failed to paste image from clipboard:", error);
-    }
+    // Use the utility function
+    await handleImagePasteFromClipboard(createImageComponentAtMouse);
   }, [createImageComponentAtMouse]);
 
   // Enhanced pan and zoom utilities
