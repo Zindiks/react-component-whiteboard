@@ -12,8 +12,7 @@ import { YouTubeVideo } from "./widgets/YouTubeVideo";
 import { SoundCloudWidget } from "./widgets/SoundCloudWidget";
 import { SpotifyWidget } from "./widgets/SpotifyWidget";
 import { StylishLink } from "./widgets/StylishLink";
-import { FlowCanvas } from "./widgets/FlowCanvas";
-import { FlowNode } from "./widgets/FlowNode";
+
 import {
   RectangleShape,
   EllipseShape,
@@ -179,35 +178,6 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       />
     ),
     stylishlink: () => <StylishLink />,
-    flowCanvas: () => <FlowCanvas />,
-    flowNodeStart: () => (
-      <FlowNode
-        nodeType="start"
-        label="Start"
-        color="#10b981"
-      />
-    ),
-    flowNodeProcess: () => (
-      <FlowNode
-        nodeType="process"
-        label="Process"
-        color="#3b82f6"
-      />
-    ),
-    flowNodeDecision: () => (
-      <FlowNode
-        nodeType="decision"
-        label="Decision"
-        color="#f59e0b"
-      />
-    ),
-    flowNodeEnd: () => (
-      <FlowNode
-        nodeType="end"
-        label="End"
-        color="#ef4444"
-      />
-    ),
     // Shape components (no headers, resizable, connectable)
     rectangle: () => (
       <RectangleShape
