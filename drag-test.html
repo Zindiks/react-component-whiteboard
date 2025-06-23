@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Drag Test Page</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .test-image {
+        width: 300px;
+        height: 200px;
+        margin: 20px;
+        border: 2px solid #ccc;
+        object-fit: cover;
+      }
+      .instructions {
+        background: #f0f8ff;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="instructions">
+      <h2>Image Drag Test</h2>
+      <p>
+        Drag any of these images to your whiteboard app to test the image drop
+        functionality:
+      </p>
+    </div>
+
+    <h3>Test Images:</h3>
+
+    <img
+      class="test-image"
+      src="https://picsum.photos/300/200?random=1"
+      alt="Random test image 1"
+      draggable="true"
+    />
+
+    <img
+      class="test-image"
+      src="https://picsum.photos/300/200?random=2"
+      alt="Random test image 2"
+      draggable="true"
+    />
+
+    <img
+      class="test-image"
+      src="https://via.placeholder.com/300x200/4CAF50/white?text=Test+Image"
+      alt="Placeholder test image"
+      draggable="true"
+    />
+
+    <p>Instructions:</p>
+    <ol>
+      <li>Open your whiteboard app in another tab/window</li>
+      <li>Drag any image above onto the whiteboard</li>
+      <li>An image component should automatically be created</li>
+      <li>Check the browser console for debug messages</li>
+    </ol>
+  </body>
+</html>

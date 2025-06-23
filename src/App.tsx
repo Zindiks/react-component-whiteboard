@@ -152,6 +152,48 @@ const COMPONENT_CATEGORIES: Category[] = [
       },
     ],
   },
+  {
+    name: "Shapes",
+    icon: "🔷",
+    components: [
+      {
+        type: "rectangle",
+        label: "Rectangle",
+        icon: "⬜",
+        description: "Rectangle shape",
+      },
+      {
+        type: "ellipse",
+        label: "Ellipse",
+        icon: "🔵",
+        description: "Ellipse/Circle shape",
+      },
+      {
+        type: "arrow",
+        label: "Arrow",
+        icon: "➡️",
+        description: "Arrow line",
+      },
+      {
+        type: "line",
+        label: "Line",
+        icon: "➖",
+        description: "Straight line",
+      },
+      {
+        type: "text",
+        label: "Text",
+        icon: "📝",
+        description: "Text shape",
+      },
+      {
+        type: "imageShape",
+        label: "Image",
+        icon: "🖼️",
+        description: "Image shape",
+      },
+    ],
+  },
 ];
 
 const CustomGrid = () => {
@@ -183,6 +225,7 @@ const CustomGrid = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDragOverBoard, setIsDragOverBoard] = useState(false);
+  const [dragType, setDragType] = useState<"component" | "image" | null>(null);
 
   interface Component {
     id: number;
@@ -192,6 +235,8 @@ const CustomGrid = () => {
     width?: number;
     height?: number;
     zIndex?: number;
+    imageSrc?: string; // For image components
+    text?: string; // For text components
   }
 
   const [components, setComponents] = useState<Component[]>([
@@ -861,16 +906,33 @@ const CustomGrid = () => {
       );
 
       console.log(`Adding new ${type} component with ID: ${newId}`);
-      setComponents((prev) => [
-        ...prev,
-        {
-          id: newId,
-          x: x ?? 200 + Math.random() * 200,
-          y: y ?? 200 + Math.random() * 200,
-          type,
-          zIndex: highestZIndex + 1, // Place new component on top
-        },
-      ]);
+
+      // Create base component
+      const newComponent: Component = {
+        id: newId,
+        x: x ?? 200 + Math.random() * 200,
+        y: y ?? 200 + Math.random() * 200,
+        type,
+        zIndex: highestZIndex + 1, // Place new component on top
+      };
+
+      // Add default properties for shape components
+      if (["rectangle", "ellipse"].includes(type)) {
+        newComponent.width = 120;
+        newComponent.height = 80;
+      } else if (["arrow", "line"].includes(type)) {
+        newComponent.width = 150;
+        newComponent.height = 20;
+      } else if (type === "text") {
+        newComponent.width = 150;
+        newComponent.height = 50;
+        newComponent.text = "Double-click to edit";
+      } else if (type === "imageShape") {
+        newComponent.width = 200;
+        newComponent.height = 150;
+      }
+
+      setComponents((prev) => [...prev, newComponent]);
     },
     [components]
   );
@@ -902,14 +964,70 @@ const CustomGrid = () => {
     );
   };
 
-  // Handle drop events from sidebar for new components
+  // Handle drop events from sidebar for new components and external images
   useEffect(() => {
     const handleDragOver = (event: DragEvent) => {
-      if (event.dataTransfer?.types.includes("text/plain")) {
+      // Allow image file drops from outside browser (check files first)
+      if (event.dataTransfer?.types.includes("Files")) {
         event.preventDefault();
         event.dataTransfer.dropEffect = "copy";
         setIsDragOverBoard(true);
+        setDragType("image");
+        return;
       }
+
+      // Allow image URL drops from browser (check URLs second)
+      if (
+        event.dataTransfer?.types.includes("text/uri-list") ||
+        event.dataTransfer?.types.includes("text/html")
+      ) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+        setIsDragOverBoard(true);
+        setDragType("image");
+        return;
+      }
+
+      // Check for component drops from sidebar (only text/plain without other types)
+      if (
+        event.dataTransfer?.types.includes("text/plain") &&
+        !event.dataTransfer?.types.includes("text/html") &&
+        !event.dataTransfer?.types.includes("text/uri-list") &&
+        !event.dataTransfer?.types.includes("Files")
+      ) {
+        // This is likely a component drag from our sidebar
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+        setIsDragOverBoard(true);
+        setDragType("component");
+        return;
+      }
+
+      // Check for plain text URLs (like dragging from address bar)
+      if (
+        event.dataTransfer?.types.includes("text/plain") &&
+        event.dataTransfer?.types.length === 1
+      ) {
+        // Try to get the plain text to see if it's a URL
+        try {
+          const plainText = event.dataTransfer.getData("text/plain");
+          if (plainText && /^https?:\/\//.test(plainText.trim())) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "copy";
+            setIsDragOverBoard(true);
+            setDragType("image");
+            return;
+          }
+        } catch {
+          // Can't access data during dragover in some browsers
+        }
+      }
+
+      // Log if we don't handle this drag type (optional debug)
+      // const types = Array.from(event.dataTransfer?.types || []);
+      // if (types.length > 0) {
+      //   console.log("❌ Unhandled drag type:", types);
+      // }
     };
 
     const handleDragLeave = (event: DragEvent) => {
@@ -918,19 +1036,236 @@ const CustomGrid = () => {
         !(event.relatedTarget as Element).closest("[data-drop-zone]")
       ) {
         setIsDragOverBoard(false);
+        setDragType(null);
       }
     };
 
     const handleDrop = (event: DragEvent) => {
       event.preventDefault();
+      setIsDragOverBoard(false);
+      setDragType(null);
+
+      // Handle image file drops from outside browser (files) - check first
+      const files = Array.from(event.dataTransfer?.files || []);
+      const imageFile = files.find((file) => file.type.startsWith("image/"));
+
+      if (imageFile) {
+        // Convert screen coordinates to whiteboard coordinates
+        const x = (event.clientX - transform.x) / transform.k;
+        const y = (event.clientY - transform.y) / transform.k;
+
+        // Read the file as data URL
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imageSrc = e.target?.result as string;
+
+          // Create a temporary image to get natural dimensions
+          const tempImg = new Image();
+          tempImg.onload = () => {
+            const naturalWidth = tempImg.naturalWidth;
+            const naturalHeight = tempImg.naturalHeight;
+
+            // Scale down if the image is too large
+            const maxSize = 400; // Maximum dimension
+            let width = naturalWidth;
+            let height = naturalHeight;
+
+            if (width > maxSize || height > maxSize) {
+              const ratio = Math.min(maxSize / width, maxSize / height);
+              width = Math.round(width * ratio);
+              height = Math.round(height * ratio);
+            }
+
+            // Create a new imageShape component with the dropped image
+            const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+            const highestZIndex = Math.max(
+              ...components.map((c) => c.zIndex || 0),
+              0
+            );
+
+            const newComponent: Component = {
+              id: newId,
+              x,
+              y,
+              type: "imageShape",
+              width,
+              height,
+              zIndex: highestZIndex + 1,
+              imageSrc,
+            };
+
+            setComponents((prev) => [...prev, newComponent]);
+          };
+
+          tempImg.onerror = () => {
+            console.error("Failed to load image for dimension calculation");
+            // Fallback to default size
+            const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+            const highestZIndex = Math.max(
+              ...components.map((c) => c.zIndex || 0),
+              0
+            );
+
+            const newComponent: Component = {
+              id: newId,
+              x,
+              y,
+              type: "imageShape",
+              width: 200,
+              height: 150,
+              zIndex: highestZIndex + 1,
+              imageSrc,
+            };
+
+            setComponents((prev) => [...prev, newComponent]);
+          };
+
+          tempImg.src = imageSrc;
+        };
+
+        reader.readAsDataURL(imageFile);
+        return;
+      }
+
+      // Handle image URL drops from browser (drag from web pages)
+      const urlData = event.dataTransfer?.getData("text/uri-list");
+      const htmlData = event.dataTransfer?.getData("text/html");
+      const plainData = event.dataTransfer?.getData("text/plain");
+
+      if (urlData || htmlData || plainData) {
+        let imageUrl = "";
+
+        if (urlData) {
+          // Direct URL drag
+          imageUrl = urlData.split("\n")[0]; // Take first URL if multiple
+        } else if (htmlData) {
+          // HTML drag - extract image src from img tag
+          const imgMatch = htmlData.match(/<img[^>]+src=["']([^"']+)["']/i);
+          if (imgMatch) {
+            imageUrl = imgMatch[1];
+          } else {
+            // Try to extract any URL that might be an image from the HTML
+            const urlMatch = htmlData.match(/https?:\/\/[^\s"'<>]+/g);
+            if (urlMatch) {
+              for (const url of urlMatch) {
+                if (
+                  /\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)(\?.*)?$/i.test(url)
+                ) {
+                  imageUrl = url;
+                  break;
+                }
+              }
+            }
+          }
+        } else if (plainData && /^https?:\/\//.test(plainData.trim())) {
+          // Plain text URL drag
+          imageUrl = plainData.trim();
+        }
+
+        // Check if it's likely an image URL
+        const isImageUrl =
+          imageUrl &&
+          (/\.(jpg|jpeg|png|gif|webp|svg|bmp|ico|tiff|tif)(\?.*)?$/i.test(
+            imageUrl
+          ) ||
+            imageUrl.includes("image") ||
+            imageUrl.includes("img") ||
+            imageUrl.includes("photo") ||
+            imageUrl.includes("pic") ||
+            // Check for common image hosting domains
+            /\.(unsplash|pexels|pixabay|imgur|flickr|googleusercontent|amazonaws)\./.test(
+              imageUrl
+            ) ||
+            // Check for data URLs
+            imageUrl.startsWith("data:image/"));
+
+        if (isImageUrl) {
+          // Convert screen coordinates to whiteboard coordinates
+          const x = (event.clientX - transform.x) / transform.k;
+          const y = (event.clientY - transform.y) / transform.k;
+
+          // Create a temporary image to get natural dimensions
+          const tempImg = new Image();
+          tempImg.onload = () => {
+            const naturalWidth = tempImg.naturalWidth;
+            const naturalHeight = tempImg.naturalHeight;
+
+            // Scale down if the image is too large
+            const maxSize = 400; // Maximum dimension
+            let width = naturalWidth;
+            let height = naturalHeight;
+
+            if (width > maxSize || height > maxSize) {
+              const ratio = Math.min(maxSize / width, maxSize / height);
+              width = Math.round(width * ratio);
+              height = Math.round(height * ratio);
+            }
+
+            // Create a new imageShape component with the dropped image URL
+            const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+            const highestZIndex = Math.max(
+              ...components.map((c) => c.zIndex || 0),
+              0
+            );
+
+            const newComponent: Component = {
+              id: newId,
+              x,
+              y,
+              type: "imageShape",
+              width,
+              height,
+              zIndex: highestZIndex + 1,
+              imageSrc: imageUrl,
+            };
+
+            setComponents((prev) => [...prev, newComponent]);
+          };
+
+          tempImg.onerror = () => {
+            console.error("Failed to load image URL for dimension calculation");
+            // Fallback to default size
+            const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+            const highestZIndex = Math.max(
+              ...components.map((c) => c.zIndex || 0),
+              0
+            );
+
+            const newComponent: Component = {
+              id: newId,
+              x,
+              y,
+              type: "imageShape",
+              width: 200,
+              height: 150,
+              zIndex: highestZIndex + 1,
+              imageSrc: imageUrl,
+            };
+
+            setComponents((prev) => [...prev, newComponent]);
+          };
+
+          tempImg.crossOrigin = "anonymous"; // Try to handle CORS
+          tempImg.src = imageUrl;
+        }
+      }
+
+      // Handle component drops from sidebar (only if no files/URLs detected)
       const componentType = event.dataTransfer?.getData("text/plain");
-      if (componentType) {
+      if (
+        componentType &&
+        !event.dataTransfer?.types.includes("text/html") &&
+        !event.dataTransfer?.types.includes("text/uri-list") &&
+        !event.dataTransfer?.types.includes("Files")
+      ) {
+        // This is likely a component drag from our sidebar
+
         // Convert screen coordinates to whiteboard coordinates
         const x = (event.clientX - transform.x) / transform.k;
         const y = (event.clientY - transform.y) / transform.k;
         addNewComponent(componentType, x, y);
+        return;
       }
-      setIsDragOverBoard(false);
     };
 
     document.addEventListener("dragover", handleDragOver);
@@ -942,7 +1277,7 @@ const CustomGrid = () => {
       document.removeEventListener("dragleave", handleDragLeave);
       document.removeEventListener("drop", handleDrop);
     };
-  }, [addNewComponent, transform]);
+  }, [addNewComponent, transform, components]);
 
   const bringToFront = useCallback((id: number) => {
     setComponents((prevComponents) => {
@@ -1004,9 +1339,40 @@ const CustomGrid = () => {
     setShowOverview(false);
   }, []);
 
+  const handleResizeComponent = useCallback(
+    (id: number, width: number, height: number) => {
+      console.log(`Resizing component ${id} to ${width}x${height}`);
+      setComponents((prev) =>
+        prev.map((component) =>
+          component.id === id ? { ...component, width, height } : component
+        )
+      );
+    },
+    []
+  );
+
+  const handleTextChange = useCallback((id: number, text: string) => {
+    console.log(`Changing text for component ${id} to: ${text}`);
+    setComponents((prev) =>
+      prev.map((component) =>
+        component.id === id ? { ...component, text } : component
+      )
+    );
+  }, []);
+
+  const handleImageChange = useCallback((id: number, imageSrc: string) => {
+    console.log(`Changing image for component ${id}`);
+    setComponents((prev) =>
+      prev.map((component) =>
+        component.id === id ? { ...component, imageSrc } : component
+      )
+    );
+  }, []);
+
   return (
     <div
       ref={containerRef}
+      data-drop-zone
       style={{
         position: "relative",
         width: "100vw",
@@ -1085,9 +1451,16 @@ const CustomGrid = () => {
               onDragStart={handleDragStart}
               onSelect={handleSelect}
               onDelete={handleDeleteComponent}
+              onResize={handleResizeComponent}
+              onTextChange={handleTextChange}
+              onImageChange={handleImageChange}
               selected={selectedComponents.includes(component.id)}
               transform={transform}
               zIndex={component.zIndex || 0}
+              imageSrc={component.imageSrc}
+              width={component.width}
+              height={component.height}
+              text={component.text}
             />
           ))}
       </div>
@@ -1139,7 +1512,9 @@ const CustomGrid = () => {
               boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
             }}
           >
-            Drop component here
+            {dragType === "image"
+              ? "📷 Drop image here"
+              : "🔧 Drop component here"}
           </div>
         </div>
       )}

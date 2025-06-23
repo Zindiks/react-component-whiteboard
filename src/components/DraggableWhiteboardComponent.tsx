@@ -14,6 +14,14 @@ import { SpotifyWidget } from "./widgets/SpotifyWidget";
 import { StylishLink } from "./widgets/StylishLink";
 import { FlowCanvas } from "./widgets/FlowCanvas";
 import { FlowNode } from "./widgets/FlowNode";
+import {
+  RectangleShape,
+  EllipseShape,
+  ArrowShape,
+  LineShape,
+  TextShape,
+  ImageShape,
+} from "./shapes";
 
 interface DraggableComponentProps {
   x: number;
@@ -27,6 +35,13 @@ interface DraggableComponentProps {
   selected: boolean;
   transform: d3.ZoomTransform;
   zIndex?: number;
+  imageSrc?: string;
+  width?: number;
+  height?: number;
+  text?: string;
+  onResize?: (id: number, width: number, height: number) => void;
+  onTextChange?: (id: number, text: string) => void;
+  onImageChange?: (id: number, imageSrc: string) => void;
 }
 
 export const DraggableComponent: React.FC<DraggableComponentProps> = ({
@@ -41,6 +56,13 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   selected,
   transform,
   zIndex,
+  imageSrc,
+  width,
+  height,
+  text,
+  onResize,
+  onTextChange,
+  onImageChange,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
@@ -214,6 +236,80 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         onDelete={handleDeleteClick}
       />
     ),
+    // Shape components (no headers, resizable, connectable)
+    rectangle: () => (
+      <RectangleShape
+        x={0}
+        y={0}
+        width={width || 120}
+        height={height || 80}
+        selected={selected}
+        onSelect={() => onSelect(id)}
+        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+      />
+    ),
+    ellipse: () => (
+      <EllipseShape
+        x={0}
+        y={0}
+        width={width || 120}
+        height={height || 80}
+        selected={selected}
+        onSelect={() => onSelect(id)}
+        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+      />
+    ),
+    arrow: () => (
+      <ArrowShape
+        x={0}
+        y={0}
+        width={width || 150}
+        height={height || 20}
+        selected={selected}
+        onSelect={() => onSelect(id)}
+        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+      />
+    ),
+    line: () => (
+      <LineShape
+        x={0}
+        y={0}
+        width={width || 150}
+        height={height || 20}
+        selected={selected}
+        onSelect={() => onSelect(id)}
+        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+      />
+    ),
+    text: () => (
+      <TextShape
+        x={0}
+        y={0}
+        width={width || 150}
+        height={height || 50}
+        selected={selected}
+        onSelect={() => onSelect(id)}
+        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+        text={text || "Double-click to edit"}
+        onTextChange={(newText) => onTextChange?.(id, newText)}
+      />
+    ),
+    imageShape: () => (
+      <ImageShape
+        x={0}
+        y={0}
+        width={width || 200}
+        height={height || 150}
+        selected={selected}
+        onSelect={() => onSelect(id)}
+        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+        imageSrc={imageSrc}
+        onImageChange={(newImageSrc) => {
+          console.log("Image changed:", newImageSrc);
+          onImageChange?.(id, newImageSrc);
+        }}
+      />
+    ),
   };
 
   const renderComponent = () => {
@@ -230,6 +326,33 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     );
   };
 
+  // Check if this is a shape component (no header, different interaction)
+  const isShapeComponent = [
+    "rectangle",
+    "ellipse",
+    "arrow",
+    "line",
+    "text",
+    "imageShape",
+  ].includes(type);
+
+  // Shape-specific mouse down handler for dragging
+  const handleShapeMouseDown = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!selected) {
+      // Clicking an unselected component selects it
+      onSelect(id);
+    } else {
+      // Clicking a selected component starts dragging all selected
+      setIsDragging(true);
+      const mousePos = { x: event.clientX, y: event.clientY };
+      setDragStartPos(mousePos);
+      onDragStart(id);
+    }
+  };
+
   return (
     <div
       data-component="true"
@@ -241,6 +364,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         top: `${y}px`,
         zIndex: zIndex,
       }}
+      onMouseDown={isShapeComponent ? handleShapeMouseDown : undefined}
     >
       {renderComponent()}
     </div>
