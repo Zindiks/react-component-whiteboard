@@ -318,22 +318,97 @@ const CustomGrid = () => {
   // Helper function to check if a string is likely an image URL
   const isImageUrl = (url: string): boolean => {
     try {
+      // Handle data URLs
+      if (url.startsWith('data:image/')) {
+        return true;
+      }
+      
+      // Handle blob URLs
+      if (url.startsWith('blob:')) {
+        return true;
+      }
+      
       const urlObj = new URL(url);
       const pathname = urlObj.pathname.toLowerCase();
-      return (
-        pathname.endsWith(".jpg") ||
-        pathname.endsWith(".jpeg") ||
-        pathname.endsWith(".png") ||
-        pathname.endsWith(".gif") ||
-        pathname.endsWith(".webp") ||
-        pathname.endsWith(".svg") ||
-        pathname.endsWith(".bmp") ||
-        url.includes("image") // For URLs that contain "image" but don't end with extension
-      );
+      
+      // Check for explicit image file extensions
+      const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico', '.tiff', '.tif', '.avif'];
+      if (imageExtensions.some(ext => pathname.endsWith(ext))) {
+        return true;
+      }
+      
+      // Check for URLs that contain image-related keywords
+      const imageKeywords = ['image', 'img', 'photo', 'picture', 'pic', 'avatar', 'thumbnail', 'thumb'];
+      if (imageKeywords.some(keyword => url.toLowerCase().includes(keyword))) {
+        return true;
+      }
+      
+      // Check for common image hosting domains
+      const imageHosts = [
+        'imgur.com', 'i.imgur.com',
+        'unsplash.com', 'images.unsplash.com',
+        'pexels.com', 'images.pexels.com',
+        'pixabay.com',
+        'flickr.com', 'live.staticflickr.com',
+        'googleusercontent.com',
+        'amazonaws.com',
+        'cloudinary.com',
+        'githubusercontent.com'
+      ];
+      
+      if (imageHosts.some(host => urlObj.hostname.includes(host))) {
+        return true;
+      }
+      
+      return false;
     } catch {
       return false;
     }
   };
+
+  // Helper function to extract image URL from HTML content
+  const extractImageFromHtml = useCallback((htmlText: string): string | null => {
+    try {
+      // Create a temporary DOM element to parse HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlText;
+      
+      // Look for img tags
+      const imgTags = tempDiv.querySelectorAll('img');
+      for (const img of imgTags) {
+        const src = img.src || img.getAttribute('src');
+        if (src && isImageUrl(src)) {
+          return src;
+        }
+      }
+      
+      // Look for background images in style attributes
+      const elementsWithStyle = tempDiv.querySelectorAll('[style*="background"]');
+      for (const element of elementsWithStyle) {
+        const style = element.getAttribute('style') || '';
+        const backgroundMatch = style.match(/background-image:\s*url\(['"]?([^'"]+)['"]?\)/);
+        if (backgroundMatch && backgroundMatch[1] && isImageUrl(backgroundMatch[1])) {
+          return backgroundMatch[1];
+        }
+      }
+      
+      // Look for any URLs in the text that might be images
+      const urlRegex = /https?:\/\/[^\s"'<>]+/g;
+      const urls = htmlText.match(urlRegex);
+      if (urls) {
+        for (const url of urls) {
+          if (isImageUrl(url)) {
+            return url;
+          }
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error extracting image from HTML:', error);
+      return null;
+    }
+  }, []);
 
   // Helper function to create an image component at mouse position
   const createImageComponentAtMouse = useCallback(
@@ -455,16 +530,44 @@ const CustomGrid = () => {
       return;
     }
 
-    // If no copied components, try to paste from clipboard (for image URLs)
+    // If no copied components, try to paste from clipboard
     try {
+      // First, try to read clipboard items (for actual image data)
+      if (navigator.clipboard && navigator.clipboard.read) {
+        const clipboardItems = await navigator.clipboard.read();
+        
+        for (const clipboardItem of clipboardItems) {
+          // Check for image data in clipboard
+          for (const type of clipboardItem.types) {
+            if (type.startsWith('image/')) {
+              const imageBlob = await clipboardItem.getType(type);
+              const imageSrc = URL.createObjectURL(imageBlob);
+              await createImageComponentAtMouse(imageSrc);
+              return;
+            }
+          }
+          
+          // Check for HTML content that might contain images
+          if (clipboardItem.types.includes('text/html')) {
+            const htmlBlob = await clipboardItem.getType('text/html');
+            const htmlText = await htmlBlob.text();
+            const imageUrl = extractImageFromHtml(htmlText);
+            if (imageUrl) {
+              await createImageComponentAtMouse(imageUrl);
+              return;
+            }
+          }
+        }
+      }
+      
+      // Fallback: try to read text for image URLs
       const clipboardText = await navigator.clipboard.readText();
       if (clipboardText && isImageUrl(clipboardText)) {
         await createImageComponentAtMouse(clipboardText);
         return;
       }
-    } catch {
-      // Clipboard access denied or failed
-      console.log("No components to paste and clipboard access failed");
+    } catch (error) {
+      console.log("Clipboard access failed or no image content found:", error);
     }
   }, [
     copiedComponents,
@@ -473,7 +576,52 @@ const CustomGrid = () => {
     mousePosition.y,
     transform,
     createImageComponentAtMouse,
+    extractImageFromHtml,
   ]);
+
+  // Function to force paste image from clipboard (ignoring copied components)
+  const handlePasteImageFromClipboard = useCallback(async () => {
+    try {
+      // Try to read clipboard items (for actual image data)
+      if (navigator.clipboard && navigator.clipboard.read) {
+        const clipboardItems = await navigator.clipboard.read();
+        
+        for (const clipboardItem of clipboardItems) {
+          // Check for image data in clipboard
+          for (const type of clipboardItem.types) {
+            if (type.startsWith('image/')) {
+              const imageBlob = await clipboardItem.getType(type);
+              const imageSrc = URL.createObjectURL(imageBlob);
+              await createImageComponentAtMouse(imageSrc);
+              return;
+            }
+          }
+          
+          // Check for HTML content that might contain images
+          if (clipboardItem.types.includes('text/html')) {
+            const htmlBlob = await clipboardItem.getType('text/html');
+            const htmlText = await htmlBlob.text();
+            const imageUrl = extractImageFromHtml(htmlText);
+            if (imageUrl) {
+              await createImageComponentAtMouse(imageUrl);
+              return;
+            }
+          }
+        }
+      }
+      
+      // Fallback: try to read text for image URLs
+      const clipboardText = await navigator.clipboard.readText();
+      if (clipboardText && isImageUrl(clipboardText)) {
+        await createImageComponentAtMouse(clipboardText);
+        return;
+      }
+      
+      console.log("No image content found in clipboard");
+    } catch (error) {
+      console.log("Failed to paste image from clipboard:", error);
+    }
+  }, [createImageComponentAtMouse, extractImageFromHtml]);
 
   // Enhanced pan and zoom utilities
   const getEventCoordinates = (event: MouseEvent | React.MouseEvent) => ({
@@ -871,7 +1019,13 @@ const CustomGrid = () => {
       } else if (event.key === "v" && (event.ctrlKey || event.metaKey)) {
         // Paste components at mouse position
         event.preventDefault();
-        handlePasteComponents();
+        if (event.shiftKey) {
+          // Ctrl+Shift+V: Force paste image from clipboard (ignore copied components)
+          handlePasteImageFromClipboard();
+        } else {
+          // Ctrl+V: Normal paste (components first, then images)
+          handlePasteComponents();
+        }
       }
     };
 
@@ -1008,6 +1162,7 @@ const CustomGrid = () => {
     showOverview,
     handleCopyComponents,
     handlePasteComponents,
+    handlePasteImageFromClipboard,
   ]);
 
   // Cleanup timeout on unmount

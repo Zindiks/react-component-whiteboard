@@ -17,11 +17,18 @@ Implemented copy-paste functionality for all shape components in the React white
 - Stores components in memory for pasting
 - Shows console feedback with number of copied components
 
-### 2. Paste Functionality (Ctrl/Cmd+V)
+### 2. Paste Functionality (Ctrl/Cmd+V & Ctrl/Cmd+Shift+V)
 
-- **Smart paste logic:**
+- **Smart paste logic (Ctrl+V):**
   1. If shape components are copied, pastes them at mouse position
-  2. If no copied components and clipboard contains image URL, creates image component
+  2. If no copied components, tries clipboard image data (copied images)
+  3. If no image data, tries clipboard HTML content for images
+  4. If no HTML images, tries clipboard text for image URLs
+
+- **Force image paste (Ctrl+Shift+V):**
+  - Bypasses copied components completely
+  - Goes directly to clipboard image detection
+  - Perfect for pasting images when shapes are copied
 
 - **Smart positioning:**
   - Converts screen coordinates to whiteboard coordinates
@@ -29,15 +36,19 @@ Implemented copy-paste functionality for all shape components in the React white
   - Positions components at mouse pointer location
   - Offsets multiple components slightly to avoid overlap
 
-### 3. Image URL Paste Support
+### 3. Enhanced Image Paste Support
 
-- Automatically detects image URLs in clipboard text
-- Supports various image formats: .jpg, .jpeg, .png, .gif, .webp, .svg, .bmp
-- Detects URLs containing "image" keyword
-- Loads images to get natural dimensions
-- Scales down large images (max 400px dimension)
-- Maintains aspect ratio
-- Handles CORS and loading errors gracefully
+- **Direct image pasting**: Copy images from websites and paste directly
+- **HTML content parsing**: Extracts images from copied HTML snippets  
+- **Advanced URL detection**: 
+  - File extensions: .jpg, .jpeg, .png, .gif, .webp, .svg, .bmp, .ico, .tiff, .avif
+  - Image keywords: "image", "img", "photo", "picture", "avatar", "thumbnail"
+  - Popular hosts: imgur, unsplash, pexels, pixabay, flickr, googleusercontent, etc.
+- **Data URL support**: Base64 encoded images and blob URLs
+- **Natural image sizing**: Loads images to get natural dimensions
+- **Smart scaling**: Scales down large images (max 400px dimension)
+- **Aspect ratio preservation**: Maintains original proportions
+- **CORS handling**: Graceful handling of external image restrictions
 
 ### 4. Mouse Position Tracking
 
@@ -60,18 +71,35 @@ Implemented copy-paste functionality for all shape components in the React white
 3. Components appear at mouse location with new IDs
 4. Pasted components are automatically selected
 
+### To Paste Images from Websites:
+
+1. **Right-click** on any image from a website → **"Copy Image"**
+2. Move mouse to desired location on the whiteboard
+3. Press **Ctrl+V** (or **Cmd+V** on Mac) 
+4. Image appears instantly at mouse location!
+
 ### To Paste Image URLs:
 
 1. Copy an image URL to your clipboard (from browser, etc.)
 2. Move mouse to desired location on the whiteboard
-3. Press **Ctrl+V** (or **Cmd+V** on Mac) - only works when no shape components are copied
+3. Press **Ctrl+V** (or **Cmd+V** on Mac)
 4. Image loads and appears as a new image component at mouse location
+
+### To Force Paste Images (When Shapes Are Copied):
+
+1. Have some shapes copied with Ctrl+C
+2. Copy an image from a website or copy an image URL
+3. Press **Ctrl+Shift+V** (or **Cmd+Shift+V** on Mac)
+4. Image pastes instead of the copied shapes!
 
 ## Technical Implementation
 
 ### Key Functions:
 
 - `handleCopyComponents()`: Filters and copies selected shape components
+- `handlePasteComponents()`: Smart paste with priority logic
+- `handlePasteImageFromClipboard()`: Force paste images from clipboard
+- `extractImageFromHtml()`: Extracts images from HTML content
 - `handlePasteComponents()`: Handles both clipboard URLs and copied components
 - `isImageUrl()`: Validates if clipboard text is an image URL
 - `createImageComponentAtMouse()`: Creates image component at mouse position
@@ -98,24 +126,29 @@ Implemented copy-paste functionality for all shape components in the React white
 
 ### Test Cases:
 
-1. **Copy/Paste Image Components:**
-
-   - Create image components by dragging from shapes category
-   - Select and copy with Ctrl+C
+1. **Copy/Paste Shape Components:**
+   - Create various shape components (rectangle, ellipse, arrow, line, text, image)
+   - Select single or multiple shapes and copy with Ctrl+C
    - Move mouse and paste with Ctrl+V
+   - Verify all shape types are properly duplicated
 
-2. **Paste Image URLs:**
+2. **Mixed Shape Selection:**
+   - Select multiple different shape types simultaneously
+   - Copy and paste to verify all are duplicated correctly
+   - Test with different combinations of shapes
 
+3. **Paste Image URLs:**
    - Copy an image URL from a website
+   - Ensure no shapes are copied first
    - Paste with Ctrl+V on the whiteboard
    - Test with various image formats
 
-3. **Multiple Component Copy:**
+4. **Priority Logic:**
+   - Copy some shapes, then copy an image URL to clipboard
+   - Verify that Ctrl+V pastes the copied shapes (not the URL)
+   - Clear copied shapes and verify URL pasting works
 
-   - Select multiple image components
-   - Copy and paste to verify all are duplicated
-
-4. **Coordinate Accuracy:**
+5. **Coordinate Accuracy:**
    - Test at different zoom levels
    - Test with panned viewport
    - Verify components appear exactly at mouse position
@@ -128,7 +161,8 @@ Implemented copy-paste functionality for all shape components in the React white
 
 ## Future Enhancements
 
-- Support for copying/pasting other component types
+- Support for copying/pasting widget components (non-shape components)
 - Visual feedback during copy/paste operations
 - Clipboard data validation and security improvements
 - Support for pasting image files from clipboard (browser permitting)
+- Keyboard shortcuts for other operations (cut, duplicate, etc.)
