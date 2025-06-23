@@ -10,6 +10,7 @@ import { Component } from "./types/whiteboard";
 import { useWhiteboardState } from "./hooks/useWhiteboardState";
 import { useZoomControls } from "./hooks/useZoomControls";
 import { usePanControls } from "./hooks/usePanControls";
+import { useSidebarControls } from "./hooks/useSidebarControls";
 import {
   isYouTubeUrl,
   isSoundCloudUrl,
@@ -73,11 +74,18 @@ const CustomGrid = () => {
   const [showOverview, setShowOverview] = useState(false);
   const overviewRef = useRef<HTMLDivElement>(null);
 
-  // Sidebar state
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isDragOverBoard, setIsDragOverBoard] = useState(false);
-  const [dragType, setDragType] = useState<"component" | "image" | null>(null);
+  // Use sidebar controls hook
+  const {
+    activeCategory,
+    isSidebarOpen,
+    isDragOverBoard,
+    dragType,
+    setIsDragOverBoard,
+    setDragType,
+    handleCategoryClick,
+    handleCloseSidebar,
+    getActiveCategory,
+  } = useSidebarControls();
 
   // Use pan controls hook
   const {
@@ -708,33 +716,6 @@ const CustomGrid = () => {
     };
   }, [zoomIndicatorTimeoutRef]);
 
-  // Category and sidebar handlers
-  const handleCategoryClick = useCallback(
-    (categoryName: string) => {
-      if (activeCategory === categoryName && isSidebarOpen) {
-        // If same category is clicked while sidebar is open, close it
-        setIsSidebarOpen(false);
-        setActiveCategory(null);
-      } else {
-        // Open sidebar with new category
-        setActiveCategory(categoryName);
-        setIsSidebarOpen(true);
-      }
-    },
-    [activeCategory, isSidebarOpen]
-  );
-
-  const handleCloseSidebar = useCallback(() => {
-    setIsSidebarOpen(false);
-    setActiveCategory(null);
-  }, []);
-
-  const getActiveCategory = () => {
-    return (
-      COMPONENT_CATEGORIES.find((cat) => cat.name === activeCategory) || null
-    );
-  };
-
   // Handle drop events from sidebar for new components and external images
   useEffect(() => {
     const handleDragOver = (event: DragEvent) => {
@@ -1128,7 +1109,7 @@ const CustomGrid = () => {
       document.removeEventListener("dragleave", handleDragLeave);
       document.removeEventListener("drop", handleDrop);
     };
-  }, [addNewComponent, transform, components, setComponents]);
+  }, [addNewComponent, transform, components, setComponents, setDragType, setIsDragOverBoard]);
 
   // Overview/Minimap functionality
   const getWhiteboardBounds = useCallback(() => {
