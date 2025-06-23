@@ -1,7 +1,5 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import * as d3 from "d3";
-import { Plus, Minus } from "lucide-react";
-import { Button } from "./components/ui/button";
 import { ComponentFooter } from "./components/ComponentFooter";
 import { CategorySidebar } from "./components/CategorySidebar";
 import { DraggableComponent } from "./components/DraggableWhiteboardComponent";
@@ -13,6 +11,7 @@ import { usePanControls } from "./hooks/usePanControls";
 import { useSidebarControls } from "./hooks/useSidebarControls";
 import { useDragAndDrop } from "./hooks/useDragAndDrop";
 import { Overview } from "./components/Overview";
+import { ControlPanel } from "./components/ControlPanel";
 import {
   copySelectedComponents,
   handleComponentPaste,
@@ -955,50 +954,6 @@ const CustomGrid = () => {
           />
         </div>
       )}
-    </div>
-  );
-};
-
-interface ControlPanelProps {
-  onZoom: (factor: number) => void;
-  selectedComponents: number[];
-}
-
-const ControlPanel: React.FC<ControlPanelProps> = ({
-  onZoom,
-  selectedComponents,
-}) => {
-  return (
-    <div
-      data-control-panel
-      style={{
-        position: "absolute",
-        bottom: "10px",
-        left: "10px",
-        backgroundColor: "white",
-        padding: "10px",
-        borderRadius: "5px",
-        boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-        maxWidth: "250px",
-      }}
-      className="flex flex-col gap-2"
-    >
-      <div className="flex gap-2">
-        <Button onClick={() => onZoom(1.4)} variant={"ghost"} size="sm">
-          <Plus className="w-4 h-4" />
-        </Button>
-        <Button onClick={() => onZoom(0.7)} variant={"ghost"} size="sm">
-          <Minus className="w-4 h-4" />
-        </Button>
-      </div>
-      <p className="text-sm mt-2">
-        Mode: Selection
-        {selectedComponents.length > 0 && (
-          <span className="text-blue-600 ml-2">
-            ({selectedComponents.length} selected)
-          </span>
-        )}
-      </p>
     </div>
   );
 };
