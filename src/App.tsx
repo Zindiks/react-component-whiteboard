@@ -2169,6 +2169,7 @@ const CustomGrid = () => {
               onTextChange={handleTextChange}
               onImageChange={handleImageChange}
               selected={selectedComponents.includes(component.id)}
+              selectedCount={selectedComponents.length}
               transform={transform}
               zIndex={component.zIndex || 0}
               imageSrc={component.imageSrc}

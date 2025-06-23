@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { RotateCw, TrendingUp } from "lucide-react";
-import { ComponentHeader } from "./ComponentHeader";
+import { TrendingUp, RotateCcw } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -28,8 +18,6 @@ const CRYPTOCURRENCIES = {
   solana: { name: "Solana", symbol: "SOL", color: "#14b8a6" },
   cardano: { name: "Cardano", symbol: "ADA", color: "#3b82f6" },
   dogecoin: { name: "Dogecoin", symbol: "DOGE", color: "#eab308" },
-  polkadot: { name: "Polkadot", symbol: "DOT", color: "#ec4899" },
-  ripple: { name: "XRP", symbol: "XRP", color: "#4f46e5" },
 };
 
 type CryptoId = keyof typeof CRYPTOCURRENCIES;
@@ -44,119 +32,62 @@ interface CryptoChartProps {
   width?: number;
   height?: number;
   initialCrypto?: CryptoId;
-  onHeaderMouseDown?: (event: React.MouseEvent) => void;
-  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const BitcoinChart: React.FC<CryptoChartProps> = ({
   width = 400,
   height = 300,
   initialCrypto = "bitcoin",
-  onHeaderMouseDown,
-  onDelete,
 }) => {
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoId>(initialCrypto);
   const [data, setData] = useState<CryptoData[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const [priceChange24h, setPriceChange24h] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Get the name for the selected crypto
-  const cryptoName = CRYPTOCURRENCIES[selectedCrypto].name;
-
-  // Fetch cryptocurrency price data
   const fetchCryptoData = async () => {
-    try {
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      // Fetch current price from CoinGecko API (free, no API key needed)
-      const response = await fetch(
+    try {
+      // Fetch current price
+      const priceResponse = await fetch(
         `https://api.coingecko.com/api/v3/simple/price?ids=${selectedCrypto}&vs_currencies=usd&include_24hr_change=true`
       );
+      const priceData = await priceResponse.json();
+      
+      setCurrentPrice(priceData[selectedCrypto]?.usd || 0);
+      setPriceChange24h(priceData[selectedCrypto]?.usd_24h_change || 0);
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${cryptoName} data`);
-      }
-
-      const priceData = await response.json();
-      const price = priceData[selectedCrypto].usd;
-      const change24h = priceData[selectedCrypto].usd_24h_change || 0;
-      const now = new Date();
-
-      setCurrentPrice(price);
-      setPriceChange24h(change24h);
-
-      // Add new data point
-      setData((prevData) => {
-        const newPoint: CryptoData = {
-          time: now.toLocaleTimeString(),
-          price: price,
-          timestamp: now.getTime(),
-        };
-
-        // Keep only last 20 data points for better performance
-        const updatedData = [...prevData, newPoint].slice(-20);
-        return updatedData;
-      });
-
-      setLoading(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-      setLoading(false);
-    }
-  };
-
-  // Initial fetch and set up interval
-  useEffect(() => {
-    // Reset data when changing crypto
-    setData([]);
-    setCurrentPrice(null);
-    setPriceChange24h(null);
-    setLoading(true);
-
-    fetchCryptoData();
-
-    // Update every 30 seconds (CoinGecko rate limit friendly)
-    const interval = setInterval(fetchCryptoData, 30000);
-
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCrypto]);
-
-  // Custom tooltip formatter
-  const CustomTooltip = ({
-    active,
-    payload,
-    label,
-  }: {
-    active?: boolean;
-    payload?: Array<{ value: number }>;
-    label?: string;
-  }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-popover border border-border rounded-lg shadow-md p-3">
-          <p className="text-sm text-muted-foreground">{`Time: ${label}`}</p>
-          <p className="text-sm font-semibold text-foreground">
-            {`Price: $${payload[0].value.toLocaleString()}`}
-          </p>
-        </div>
+      // Fetch historical data (7 days)
+      const historyResponse = await fetch(
+        `https://api.coingecko.com/api/v3/coins/${selectedCrypto}/market_chart?vs_currency=usd&days=7&interval=hourly`
       );
+      const historyData = await historyResponse.json();
+
+      if (historyData.prices) {
+        const formattedData = historyData.prices.slice(0, 24).map(([timestamp, price]: [number, number]) => ({
+          time: new Date(timestamp).toLocaleDateString(),
+          price: Math.round(price * 100) / 100,
+          timestamp,
+        }));
+        setData(formattedData);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch data");
+    } finally {
+      setLoading(false);
     }
-    return null;
   };
+
+  useEffect(() => {
+    fetchCryptoData();
+  }, [selectedCrypto]);
 
   if (loading && data.length === 0) {
     return (
-      <Card className="border-gray-200" style={{ width, height }}>
-        <ComponentHeader
-          title={`${CRYPTOCURRENCIES[selectedCrypto].name} (${CRYPTOCURRENCIES[selectedCrypto].symbol})`}
-          icon={TrendingUp}
-          iconColor="bg-gray-500"
-          onMouseDown={onHeaderMouseDown}
-          onDelete={onDelete}
-        />
+      <Card className="border-gray-200 bg-white shadow-sm" style={{ width, height }}>
         <CardContent className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
             <div
@@ -174,14 +105,7 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
 
   if (error) {
     return (
-      <Card className="border-destructive/50" style={{ width, height }}>
-        <ComponentHeader
-          title={`${CRYPTOCURRENCIES[selectedCrypto].name} (${CRYPTOCURRENCIES[selectedCrypto].symbol})`}
-          icon={TrendingUp}
-          iconColor="bg-destructive"
-          onMouseDown={onHeaderMouseDown}
-          onDelete={onDelete}
-        />
+      <Card className="border-destructive/50 bg-white shadow-sm" style={{ width, height }}>
         <CardContent className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
             <p className="text-sm text-destructive mb-2">Error loading data:</p>
@@ -196,20 +120,21 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
   }
 
   return (
-    <Card className="border-gray-200" style={{ width, height }}>
-      <ComponentHeader
-        title={`${CRYPTOCURRENCIES[selectedCrypto].name} (${CRYPTOCURRENCIES[selectedCrypto].symbol})`}
-        icon={TrendingUp}
-        iconColor={CRYPTOCURRENCIES[selectedCrypto].color}
-        onMouseDown={onHeaderMouseDown}
-        onDelete={onDelete}
-        actions={
+    <Card className="border-gray-200 bg-white shadow-sm" style={{ width, height }}>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <TrendingUp size={20} style={{ color: CRYPTOCURRENCIES[selectedCrypto].color }} />
+            <h3 className="font-semibold text-sm">
+              {CRYPTOCURRENCIES[selectedCrypto].name} ({CRYPTOCURRENCIES[selectedCrypto].symbol})
+            </h3>
+          </div>
           <div className="flex items-center space-x-1">
             <Select
               value={selectedCrypto}
               onValueChange={(value: CryptoId) => setSelectedCrypto(value)}
             >
-              <SelectTrigger className="w-16 h-6 border-none shadow-none p-1">
+              <SelectTrigger className="w-20 h-6 border-none shadow-none p-1 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -220,7 +145,7 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: crypto.color }}
                       />
-                      <span>{crypto.name}</span>
+                      <span>{crypto.symbol}</span>
                     </div>
                   </SelectItem>
                 ))}
@@ -233,20 +158,20 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
               size="sm"
               className="h-6 w-6 p-0"
             >
-              <RotateCw
-                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              <RotateCcw
+                size={14}
+                className={loading ? "animate-spin" : ""}
               />
             </Button>
           </div>
-        }
-      />
+        </div>
 
-      <CardContent className="p-4">
+        {/* Price display */}
         <div className="flex items-center justify-between mb-3">
           <div className="text-left flex flex-col items-start">
             {currentPrice && (
               <>
-                <p className="text-lg font-bold">
+                <p className="text-2xl font-bold">
                   ${currentPrice.toLocaleString()}
                 </p>
                 {priceChange24h !== null && (
@@ -263,54 +188,17 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
           </div>
         </div>
 
-        {/* Chart */}
-        <div style={{ width: "100%", height: height - 80 }}>
-          <ResponsiveContainer>
-            <LineChart
-              data={data}
-              margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
-              />
-              <XAxis
-                dataKey="time"
-                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false}
-                tickLine={false}
-                domain={["dataMin - 100", "dataMax + 100"]}
-                tickFormatter={(value) => `$${value.toLocaleString()}`}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Line
-                type="monotone"
-                dataKey="price"
-                stroke={CRYPTOCURRENCIES[selectedCrypto].color}
-                strokeWidth={2}
-                dot={{
-                  fill: CRYPTOCURRENCIES[selectedCrypto].color,
-                  strokeWidth: 2,
-                  r: 3,
-                }}
-                activeDot={{
-                  r: 5,
-                  stroke: CRYPTOCURRENCIES[selectedCrypto].color,
-                  strokeWidth: 2,
-                }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+        {/* Simple chart placeholder */}
+        <div 
+          className="w-full bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm" 
+          style={{ height: Math.max(height - 160, 100) }}
+        >
+          Chart: {data.length} data points • 24h trend
         </div>
 
         {/* Footer */}
         <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
-          <span>Live updates every 30s</span>
+          <span>Live updates</span>
           <span>
             {data.length} data point{data.length !== 1 ? "s" : ""}
             {data.length > 0 &&
@@ -321,3 +209,5 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
     </Card>
   );
 };
+
+export default BitcoinChart;

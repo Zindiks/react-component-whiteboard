@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import confetti from "canvas-confetti";
 import { Sparkles, Star, Heart, Zap } from "lucide-react";
-import { ComponentHeader } from "./ComponentHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,15 +8,11 @@ import { cn } from "@/lib/utils";
 interface ConfettiButtonProps {
   width?: number;
   height?: number;
-  onHeaderMouseDown?: (event: React.MouseEvent) => void;
-  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const ConfettiButton: React.FC<ConfettiButtonProps> = ({
   width = 250,
   height = 200,
-  onHeaderMouseDown,
-  onDelete,
 }) => {
   const [clickCount, setClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState<Date | null>(null);
@@ -156,22 +151,19 @@ export const ConfettiButton: React.FC<ConfettiButtonProps> = ({
   };
 
   return (
-    <Card className="overflow-hidden" style={{ width, height }}>
-      <ComponentHeader
-        title="Confetti Button"
-        icon={Sparkles}
-        iconColor="bg-purple-500"
-        onMouseDown={onHeaderMouseDown}
-        onDelete={onDelete}
-        actions={
+    <Card className="overflow-hidden bg-white shadow-sm" style={{ width, height }}>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <Sparkles size={20} className="text-purple-600" />
+            <h3 className="font-semibold text-sm">Confetti Button</h3>
+          </div>
           <div className="text-right">
             <p className="text-lg font-bold text-purple-600">{clickCount}</p>
             <p className="text-xs text-muted-foreground">clicks</p>
           </div>
-        }
-      />
+        </div>
 
-      <CardContent className="p-4">
         {/* Main Confetti Button */}
         <div className="flex justify-center mb-4">
           <Button

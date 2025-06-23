@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Edit, Eye, FileText } from "lucide-react";
-import { ComponentHeader } from "./ComponentHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,15 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 interface TextNoteProps {
   initialContent?: string;
   onContentChange?: (content: string) => void;
-  onHeaderMouseDown?: (event: React.MouseEvent) => void;
-  onDelete?: (event: React.MouseEvent) => void;
 }
 
 export const TextNote: React.FC<TextNoteProps> = ({
   initialContent = "# Hello World\n\nThis is a **markdown** note. You can edit it!",
   onContentChange,
-  onHeaderMouseDown,
-  onDelete,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(initialContent);
@@ -97,21 +92,20 @@ export const TextNote: React.FC<TextNoteProps> = ({
   return (
     <Card
       ref={noteRef}
-      className="resize overflow-auto min-w-[300px] min-h-[200px] max-w-[600px] max-h-[400px]"
+      className="resize overflow-auto min-w-[300px] min-h-[200px] max-w-[600px] max-h-[400px] bg-white shadow-sm"
       style={{ width: currentWidth, height: currentHeight }}
     >
-      <ComponentHeader
-        title="Text Note"
-        icon={FileText}
-        iconColor="bg-green-500"
-        onMouseDown={onHeaderMouseDown}
-        onDelete={onDelete}
-        actions={
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <FileText size={20} className="text-green-600" />
+            <h3 className="font-semibold text-sm">Text Note</h3>
+          </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsEditing(!isEditing)}
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+            className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
             title={isEditing ? "Preview" : "Edit"}
           >
             {isEditing ? (
@@ -120,10 +114,7 @@ export const TextNote: React.FC<TextNoteProps> = ({
               <Edit className="w-4 h-4" />
             )}
           </Button>
-        }
-      />
-
-      <CardContent className="p-4">
+        </div>
         {/* Content */}
         <div className="relative" style={{ height: currentHeight - 60 }}>
           {isEditing ? (
