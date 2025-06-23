@@ -39,6 +39,9 @@ interface DraggableComponentProps {
   width?: number;
   height?: number;
   text?: string;
+  youtubeUrl?: string;
+  soundcloudUrl?: string;
+  spotifyUrl?: string;
   onResize?: (id: number, width: number, height: number) => void;
   onTextChange?: (id: number, text: string) => void;
   onImageChange?: (id: number, imageSrc: string) => void;
@@ -60,6 +63,9 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   width,
   height,
   text,
+  youtubeUrl,
+  soundcloudUrl,
+  spotifyUrl,
   onResize,
   onTextChange,
   onImageChange,
@@ -172,18 +178,27 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     ),
     youtubeVideo: () => (
       <YouTubeVideo
+        initialUrl={youtubeUrl}
+        width={width}
+        height={height}
         onHeaderMouseDown={handleHeaderMouseDown}
         onDelete={handleDeleteClick}
       />
     ),
     soundcloud: () => (
       <SoundCloudWidget
+        initialUrl={soundcloudUrl}
+        width={width}
+        height={height}
         onHeaderMouseDown={handleHeaderMouseDown}
         onDelete={handleDeleteClick}
       />
     ),
     spotify: () => (
       <SpotifyWidget
+        initialUrl={spotifyUrl}
+        width={width}
+        height={height}
         onHeaderMouseDown={handleHeaderMouseDown}
         onDelete={handleDeleteClick}
       />

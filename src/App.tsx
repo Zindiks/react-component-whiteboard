@@ -241,6 +241,9 @@ const CustomGrid = () => {
     zIndex?: number;
     imageSrc?: string; // For image components
     text?: string; // For text components
+    youtubeUrl?: string; // For YouTube video components
+    soundcloudUrl?: string; // For SoundCloud components
+    spotifyUrl?: string; // For Spotify components
   }
 
   const [components, setComponents] = useState<Component[]>([
@@ -300,8 +303,15 @@ const CustomGrid = () => {
   // Copy-paste functionality for all shape components
   const handleCopyComponents = useCallback(() => {
     // Shape types that can be copied
-    const shapeTypes = ["rectangle", "ellipse", "arrow", "line", "text", "imageShape"];
-    
+    const shapeTypes = [
+      "rectangle",
+      "ellipse",
+      "arrow",
+      "line",
+      "text",
+      "imageShape",
+    ];
+
     // Filter selected components to include all shape types
     const selectedShapeComponents = components.filter(
       (c) => selectedComponents.includes(c.id) && shapeTypes.includes(c.type)
@@ -319,47 +329,74 @@ const CustomGrid = () => {
   const isImageUrl = (url: string): boolean => {
     try {
       // Handle data URLs
-      if (url.startsWith('data:image/')) {
+      if (url.startsWith("data:image/")) {
         return true;
       }
-      
+
       // Handle blob URLs
-      if (url.startsWith('blob:')) {
+      if (url.startsWith("blob:")) {
         return true;
       }
-      
+
       const urlObj = new URL(url);
       const pathname = urlObj.pathname.toLowerCase();
-      
+
       // Check for explicit image file extensions
-      const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico', '.tiff', '.tif', '.avif'];
-      if (imageExtensions.some(ext => pathname.endsWith(ext))) {
+      const imageExtensions = [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".gif",
+        ".webp",
+        ".svg",
+        ".bmp",
+        ".ico",
+        ".tiff",
+        ".tif",
+        ".avif",
+      ];
+      if (imageExtensions.some((ext) => pathname.endsWith(ext))) {
         return true;
       }
-      
+
       // Check for URLs that contain image-related keywords
-      const imageKeywords = ['image', 'img', 'photo', 'picture', 'pic', 'avatar', 'thumbnail', 'thumb'];
-      if (imageKeywords.some(keyword => url.toLowerCase().includes(keyword))) {
+      const imageKeywords = [
+        "image",
+        "img",
+        "photo",
+        "picture",
+        "pic",
+        "avatar",
+        "thumbnail",
+        "thumb",
+      ];
+      if (
+        imageKeywords.some((keyword) => url.toLowerCase().includes(keyword))
+      ) {
         return true;
       }
-      
+
       // Check for common image hosting domains
       const imageHosts = [
-        'imgur.com', 'i.imgur.com',
-        'unsplash.com', 'images.unsplash.com',
-        'pexels.com', 'images.pexels.com',
-        'pixabay.com',
-        'flickr.com', 'live.staticflickr.com',
-        'googleusercontent.com',
-        'amazonaws.com',
-        'cloudinary.com',
-        'githubusercontent.com'
+        "imgur.com",
+        "i.imgur.com",
+        "unsplash.com",
+        "images.unsplash.com",
+        "pexels.com",
+        "images.pexels.com",
+        "pixabay.com",
+        "flickr.com",
+        "live.staticflickr.com",
+        "googleusercontent.com",
+        "amazonaws.com",
+        "cloudinary.com",
+        "githubusercontent.com",
       ];
-      
-      if (imageHosts.some(host => urlObj.hostname.includes(host))) {
+
+      if (imageHosts.some((host) => urlObj.hostname.includes(host))) {
         return true;
       }
-      
+
       return false;
     } catch {
       return false;
@@ -367,48 +404,59 @@ const CustomGrid = () => {
   };
 
   // Helper function to extract image URL from HTML content
-  const extractImageFromHtml = useCallback((htmlText: string): string | null => {
-    try {
-      // Create a temporary DOM element to parse HTML
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = htmlText;
-      
-      // Look for img tags
-      const imgTags = tempDiv.querySelectorAll('img');
-      for (const img of imgTags) {
-        const src = img.src || img.getAttribute('src');
-        if (src && isImageUrl(src)) {
-          return src;
-        }
-      }
-      
-      // Look for background images in style attributes
-      const elementsWithStyle = tempDiv.querySelectorAll('[style*="background"]');
-      for (const element of elementsWithStyle) {
-        const style = element.getAttribute('style') || '';
-        const backgroundMatch = style.match(/background-image:\s*url\(['"]?([^'"]+)['"]?\)/);
-        if (backgroundMatch && backgroundMatch[1] && isImageUrl(backgroundMatch[1])) {
-          return backgroundMatch[1];
-        }
-      }
-      
-      // Look for any URLs in the text that might be images
-      const urlRegex = /https?:\/\/[^\s"'<>]+/g;
-      const urls = htmlText.match(urlRegex);
-      if (urls) {
-        for (const url of urls) {
-          if (isImageUrl(url)) {
-            return url;
+  const extractImageFromHtml = useCallback(
+    (htmlText: string): string | null => {
+      try {
+        // Create a temporary DOM element to parse HTML
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = htmlText;
+
+        // Look for img tags
+        const imgTags = tempDiv.querySelectorAll("img");
+        for (const img of imgTags) {
+          const src = img.src || img.getAttribute("src");
+          if (src && isImageUrl(src)) {
+            return src;
           }
         }
+
+        // Look for background images in style attributes
+        const elementsWithStyle = tempDiv.querySelectorAll(
+          '[style*="background"]'
+        );
+        for (const element of elementsWithStyle) {
+          const style = element.getAttribute("style") || "";
+          const backgroundMatch = style.match(
+            /background-image:\s*url\(['"]?([^'"]+)['"]?\)/
+          );
+          if (
+            backgroundMatch &&
+            backgroundMatch[1] &&
+            isImageUrl(backgroundMatch[1])
+          ) {
+            return backgroundMatch[1];
+          }
+        }
+
+        // Look for any URLs in the text that might be images
+        const urlRegex = /https?:\/\/[^\s"'<>]+/g;
+        const urls = htmlText.match(urlRegex);
+        if (urls) {
+          for (const url of urls) {
+            if (isImageUrl(url)) {
+              return url;
+            }
+          }
+        }
+
+        return null;
+      } catch (error) {
+        console.error("Error extracting image from HTML:", error);
+        return null;
       }
-      
-      return null;
-    } catch (error) {
-      console.error('Error extracting image from HTML:', error);
-      return null;
-    }
-  }, []);
+    },
+    []
+  );
 
   // Helper function to create an image component at mouse position
   const createImageComponentAtMouse = useCallback(
@@ -498,6 +546,211 @@ const CustomGrid = () => {
     [components, mousePosition.x, mousePosition.y, transform]
   );
 
+  // Helper function to detect YouTube URLs
+  const isYouTubeUrl = useCallback((url: string): boolean => {
+    if (!url || typeof url !== "string") return false;
+
+    try {
+      const urlObj = new URL(url.trim());
+      const hostname = urlObj.hostname.toLowerCase();
+
+      // Check for various YouTube URL patterns
+      return (
+        hostname === "youtube.com" ||
+        hostname === "www.youtube.com" ||
+        hostname === "youtu.be" ||
+        hostname === "m.youtube.com" ||
+        hostname === "music.youtube.com" ||
+        // Also check for YouTube embeds
+        hostname === "youtube-nocookie.com" ||
+        hostname === "www.youtube-nocookie.com" ||
+        // Check if the URL contains youtube in path for some edge cases
+        urlObj.href.includes("youtube.com/watch") ||
+        urlObj.href.includes("youtube.com/embed") ||
+        urlObj.href.includes("youtu.be/")
+      );
+    } catch {
+      // If URL parsing fails, try simple string matching
+      const lowerUrl = url.toLowerCase();
+      return (
+        lowerUrl.includes("youtube.com/watch") ||
+        lowerUrl.includes("youtu.be/") ||
+        lowerUrl.includes("youtube.com/embed") ||
+        lowerUrl.includes("youtube.com/v/") ||
+        lowerUrl.includes("m.youtube.com/watch")
+      );
+    }
+  }, []);
+
+  // Helper function to create a YouTube component at mouse position
+  const createYouTubeComponentAtMouse = useCallback(
+    (youtubeUrl: string): void => {
+      // Default size for YouTube videos (4:3 aspect ratio)
+      const width = 400;
+      const height = 300; // 400 * 3/4 = 300
+
+      // Convert screen coordinates to whiteboard coordinates and center on mouse position
+      const whiteboardX =
+        (mousePosition.x - transform.x) / transform.k - width / 2;
+      const whiteboardY =
+        (mousePosition.y - transform.y) / transform.k - height / 2;
+
+      // Create a new YouTube component at mouse position
+      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const highestZIndex = Math.max(
+        ...components.map((c) => c.zIndex || 0),
+        0
+      );
+
+      const newComponent: Component = {
+        id: newId,
+        x: whiteboardX,
+        y: whiteboardY,
+        type: "youtubeVideo",
+        width,
+        height,
+        zIndex: highestZIndex + 1,
+        youtubeUrl, // Store the URL for the component
+      };
+
+      setComponents((prev) => [...prev, newComponent]);
+      setSelectedComponents([newId]); // Select the new component
+      console.log(`Created YouTube video component from URL: ${youtubeUrl}`);
+    },
+    [components, mousePosition.x, mousePosition.y, transform]
+  );
+
+  // Helper function to detect SoundCloud URLs
+  const isSoundCloudUrl = useCallback((url: string): boolean => {
+    if (!url || typeof url !== "string") return false;
+
+    try {
+      const urlObj = new URL(url.trim());
+      const hostname = urlObj.hostname.toLowerCase();
+
+      // Check for SoundCloud URL patterns
+      return (
+        hostname === "soundcloud.com" ||
+        hostname === "www.soundcloud.com" ||
+        hostname === "m.soundcloud.com" ||
+        hostname === "on.soundcloud.com" ||
+        urlObj.href.includes("soundcloud.com/")
+      );
+    } catch {
+      // If URL parsing fails, try simple string matching
+      const lowerUrl = url.toLowerCase();
+      return (
+        lowerUrl.includes("soundcloud.com/") ||
+        lowerUrl.includes("on.soundcloud.com")
+      );
+    }
+  }, []);
+
+  // Helper function to create a SoundCloud component at mouse position
+  const createSoundCloudComponentAtMouse = useCallback(
+    (soundcloudUrl: string): void => {
+      // Default size for SoundCloud widgets
+      const width = 400;
+      const height = 200;
+
+      // Convert screen coordinates to whiteboard coordinates and center on mouse position
+      const whiteboardX =
+        (mousePosition.x - transform.x) / transform.k - width / 2;
+      const whiteboardY =
+        (mousePosition.y - transform.y) / transform.k - height / 2;
+
+      // Create a new SoundCloud component at mouse position
+      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const highestZIndex = Math.max(
+        ...components.map((c) => c.zIndex || 0),
+        0
+      );
+
+      const newComponent: Component = {
+        id: newId,
+        x: whiteboardX,
+        y: whiteboardY,
+        type: "soundcloud",
+        width,
+        height,
+        zIndex: highestZIndex + 1,
+        soundcloudUrl, // Store the URL for the component
+      };
+
+      setComponents((prev) => [...prev, newComponent]);
+      setSelectedComponents([newId]); // Select the new component
+      console.log(`Created SoundCloud component from URL: ${soundcloudUrl}`);
+    },
+    [components, mousePosition.x, mousePosition.y, transform]
+  );
+
+  // Helper function to detect Spotify URLs
+  const isSpotifyUrl = useCallback((url: string): boolean => {
+    if (!url || typeof url !== "string") return false;
+
+    try {
+      const urlObj = new URL(url.trim());
+      const hostname = urlObj.hostname.toLowerCase();
+
+      // Check for Spotify URL patterns
+      return (
+        hostname === "spotify.com" ||
+        hostname === "www.spotify.com" ||
+        hostname === "open.spotify.com" ||
+        hostname === "play.spotify.com" ||
+        urlObj.href.includes("spotify.com/") ||
+        // Also check for spotify: protocol links
+        url.startsWith("spotify:")
+      );
+    } catch {
+      // If URL parsing fails, try simple string matching
+      const lowerUrl = url.toLowerCase();
+      return (
+        lowerUrl.includes("spotify.com/") ||
+        lowerUrl.includes("open.spotify.com") ||
+        lowerUrl.startsWith("spotify:")
+      );
+    }
+  }, []);
+
+  // Helper function to create a Spotify component at mouse position
+  const createSpotifyComponentAtMouse = useCallback(
+    (spotifyUrl: string): void => {
+      // Default size for Spotify widgets
+      const width = 400;
+      const height = 200;
+
+      // Convert screen coordinates to whiteboard coordinates and center on mouse position
+      const whiteboardX =
+        (mousePosition.x - transform.x) / transform.k - width / 2;
+      const whiteboardY =
+        (mousePosition.y - transform.y) / transform.k - height / 2;
+
+      // Create a new Spotify component at mouse position
+      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const highestZIndex = Math.max(
+        ...components.map((c) => c.zIndex || 0),
+        0
+      );
+
+      const newComponent: Component = {
+        id: newId,
+        x: whiteboardX,
+        y: whiteboardY,
+        type: "spotify",
+        width,
+        height,
+        zIndex: highestZIndex + 1,
+        spotifyUrl, // Store the URL for the component
+      };
+
+      setComponents((prev) => [...prev, newComponent]);
+      setSelectedComponents([newId]); // Select the new component
+      console.log(`Created Spotify component from URL: ${spotifyUrl}`);
+    },
+    [components, mousePosition.x, mousePosition.y, transform]
+  );
+
   const handlePasteComponents = useCallback(async () => {
     // If we have copied components, paste them first (prioritize component copy/paste)
     if (copiedComponents.length > 0) {
@@ -535,21 +788,21 @@ const CustomGrid = () => {
       // First, try to read clipboard items (for actual image data)
       if (navigator.clipboard && navigator.clipboard.read) {
         const clipboardItems = await navigator.clipboard.read();
-        
+
         for (const clipboardItem of clipboardItems) {
           // Check for image data in clipboard
           for (const type of clipboardItem.types) {
-            if (type.startsWith('image/')) {
+            if (type.startsWith("image/")) {
               const imageBlob = await clipboardItem.getType(type);
               const imageSrc = URL.createObjectURL(imageBlob);
               await createImageComponentAtMouse(imageSrc);
               return;
             }
           }
-          
+
           // Check for HTML content that might contain images
-          if (clipboardItem.types.includes('text/html')) {
-            const htmlBlob = await clipboardItem.getType('text/html');
+          if (clipboardItem.types.includes("text/html")) {
+            const htmlBlob = await clipboardItem.getType("text/html");
             const htmlText = await htmlBlob.text();
             const imageUrl = extractImageFromHtml(htmlText);
             if (imageUrl) {
@@ -559,12 +812,30 @@ const CustomGrid = () => {
           }
         }
       }
-      
-      // Fallback: try to read text for image URLs
+
+      // Fallback: try to read text for YouTube, SoundCloud, Spotify URLs or image URLs
       const clipboardText = await navigator.clipboard.readText();
-      if (clipboardText && isImageUrl(clipboardText)) {
-        await createImageComponentAtMouse(clipboardText);
-        return;
+      if (clipboardText) {
+        // First check for YouTube URLs
+        if (isYouTubeUrl(clipboardText)) {
+          createYouTubeComponentAtMouse(clipboardText);
+          return;
+        }
+        // Then check for SoundCloud URLs
+        if (isSoundCloudUrl(clipboardText)) {
+          createSoundCloudComponentAtMouse(clipboardText);
+          return;
+        }
+        // Then check for Spotify URLs
+        if (isSpotifyUrl(clipboardText)) {
+          createSpotifyComponentAtMouse(clipboardText);
+          return;
+        }
+        // Finally check for image URLs
+        if (isImageUrl(clipboardText)) {
+          await createImageComponentAtMouse(clipboardText);
+          return;
+        }
       }
     } catch (error) {
       console.log("Clipboard access failed or no image content found:", error);
@@ -577,6 +848,12 @@ const CustomGrid = () => {
     transform,
     createImageComponentAtMouse,
     extractImageFromHtml,
+    isYouTubeUrl,
+    createYouTubeComponentAtMouse,
+    isSoundCloudUrl,
+    createSoundCloudComponentAtMouse,
+    isSpotifyUrl,
+    createSpotifyComponentAtMouse,
   ]);
 
   // Function to force paste image from clipboard (ignoring copied components)
@@ -585,21 +862,21 @@ const CustomGrid = () => {
       // Try to read clipboard items (for actual image data)
       if (navigator.clipboard && navigator.clipboard.read) {
         const clipboardItems = await navigator.clipboard.read();
-        
+
         for (const clipboardItem of clipboardItems) {
           // Check for image data in clipboard
           for (const type of clipboardItem.types) {
-            if (type.startsWith('image/')) {
+            if (type.startsWith("image/")) {
               const imageBlob = await clipboardItem.getType(type);
               const imageSrc = URL.createObjectURL(imageBlob);
               await createImageComponentAtMouse(imageSrc);
               return;
             }
           }
-          
+
           // Check for HTML content that might contain images
-          if (clipboardItem.types.includes('text/html')) {
-            const htmlBlob = await clipboardItem.getType('text/html');
+          if (clipboardItem.types.includes("text/html")) {
+            const htmlBlob = await clipboardItem.getType("text/html");
             const htmlText = await htmlBlob.text();
             const imageUrl = extractImageFromHtml(htmlText);
             if (imageUrl) {
@@ -609,14 +886,14 @@ const CustomGrid = () => {
           }
         }
       }
-      
+
       // Fallback: try to read text for image URLs
       const clipboardText = await navigator.clipboard.readText();
       if (clipboardText && isImageUrl(clipboardText)) {
         await createImageComponentAtMouse(clipboardText);
         return;
       }
-      
+
       console.log("No image content found in clipboard");
     } catch (error) {
       console.log("Failed to paste image from clipboard:", error);
@@ -1483,12 +1760,92 @@ const CustomGrid = () => {
       const plainData = event.dataTransfer?.getData("text/plain");
 
       if (urlData || htmlData || plainData) {
-        let imageUrl = "";
+        let extractedUrl = "";
 
         if (urlData) {
           // Direct URL drag
-          imageUrl = urlData.split("\n")[0]; // Take first URL if multiple
-        } else if (htmlData) {
+          extractedUrl = urlData.split("\n")[0]; // Take first URL if multiple
+        } else if (plainData && /^https?:\/\//.test(plainData.trim())) {
+          // Plain text URL drag
+          extractedUrl = plainData.trim();
+        }
+
+        // Check for media URLs first (YouTube, SoundCloud, Spotify)
+        if (extractedUrl) {
+          const x = (event.clientX - transform.x) / transform.k;
+          const y = (event.clientY - transform.y) / transform.k;
+
+          if (isYouTubeUrl(extractedUrl)) {
+            const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+            const highestZIndex = Math.max(
+              ...components.map((c) => c.zIndex || 0),
+              0
+            );
+
+            const newComponent: Component = {
+              id: newId,
+              x: x - 200, // Center the 400px wide component
+              y: y - 150, // Center the 300px tall component
+              type: "youtubeVideo",
+              width: 400,
+              height: 300,
+              zIndex: highestZIndex + 1,
+              youtubeUrl: extractedUrl,
+            };
+
+            setComponents((prev) => [...prev, newComponent]);
+            return;
+          }
+
+          if (isSoundCloudUrl(extractedUrl)) {
+            const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+            const highestZIndex = Math.max(
+              ...components.map((c) => c.zIndex || 0),
+              0
+            );
+
+            const newComponent: Component = {
+              id: newId,
+              x: x - 200, // Center the 400px wide component
+              y: y - 100, // Center the 200px tall component
+              type: "soundcloud",
+              width: 400,
+              height: 200,
+              zIndex: highestZIndex + 1,
+              soundcloudUrl: extractedUrl,
+            };
+
+            setComponents((prev) => [...prev, newComponent]);
+            return;
+          }
+
+          if (isSpotifyUrl(extractedUrl)) {
+            const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+            const highestZIndex = Math.max(
+              ...components.map((c) => c.zIndex || 0),
+              0
+            );
+
+            const newComponent: Component = {
+              id: newId,
+              x: x - 200, // Center the 400px wide component
+              y: y - 100, // Center the 200px tall component
+              type: "spotify",
+              width: 400,
+              height: 200,
+              zIndex: highestZIndex + 1,
+              spotifyUrl: extractedUrl,
+            };
+
+            setComponents((prev) => [...prev, newComponent]);
+            return;
+          }
+        }
+
+        // If not a media URL, check for image URLs
+        let imageUrl = extractedUrl;
+
+        if (!imageUrl && htmlData) {
           // HTML drag - extract image src from img tag
           const imgMatch = htmlData.match(/<img[^>]+src=["']([^"']+)["']/i);
           if (imgMatch) {
@@ -1627,7 +1984,14 @@ const CustomGrid = () => {
       document.removeEventListener("dragleave", handleDragLeave);
       document.removeEventListener("drop", handleDrop);
     };
-  }, [addNewComponent, transform, components]);
+  }, [
+    addNewComponent,
+    transform,
+    components,
+    isYouTubeUrl,
+    isSoundCloudUrl,
+    isSpotifyUrl,
+  ]);
 
   const bringToFront = useCallback((id: number) => {
     setComponents((prevComponents) => {
@@ -1811,6 +2175,9 @@ const CustomGrid = () => {
               width={component.width}
               height={component.height}
               text={component.text}
+              youtubeUrl={component.youtubeUrl}
+              soundcloudUrl={component.soundcloudUrl}
+              spotifyUrl={component.spotifyUrl}
             />
           ))}
       </div>

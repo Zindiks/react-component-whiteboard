@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube URL Auto-Component Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .test-section {
+        background: #f5f5f5;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 8px;
+      }
+      .url-example {
+        background: white;
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 4px;
+        font-family: monospace;
+        word-break: break-all;
+      }
+      .feature-list {
+        background: #e8f4fd;
+        padding: 15px;
+        border-left: 4px solid #2196f3;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🎬 YouTube URL Auto-Component Feature Test</h1>
+
+    <div class="feature-list">
+      <h2>✨ New Feature: Automatic YouTube Component Creation</h2>
+      <p>
+        When you paste or drag-and-drop a YouTube URL, the whiteboard will
+        automatically create a YouTube video component at 4:3 aspect ratio
+        (400x300px) instead of requiring manual widget selection.
+      </p>
+    </div>
+
+    <div class="test-section">
+      <h3>🔗 Test URLs - Copy and paste these into the whiteboard:</h3>
+
+      <h4>Standard YouTube URLs:</h4>
+      <div class="url-example">https://www.youtube.com/watch?v=dQw4w9WgXcQ</div>
+      <div class="url-example">https://youtube.com/watch?v=dQw4w9WgXcQ</div>
+      <div class="url-example">https://m.youtube.com/watch?v=dQw4w9WgXcQ</div>
+
+      <h4>Short YouTube URLs:</h4>
+      <div class="url-example">https://youtu.be/dQw4w9WgXcQ</div>
+      <div class="url-example">https://youtu.be/dQw4w9WgXcQ?t=10</div>
+
+      <h4>YouTube Embeds:</h4>
+      <div class="url-example">https://www.youtube.com/embed/dQw4w9WgXcQ</div>
+      <div class="url-example">
+        https://youtube-nocookie.com/embed/dQw4w9WgXcQ
+      </div>
+
+      <h4>SoundCloud URLs:</h4>
+      <div class="url-example">https://soundcloud.com/artist/track-name</div>
+      <div class="url-example">
+        https://www.soundcloud.com/artist/track-name
+      </div>
+
+      <h4>Spotify URLs:</h4>
+      <div class="url-example">
+        https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh
+      </div>
+      <div class="url-example">
+        https://spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh
+      </div>
+      <div class="url-example">spotify:track:4iV5W9uYEdYUVa79Axb7Rh</div>
+    </div>
+
+    <div class="test-section">
+      <h3>🧪 How to Test:</h3>
+      <ol>
+        <li><strong>Copy a URL</strong> from the examples above</li>
+        <li><strong>Open the whiteboard application</strong> (npm run dev)</li>
+        <li>
+          <strong>Paste (Ctrl+V/Cmd+V)</strong> anywhere on the whiteboard
+        </li>
+        <li>
+          <strong>Verify</strong> that the appropriate component is created:
+          <ul>
+            <li>
+              YouTube URLs → YouTube video component (400x300px, 4:3 ratio)
+            </li>
+            <li>SoundCloud URLs → SoundCloud widget (400x200px)</li>
+            <li>Spotify URLs → Spotify widget (400x200px)</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Alternative test</strong>: Drag and drop the URL from this
+          page to the whiteboard
+        </li>
+      </ol>
+    </div>
+
+    <div class="test-section">
+      <h3>📋 Feature Specifications:</h3>
+      <ul>
+        <li>
+          <strong>YouTube Component Size:</strong> 400x300px (4:3 aspect ratio)
+          - Updated from 16:9
+        </li>
+        <li><strong>SoundCloud Component Size:</strong> 400x200px</li>
+        <li><strong>Spotify Component Size:</strong> 400x200px</li>
+        <li>
+          <strong>Placement:</strong> Components are centered at mouse position
+        </li>
+        <li>
+          <strong>Priority Order:</strong> YouTube → SoundCloud → Spotify →
+          Image URLs
+        </li>
+        <li>
+          <strong>URL Detection:</strong> Works with paste (Ctrl+V) and
+          drag-and-drop
+        </li>
+        <li>
+          <strong>Pre-configured:</strong> Components are automatically
+          pre-filled with the URL
+        </li>
+      </ul>
+    </div>
+
+    <div class="test-section">
+      <h3>🎯 Expected Behavior:</h3>
+      <p>
+        <strong>BEFORE:</strong> User had to manually add YouTube widget from
+        sidebar, then paste URL
+      </p>
+      <p>
+        <strong>AFTER:</strong> User can directly paste YouTube URL and get a
+        pre-configured component automatically
+      </p>
+    </div>
+
+    <script>
+      // Add click-to-copy functionality for convenience
+      document.querySelectorAll(".url-example").forEach((el) => {
+        el.style.cursor = "pointer";
+        el.title = "Click to copy to clipboard";
+        el.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(el.textContent);
+            el.style.background = "#d4edda";
+            el.style.border = "1px solid #c3e6cb";
+            setTimeout(() => {
+              el.style.background = "white";
+              el.style.border = "none";
+            }, 1000);
+          } catch (err) {
+            console.error("Failed to copy:", err);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -20,12 +20,14 @@ Implemented copy-paste functionality for all shape components in the React white
 ### 2. Paste Functionality (Ctrl/Cmd+V & Ctrl/Cmd+Shift+V)
 
 - **Smart paste logic (Ctrl+V):**
+
   1. If shape components are copied, pastes them at mouse position
   2. If no copied components, tries clipboard image data (copied images)
   3. If no image data, tries clipboard HTML content for images
   4. If no HTML images, tries clipboard text for image URLs
 
 - **Force image paste (Ctrl+Shift+V):**
+
   - Bypasses copied components completely
   - Goes directly to clipboard image detection
   - Perfect for pasting images when shapes are copied
@@ -39,8 +41,8 @@ Implemented copy-paste functionality for all shape components in the React white
 ### 3. Enhanced Image Paste Support
 
 - **Direct image pasting**: Copy images from websites and paste directly
-- **HTML content parsing**: Extracts images from copied HTML snippets  
-- **Advanced URL detection**: 
+- **HTML content parsing**: Extracts images from copied HTML snippets
+- **Advanced URL detection**:
   - File extensions: .jpg, .jpeg, .png, .gif, .webp, .svg, .bmp, .ico, .tiff, .avif
   - Image keywords: "image", "img", "photo", "picture", "avatar", "thumbnail"
   - Popular hosts: imgur, unsplash, pexels, pixabay, flickr, googleusercontent, etc.
@@ -75,7 +77,7 @@ Implemented copy-paste functionality for all shape components in the React white
 
 1. **Right-click** on any image from a website → **"Copy Image"**
 2. Move mouse to desired location on the whiteboard
-3. Press **Ctrl+V** (or **Cmd+V** on Mac) 
+3. Press **Ctrl+V** (or **Cmd+V** on Mac)
 4. Image appears instantly at mouse location!
 
 ### To Paste Image URLs:
@@ -107,7 +109,7 @@ Implemented copy-paste functionality for all shape components in the React white
 ### Supported Shape Types:
 
 - **Rectangle**: Rectangular shapes
-- **Ellipse**: Circular and oval shapes  
+- **Ellipse**: Circular and oval shapes
 - **Arrow**: Arrow connectors
 - **Line**: Straight lines
 - **Text**: Text components
@@ -127,23 +129,27 @@ Implemented copy-paste functionality for all shape components in the React white
 ### Test Cases:
 
 1. **Copy/Paste Shape Components:**
+
    - Create various shape components (rectangle, ellipse, arrow, line, text, image)
    - Select single or multiple shapes and copy with Ctrl+C
    - Move mouse and paste with Ctrl+V
    - Verify all shape types are properly duplicated
 
 2. **Mixed Shape Selection:**
+
    - Select multiple different shape types simultaneously
    - Copy and paste to verify all are duplicated correctly
    - Test with different combinations of shapes
 
 3. **Paste Image URLs:**
+
    - Copy an image URL from a website
    - Ensure no shapes are copied first
    - Paste with Ctrl+V on the whiteboard
    - Test with various image formats
 
 4. **Priority Logic:**
+
    - Copy some shapes, then copy an image URL to clipboard
    - Verify that Ctrl+V pastes the copied shapes (not the URL)
    - Clear copied shapes and verify URL pasting works
