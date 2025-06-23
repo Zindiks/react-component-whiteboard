@@ -297,17 +297,20 @@ const CustomGrid = () => {
     }
   }, [selectedComponents]);
 
-  // Copy-paste functionality for image components
+  // Copy-paste functionality for all shape components
   const handleCopyComponents = useCallback(() => {
-    // Filter selected components to only include image components
-    const selectedImageComponents = components.filter(
-      (c) => selectedComponents.includes(c.id) && c.type === "imageShape"
+    // Shape types that can be copied
+    const shapeTypes = ["rectangle", "ellipse", "arrow", "line", "text", "imageShape"];
+    
+    // Filter selected components to include all shape types
+    const selectedShapeComponents = components.filter(
+      (c) => selectedComponents.includes(c.id) && shapeTypes.includes(c.type)
     );
 
-    if (selectedImageComponents.length > 0) {
-      setCopiedComponents(selectedImageComponents);
+    if (selectedShapeComponents.length > 0) {
+      setCopiedComponents(selectedShapeComponents);
       console.log(
-        `Copied ${selectedImageComponents.length} image component(s)`
+        `Copied ${selectedShapeComponents.length} shape component(s)`
       );
     }
   }, [components, selectedComponents]);
@@ -421,18 +424,7 @@ const CustomGrid = () => {
   );
 
   const handlePasteComponents = useCallback(async () => {
-    // First try to paste from clipboard (for image URLs)
-    try {
-      const clipboardText = await navigator.clipboard.readText();
-      if (clipboardText && isImageUrl(clipboardText)) {
-        await createImageComponentAtMouse(clipboardText);
-        return;
-      }
-    } catch {
-      // Clipboard access denied or failed, continue with copied components
-    }
-
-    // Paste copied components
+    // If we have copied components, paste them first (prioritize component copy/paste)
     if (copiedComponents.length > 0) {
       const newComponents = copiedComponents.map((component) => {
         const newId =
@@ -458,8 +450,21 @@ const CustomGrid = () => {
       setSelectedComponents(newIds);
 
       console.log(
-        `Pasted ${newComponents.length} component(s) at mouse position`
+        `Pasted ${newComponents.length} shape component(s) at mouse position`
       );
+      return;
+    }
+
+    // If no copied components, try to paste from clipboard (for image URLs)
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+      if (clipboardText && isImageUrl(clipboardText)) {
+        await createImageComponentAtMouse(clipboardText);
+        return;
+      }
+    } catch {
+      // Clipboard access denied or failed
+      console.log("No components to paste and clipboard access failed");
     }
   }, [
     copiedComponents,
@@ -860,7 +865,7 @@ const CustomGrid = () => {
       } else if (event.key === "Delete" || event.key === "Backspace") {
         handleDeleteSelected();
       } else if (event.key === "c" && (event.ctrlKey || event.metaKey)) {
-        // Copy selected components (focus on image components)
+        // Copy selected shape components
         event.preventDefault();
         handleCopyComponents();
       } else if (event.key === "v" && (event.ctrlKey || event.metaKey)) {

@@ -2,32 +2,31 @@
 
 ## Overview
 
-Implemented copy-paste functionality for image components in the React whiteboard app, allowing users to:
+Implemented copy-paste functionality for all shape components in the React whiteboard app, allowing users to:
 
-1. **Copy selected image components** using Ctrl+C (or Cmd+C on Mac)
-2. **Paste image components** at the current mouse pointer location using Ctrl+V (or Cmd+V on Mac)
+1. **Copy selected shape components** using Ctrl+C (or Cmd+C on Mac)
+2. **Paste shape components** at the current mouse pointer location using Ctrl+V (or Cmd+V on Mac)
 3. **Paste image URLs from clipboard** directly onto the board as image components
 
 ## Features Implemented
 
 ### 1. Copy Functionality (Ctrl/Cmd+C)
 
-- Only copies image components (type: "imageShape")
-- Copies all selected image components
+- Copies all shape components (rectangle, ellipse, arrow, line, text, imageShape)
+- Copies all selected shape components simultaneously
 - Stores components in memory for pasting
 - Shows console feedback with number of copied components
 
 ### 2. Paste Functionality (Ctrl/Cmd+V)
 
-- **Two-step paste process:**
-
-  1. First tries to read clipboard for image URLs and creates image components
-  2. If no image URL found, pastes previously copied image components
+- **Smart paste logic:**
+  1. If shape components are copied, pastes them at mouse position
+  2. If no copied components and clipboard contains image URL, creates image component
 
 - **Smart positioning:**
   - Converts screen coordinates to whiteboard coordinates
   - Accounts for current zoom level and pan offset
-  - Centers image components on mouse position
+  - Positions components at mouse pointer location
   - Offsets multiple components slightly to avoid overlap
 
 ### 3. Image URL Paste Support
@@ -48,13 +47,13 @@ Implemented copy-paste functionality for image components in the React whiteboar
 
 ## Usage Instructions
 
-### To Copy Image Components:
+### To Copy Shape Components:
 
-1. Select one or more image components on the whiteboard
+1. Select one or more shape components on the whiteboard (rectangles, ellipses, arrows, lines, text, images)
 2. Press **Ctrl+C** (or **Cmd+C** on Mac)
 3. Components are copied to memory (console shows confirmation)
 
-### To Paste Image Components:
+### To Paste Shape Components:
 
 1. Move mouse to desired location on the whiteboard
 2. Press **Ctrl+V** (or **Cmd+V** on Mac)
@@ -65,17 +64,26 @@ Implemented copy-paste functionality for image components in the React whiteboar
 
 1. Copy an image URL to your clipboard (from browser, etc.)
 2. Move mouse to desired location on the whiteboard
-3. Press **Ctrl+V** (or **Cmd+V** on Mac)
+3. Press **Ctrl+V** (or **Cmd+V** on Mac) - only works when no shape components are copied
 4. Image loads and appears as a new image component at mouse location
 
 ## Technical Implementation
 
 ### Key Functions:
 
-- `handleCopyComponents()`: Filters and copies selected image components
+- `handleCopyComponents()`: Filters and copies selected shape components
 - `handlePasteComponents()`: Handles both clipboard URLs and copied components
 - `isImageUrl()`: Validates if clipboard text is an image URL
 - `createImageComponentAtMouse()`: Creates image component at mouse position
+
+### Supported Shape Types:
+
+- **Rectangle**: Rectangular shapes
+- **Ellipse**: Circular and oval shapes  
+- **Arrow**: Arrow connectors
+- **Line**: Straight lines
+- **Text**: Text components
+- **Image**: Image components
 
 ### Features:
 
