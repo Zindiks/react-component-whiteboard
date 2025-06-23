@@ -3,6 +3,7 @@ import { Play, Pause, Square, RotateCcw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { WIDGET_CONSTANTS } from "../../constants/appConstants";
 
 interface TimerProps {
   onTimeUpdate?: (time: number) => void;
@@ -23,11 +24,13 @@ export const Timer: React.FC<TimerProps> = ({
     if (isRunning) {
       intervalId = setInterval(() => {
         const now = Date.now();
-        const elapsed = Math.floor((now - startTime) / 1000);
+        const elapsed = Math.floor(
+          (now - startTime) / WIDGET_CONSTANTS.TIMER_UPDATE_INTERVAL_MS
+        );
         const newTime = initialTime + elapsed;
         setTime(newTime);
         onTimeUpdate?.(newTime);
-      }, 1000);
+      }, WIDGET_CONSTANTS.TIMER_UPDATE_INTERVAL_MS);
     }
 
     return () => {
@@ -39,7 +42,10 @@ export const Timer: React.FC<TimerProps> = ({
 
   const handleStart = () => {
     if (!isRunning) {
-      setStartTime(Date.now() - (time - initialTime) * 1000);
+      setStartTime(
+        Date.now() -
+          (time - initialTime) * WIDGET_CONSTANTS.TIMER_UPDATE_INTERVAL_MS
+      );
       setIsRunning(true);
     }
   };

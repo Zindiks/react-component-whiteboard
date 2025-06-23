@@ -1,5 +1,6 @@
 import React from "react";
 import { BaseShape, BaseShapeProps } from "./BaseShape";
+import { shapeLogger } from "../../utils/componentLoggers";
 
 export interface ImageShapeProps extends Omit<BaseShapeProps, "children"> {
   imageSrc?: string;
@@ -67,7 +68,9 @@ export const ImageShape: React.FC<ImageShapeProps> = ({
             draggable={false}
             crossOrigin="anonymous"
             onError={(e) => {
-              console.log("Image load error:", e);
+              shapeLogger.warn("Image load error, trying without crossOrigin", {
+                imageSrc,
+              });
               // Fallback: try without crossOrigin
               (e.target as HTMLImageElement).crossOrigin = "";
             }}

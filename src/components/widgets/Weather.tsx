@@ -10,6 +10,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { WIDGET_CONSTANTS } from "../../constants/appConstants";
 
 interface WeatherData {
   temperature: number;
@@ -72,7 +73,10 @@ export const Weather: React.FC<WeatherProps> = ({
     fetchWeather();
 
     // Auto-refresh every 10 minutes
-    const interval = setInterval(fetchWeather, 10 * 60 * 1000);
+    const interval = setInterval(
+      fetchWeather,
+      WIDGET_CONSTANTS.WEATHER_UPDATE_INTERVAL_MS
+    );
 
     return () => clearInterval(interval);
   }, [fetchWeather]);

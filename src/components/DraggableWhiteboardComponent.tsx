@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import * as d3 from "d3";
+import { widgetLogger } from "../utils/componentLoggers";
 import { Timer } from "./widgets/Timer";
 import { Weather } from "./widgets/Weather";
 import { BitcoinChart } from "./widgets/BitcoinChart";
@@ -252,7 +253,12 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
         imageSrc={imageSrc}
         onImageChange={(newImageSrc) => {
-          console.log("Image changed:", newImageSrc);
+          widgetLogger.debug("Image changed", {
+            componentId: id,
+            imageUrl:
+              newImageSrc.substring(0, 100) +
+              (newImageSrc.length > 100 ? "..." : ""),
+          });
           onImageChange?.(id, newImageSrc);
         }}
       />

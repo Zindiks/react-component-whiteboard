@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent } from "../ui/card";
+import { WIDGET_CONSTANTS } from "../../constants/appConstants";
 
 interface StylishLinkProps {
   initialUrl?: string;
@@ -74,7 +75,10 @@ export const StylishLink: React.FC<StylishLinkProps> = ({
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(formatUrl(url));
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(
+      () => setCopied(false),
+      WIDGET_CONSTANTS.COPY_FEEDBACK_TIMEOUT_MS
+    );
   };
 
   const handleSave = () => {

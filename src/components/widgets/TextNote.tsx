@@ -5,6 +5,7 @@ import { Edit, Eye, FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { WIDGET_CONSTANTS } from "../../constants/appConstants";
 
 interface TextNoteProps {
   initialContent?: string;
@@ -69,11 +70,17 @@ export const TextNote: React.FC<TextNoteProps> = ({
         const deltaY = moveEvent.clientY - startY;
 
         if (direction === "se" || direction === "e") {
-          const newWidth = Math.max(200, startWidth + deltaX);
+          const newWidth = Math.max(
+            WIDGET_CONSTANTS.TEXT_NOTE_MIN_WIDTH,
+            startWidth + deltaX
+          );
           setCurrentWidth(newWidth);
         }
         if (direction === "se" || direction === "s") {
-          const newHeight = Math.max(150, startHeight + deltaY);
+          const newHeight = Math.max(
+            WIDGET_CONSTANTS.TEXT_NOTE_MIN_HEIGHT,
+            startHeight + deltaY
+          );
           setCurrentHeight(newHeight);
         }
       };
@@ -98,7 +105,10 @@ export const TextNote: React.FC<TextNoteProps> = ({
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <FileText size={20} className="text-green-600" />
+            <FileText
+              size={WIDGET_CONSTANTS.TEXT_NOTE_ICON_SIZE}
+              className="text-green-600"
+            />
             <h3 className="font-semibold text-sm">Text Note</h3>
           </div>
           <Button
@@ -116,7 +126,12 @@ export const TextNote: React.FC<TextNoteProps> = ({
           </Button>
         </div>
         {/* Content */}
-        <div className="relative" style={{ height: currentHeight - 60 }}>
+        <div
+          className="relative"
+          style={{
+            height: currentHeight - WIDGET_CONSTANTS.TEXT_NOTE_HEADER_HEIGHT,
+          }}
+        >
           {isEditing ? (
             <Textarea
               ref={textareaRef}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../electron/preload.ts"],
-  "sourcesContent": ["import { contextBridge, ipcRenderer } from \"electron\";\n\n// Expose protected methods that allow the renderer process to use\n// the ipcRenderer without exposing the entire object\ncontextBridge.exposeInMainWorld(\"electronAPI\", {\n  // Example API for future use\n  getAppVersion: () => ipcRenderer.invoke(\"get-app-version\"),\n\n  // Weather API calls (if needed for security)\n  fetchWeather: (lat: number, lon: number) =>\n    ipcRenderer.invoke(\"fetch-weather\", lat, lon),\n});\n\nexport {};\n"],
-  "mappings": ";AAAA,SAAS,eAAe,mBAAmB;AAI3C,cAAc,kBAAkB,eAAe;AAAA;AAAA,EAE7C,eAAe,MAAM,YAAY,OAAO,iBAAiB;AAAA;AAAA,EAGzD,cAAc,CAAC,KAAa,QAC1B,YAAY,OAAO,iBAAiB,KAAK,GAAG;AAChD,CAAC;",
-  "names": []
-}

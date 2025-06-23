@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { SHAPE_CONSTANTS } from "../../constants/appConstants";
 
 export interface BaseShapeProps {
   x: number;
@@ -63,35 +64,59 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
         // For aspect ratio locked resizing, use corner handles for proportional scaling
         switch (resizeHandle) {
           case "se": // bottom-right
-            newWidth = Math.max(20, startSize.width + dx);
+            newWidth = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.width + dx
+            );
             newHeight = newWidth / aspectRatio;
             break;
           case "sw": // bottom-left
-            newWidth = Math.max(20, startSize.width - dx);
+            newWidth = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.width - dx
+            );
             newHeight = newWidth / aspectRatio;
             break;
           case "ne": // top-right
-            newWidth = Math.max(20, startSize.width + dx);
+            newWidth = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.width + dx
+            );
             newHeight = newWidth / aspectRatio;
             break;
           case "nw": // top-left
-            newWidth = Math.max(20, startSize.width - dx);
+            newWidth = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.width - dx
+            );
             newHeight = newWidth / aspectRatio;
             break;
           case "n": // top - constrain by height
-            newHeight = Math.max(20, startSize.height - dy);
+            newHeight = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.height - dy
+            );
             newWidth = newHeight * aspectRatio;
             break;
           case "s": // bottom - constrain by height
-            newHeight = Math.max(20, startSize.height + dy);
+            newHeight = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.height + dy
+            );
             newWidth = newHeight * aspectRatio;
             break;
           case "e": // right - constrain by width
-            newWidth = Math.max(20, startSize.width + dx);
+            newWidth = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.width + dx
+            );
             newHeight = newWidth / aspectRatio;
             break;
           case "w": // left - constrain by width
-            newWidth = Math.max(20, startSize.width - dx);
+            newWidth = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.width - dx
+            );
             newHeight = newWidth / aspectRatio;
             break;
         }
@@ -99,32 +124,68 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
         // Original free-form resizing
         switch (resizeHandle) {
           case "se": // bottom-right
-            newWidth = Math.max(20, startSize.width + dx);
-            newHeight = Math.max(20, startSize.height + dy);
+            newWidth = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.width + dx
+            );
+            newHeight = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.height + dy
+            );
             break;
           case "sw": // bottom-left
-            newWidth = Math.max(20, startSize.width - dx);
-            newHeight = Math.max(20, startSize.height + dy);
+            newWidth = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.width - dx
+            );
+            newHeight = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.height + dy
+            );
             break;
           case "ne": // top-right
-            newWidth = Math.max(20, startSize.width + dx);
-            newHeight = Math.max(20, startSize.height - dy);
+            newWidth = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.width + dx
+            );
+            newHeight = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.height - dy
+            );
             break;
           case "nw": // top-left
-            newWidth = Math.max(20, startSize.width - dx);
-            newHeight = Math.max(20, startSize.height - dy);
+            newWidth = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.width - dx
+            );
+            newHeight = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.height - dy
+            );
             break;
           case "n": // top
-            newHeight = Math.max(20, startSize.height - dy);
+            newHeight = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.height - dy
+            );
             break;
           case "s": // bottom
-            newHeight = Math.max(20, startSize.height + dy);
+            newHeight = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.height + dy
+            );
             break;
           case "e": // right
-            newWidth = Math.max(20, startSize.width + dx);
+            newWidth = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.width + dx
+            );
             break;
           case "w": // left
-            newWidth = Math.max(20, startSize.width - dx);
+            newWidth = Math.max(
+              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
+              startSize.width - dx
+            );
             break;
         }
       }

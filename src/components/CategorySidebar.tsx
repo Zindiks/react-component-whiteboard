@@ -1,18 +1,6 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
-
-interface ComponentDefinition {
-  type: string;
-  label: string;
-  icon: string;
-  description: string;
-}
-
-interface Category {
-  name: string;
-  icon: string;
-  components: ComponentDefinition[];
-}
+import { type Category } from "../constants/componentCategories";
 
 interface CategorySidebarProps {
   category: Category | null;

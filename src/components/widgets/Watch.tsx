@@ -7,6 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { WIDGET_CONSTANTS } from "../../constants/appConstants";
 
 interface WatchProps {
   width?: number;
@@ -43,7 +44,7 @@ export const Watch: React.FC<WatchProps> = ({ width = 280, height = 200 }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000);
+    }, WIDGET_CONSTANTS.WATCH_UPDATE_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, []);
