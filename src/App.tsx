@@ -227,6 +227,10 @@ const CustomGrid = () => {
   const [isDragOverBoard, setIsDragOverBoard] = useState(false);
   const [dragType, setDragType] = useState<"component" | "image" | null>(null);
 
+  // Mouse position tracking for paste operations
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [copiedComponents, setCopiedComponents] = useState<Component[]>([]);
+
   interface Component {
     id: number;
     x: number;
@@ -292,6 +296,179 @@ const CustomGrid = () => {
       setSelectedComponents([]);
     }
   }, [selectedComponents]);
+
+  // Copy-paste functionality for image components
+  const handleCopyComponents = useCallback(() => {
+    // Filter selected components to only include image components
+    const selectedImageComponents = components.filter(
+      (c) => selectedComponents.includes(c.id) && c.type === "imageShape"
+    );
+
+    if (selectedImageComponents.length > 0) {
+      setCopiedComponents(selectedImageComponents);
+      console.log(
+        `Copied ${selectedImageComponents.length} image component(s)`
+      );
+    }
+  }, [components, selectedComponents]);
+
+  // Helper function to check if a string is likely an image URL
+  const isImageUrl = (url: string): boolean => {
+    try {
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname.toLowerCase();
+      return (
+        pathname.endsWith(".jpg") ||
+        pathname.endsWith(".jpeg") ||
+        pathname.endsWith(".png") ||
+        pathname.endsWith(".gif") ||
+        pathname.endsWith(".webp") ||
+        pathname.endsWith(".svg") ||
+        pathname.endsWith(".bmp") ||
+        url.includes("image") // For URLs that contain "image" but don't end with extension
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  // Helper function to create an image component at mouse position
+  const createImageComponentAtMouse = useCallback(
+    async (imageSrc: string): Promise<void> => {
+      return new Promise((resolve) => {
+        // Create a temporary image to get natural dimensions
+        const tempImg = new Image();
+        tempImg.onload = () => {
+          const naturalWidth = tempImg.naturalWidth;
+          const naturalHeight = tempImg.naturalHeight;
+
+          // Scale down if the image is too large
+          const maxSize = 400; // Maximum dimension
+          let width = naturalWidth;
+          let height = naturalHeight;
+
+          if (width > maxSize || height > maxSize) {
+            const ratio = Math.min(maxSize / width, maxSize / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+
+          // Convert screen coordinates to whiteboard coordinates and center on mouse position
+          const whiteboardX =
+            (mousePosition.x - transform.x) / transform.k - width / 2;
+          const whiteboardY =
+            (mousePosition.y - transform.y) / transform.k - height / 2;
+
+          // Create a new imageShape component at mouse position
+          const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+          const highestZIndex = Math.max(
+            ...components.map((c) => c.zIndex || 0),
+            0
+          );
+
+          const newComponent: Component = {
+            id: newId,
+            x: whiteboardX,
+            y: whiteboardY,
+            type: "imageShape",
+            width,
+            height,
+            zIndex: highestZIndex + 1,
+            imageSrc,
+          };
+
+          setComponents((prev) => [...prev, newComponent]);
+          setSelectedComponents([newId]); // Select the new component
+          resolve();
+        };
+
+        tempImg.onerror = () => {
+          console.error("Failed to load image from URL:", imageSrc);
+          // Fallback to default size with whiteboard coordinates
+          const whiteboardX =
+            (mousePosition.x - transform.x) / transform.k - 100;
+          const whiteboardY =
+            (mousePosition.y - transform.y) / transform.k - 75;
+
+          const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+          const highestZIndex = Math.max(
+            ...components.map((c) => c.zIndex || 0),
+            0
+          );
+
+          const newComponent: Component = {
+            id: newId,
+            x: whiteboardX,
+            y: whiteboardY,
+            type: "imageShape",
+            width: 200,
+            height: 150,
+            zIndex: highestZIndex + 1,
+            imageSrc,
+          };
+
+          setComponents((prev) => [...prev, newComponent]);
+          setSelectedComponents([newId]); // Select the new component
+          resolve();
+        };
+
+        // Set CORS mode for external images
+        tempImg.crossOrigin = "anonymous";
+        tempImg.src = imageSrc;
+      });
+    },
+    [components, mousePosition.x, mousePosition.y, transform]
+  );
+
+  const handlePasteComponents = useCallback(async () => {
+    // First try to paste from clipboard (for image URLs)
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+      if (clipboardText && isImageUrl(clipboardText)) {
+        await createImageComponentAtMouse(clipboardText);
+        return;
+      }
+    } catch {
+      // Clipboard access denied or failed, continue with copied components
+    }
+
+    // Paste copied components
+    if (copiedComponents.length > 0) {
+      const newComponents = copiedComponents.map((component) => {
+        const newId =
+          Math.max(...components.map((c) => c.id), 0) + 1 + Math.random();
+        const highestZIndex = Math.max(
+          ...components.map((c) => c.zIndex || 0),
+          0
+        );
+
+        return {
+          ...component,
+          id: Math.floor(newId),
+          x: (mousePosition.x - transform.x) / transform.k - 50, // Convert screen coords to whiteboard coords and offset slightly
+          y: (mousePosition.y - transform.y) / transform.k - 50,
+          zIndex: highestZIndex + 1,
+        };
+      });
+
+      setComponents((prev) => [...prev, ...newComponents]);
+
+      // Select the newly pasted components
+      const newIds = newComponents.map((c) => c.id);
+      setSelectedComponents(newIds);
+
+      console.log(
+        `Pasted ${newComponents.length} component(s) at mouse position`
+      );
+    }
+  }, [
+    copiedComponents,
+    components,
+    mousePosition.x,
+    mousePosition.y,
+    transform,
+    createImageComponentAtMouse,
+  ]);
 
   // Enhanced pan and zoom utilities
   const getEventCoordinates = (event: MouseEvent | React.MouseEvent) => ({
@@ -682,6 +859,14 @@ const CustomGrid = () => {
         }
       } else if (event.key === "Delete" || event.key === "Backspace") {
         handleDeleteSelected();
+      } else if (event.key === "c" && (event.ctrlKey || event.metaKey)) {
+        // Copy selected components (focus on image components)
+        event.preventDefault();
+        handleCopyComponents();
+      } else if (event.key === "v" && (event.ctrlKey || event.metaKey)) {
+        // Paste components at mouse position
+        event.preventDefault();
+        handlePasteComponents();
       }
     };
 
@@ -745,6 +930,9 @@ const CustomGrid = () => {
         applyTransform(newTransform);
         setLastPanPoint(coords);
       }
+
+      // Update mouse position for paste operations
+      setMousePosition(coords);
     };
 
     const handleMouseUp = (event: MouseEvent) => {
@@ -813,6 +1001,8 @@ const CustomGrid = () => {
     zoomToSelection,
     showZoomIndicatorTemporarily,
     showOverview,
+    handleCopyComponents,
+    handlePasteComponents,
   ]);
 
   // Cleanup timeout on unmount
