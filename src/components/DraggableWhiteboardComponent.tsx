@@ -22,7 +22,20 @@ import {
   ImageShape,
 } from "./shapes";
 import { FloatingHeader } from "./widgets/FloatingHeader";
-import { Video, Timer as TimerIcon, Cloud, TrendingUp, DollarSign, StickyNote, Sparkles, Watch as WatchIcon, Type, Music, Headphones, ExternalLink } from "lucide-react";
+import {
+  Video,
+  Timer as TimerIcon,
+  Cloud,
+  TrendingUp,
+  DollarSign,
+  StickyNote,
+  Sparkles,
+  Watch as WatchIcon,
+  Type,
+  Music,
+  Headphones,
+  ExternalLink,
+} from "lucide-react";
 
 interface DraggableComponentProps {
   x: number;
@@ -157,11 +170,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     watch: () => <Watch />,
     scrollingtext: () => <ScrollingText />,
     youtubeVideo: () => (
-      <YouTubeVideo
-        initialUrl={youtubeUrl}
-        width={width}
-        height={height}
-      />
+      <YouTubeVideo initialUrl={youtubeUrl} width={width} height={height} />
     ),
     soundcloud: () => (
       <SoundCloudWidget
@@ -171,11 +180,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       />
     ),
     spotify: () => (
-      <SpotifyWidget
-        initialUrl={spotifyUrl}
-        width={width}
-        height={height}
-      />
+      <SpotifyWidget initialUrl={spotifyUrl} width={width} height={height} />
     ),
     stylishlink: () => <StylishLink />,
     // Shape components (no headers, resizable, connectable)
@@ -282,20 +287,62 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   const getComponentMetadata = () => {
     const metadata = {
       timer: { title: "Timer", icon: TimerIcon, iconColor: "bg-green-600" },
-      youtubeVideo: { title: "YouTube Video", icon: Video, iconColor: "bg-red-600" },
+      youtubeVideo: {
+        title: "YouTube Video",
+        icon: Video,
+        iconColor: "bg-red-600",
+      },
       weather: { title: "Weather", icon: Cloud, iconColor: "bg-blue-500" },
-      bitcoin: { title: "Bitcoin Chart", icon: TrendingUp, iconColor: "bg-orange-500" },
-      currency: { title: "Currency Converter", icon: DollarSign, iconColor: "bg-green-500" },
-      note: { title: "Text Note", icon: StickyNote, iconColor: "bg-yellow-500" },
-      confetti: { title: "Confetti Button", icon: Sparkles, iconColor: "bg-purple-500" },
+      bitcoin: {
+        title: "Bitcoin Chart",
+        icon: TrendingUp,
+        iconColor: "bg-orange-500",
+      },
+      currency: {
+        title: "Currency Converter",
+        icon: DollarSign,
+        iconColor: "bg-green-500",
+      },
+      note: {
+        title: "Text Note",
+        icon: StickyNote,
+        iconColor: "bg-yellow-500",
+      },
+      confetti: {
+        title: "Confetti Button",
+        icon: Sparkles,
+        iconColor: "bg-purple-500",
+      },
       watch: { title: "Watch", icon: WatchIcon, iconColor: "bg-gray-700" },
-      scrollingtext: { title: "Scrolling Text", icon: Type, iconColor: "bg-indigo-500" },
-      soundcloud: { title: "SoundCloud", icon: Music, iconColor: "bg-orange-600" },
-      spotify: { title: "Spotify", icon: Headphones, iconColor: "bg-green-600" },
-      stylishlink: { title: "Stylish Link", icon: ExternalLink, iconColor: "bg-blue-600" },
+      scrollingtext: {
+        title: "Scrolling Text",
+        icon: Type,
+        iconColor: "bg-indigo-500",
+      },
+      soundcloud: {
+        title: "SoundCloud",
+        icon: Music,
+        iconColor: "bg-orange-600",
+      },
+      spotify: {
+        title: "Spotify",
+        icon: Headphones,
+        iconColor: "bg-green-600",
+      },
+      stylishlink: {
+        title: "Stylish Link",
+        icon: ExternalLink,
+        iconColor: "bg-blue-600",
+      },
       // Add more as needed
     };
-    return metadata[type as keyof typeof metadata] || { title: type, icon: Video, iconColor: "bg-gray-600" };
+    return (
+      metadata[type as keyof typeof metadata] || {
+        title: type,
+        icon: Video,
+        iconColor: "bg-gray-600",
+      }
+    );
   };
 
   return (
@@ -309,7 +356,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
           y={y}
         />
       )}
-      
+
       <div
         data-component="true"
         className={`absolute pointer-events-auto ${
@@ -320,7 +367,9 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
           top: `${y}px`,
           zIndex: zIndex,
         }}
-        onMouseDown={isShapeComponent ? handleShapeMouseDown : handleComponentMouseDown}
+        onMouseDown={
+          isShapeComponent ? handleShapeMouseDown : handleComponentMouseDown
+        }
       >
         {renderComponent()}
       </div>

@@ -151,7 +151,10 @@ export const ConfettiButton: React.FC<ConfettiButtonProps> = ({
   };
 
   return (
-    <Card className="overflow-hidden bg-white shadow-sm" style={{ width, height }}>
+    <Card
+      className="overflow-hidden bg-white shadow-sm"
+      style={{ width, height }}
+    >
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">

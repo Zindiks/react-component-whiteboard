@@ -31,10 +31,7 @@ const formats = [
   { label: "24-hour", value: "24" },
 ];
 
-export const Watch: React.FC<WatchProps> = ({
-  width = 280,
-  height = 200,
-}) => {
+export const Watch: React.FC<WatchProps> = ({ width = 280, height = 200 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [timeZone, setTimeZone] = useState("local");
   const [format, setFormat] = useState("12");

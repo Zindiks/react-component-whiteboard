@@ -11,12 +11,14 @@ The idea is to build something similar to Miro, but instead of using a canvas or
 ## Key Features
 
 ### FigJam-Style Interaction Model
+
 - **Widget Components**: Draggable from entire surface with floating headers on selection
 - **Shape Components**: Headerless geometric shapes (Rectangle, Ellipse, Arrow, Line, Text, Image)
 - **Multi-Selection Support**: Select multiple components with Ctrl+click or marquee selection
 - **Floating Headers**: Context-sensitive headers appear only when widgets are selected
 
 ### Keyboard Shortcuts
+
 - **ESC**: Deselect all components (closes overview if open)
 - **1**: Reset zoom to 100%
 - **Shift+1**: Zoom to fit all components
@@ -28,6 +30,7 @@ The idea is to build something similar to Miro, but instead of using a canvas or
 - **Ctrl+Shift+V**: Force paste image from clipboard
 
 ### Media Support
+
 - **Image Paste/Drop**: Automatic image component creation from URLs, files, or clipboard
 - **YouTube Integration**: Auto-detect and embed YouTube videos
 - **SoundCloud Integration**: Embed SoundCloud tracks and playlists

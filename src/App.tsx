@@ -1075,7 +1075,7 @@ const CustomGrid = () => {
         const centerY = event.clientY - rect.top;
 
         // Determine zoom direction and factor
-        const zoomIntensity = 0.007;
+        const zoomIntensity = 0.015; // Increased from 0.007 for faster zoom
         const delta = -event.deltaY * zoomIntensity;
         const scaleFactor = Math.exp(delta);
 
@@ -2247,10 +2247,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       className="flex flex-col gap-2"
     >
       <div className="flex gap-2">
-        <Button onClick={() => onZoom(1.2)} variant={"ghost"} size="sm">
+        <Button onClick={() => onZoom(1.4)} variant={"ghost"} size="sm">
           <Plus className="w-4 h-4" />
         </Button>
-        <Button onClick={() => onZoom(0.8)} variant={"ghost"} size="sm">
+        <Button onClick={() => onZoom(0.7)} variant={"ghost"} size="sm">
           <Minus className="w-4 h-4" />
         </Button>
       </div>
