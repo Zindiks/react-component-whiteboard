@@ -10,6 +10,8 @@ import { useCallback, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Component } from "../types/whiteboard";
 
+const ZOOM_INDICATOR_TIMEOUT_MS = 200; // Duration to show zoom indicator
+
 export interface ZoomControlsState {
   transform: d3.ZoomTransform;
   showZoomIndicator: boolean;
@@ -80,7 +82,7 @@ export const useZoomControls = ({
     zoomIndicatorTimeoutRef.current = setTimeout(() => {
       setIsActivelyZooming(false);
       setShowZoomIndicator(false);
-    }, 800);
+    }, ZOOM_INDICATOR_TIMEOUT_MS);
   }, []);
 
   const applyTransform = useCallback(
