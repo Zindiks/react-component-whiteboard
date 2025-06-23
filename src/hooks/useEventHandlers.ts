@@ -10,6 +10,7 @@
 
 import { useEffect } from "react";
 import * as d3 from "d3";
+import { ZOOM_CONSTANTS, INTERACTION } from "../constants/appConstants";
 
 export interface UseEventHandlersProps {
   svgRef: React.RefObject<SVGSVGElement>;
@@ -78,7 +79,7 @@ export const useEventHandlers = ({
     // Enhanced zoom behavior with better filtering for Mac trackpad
     zoomBehavior.current = d3
       .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.1, 7]) // Min 10%, Max 700%
+      .scaleExtent([ZOOM_CONSTANTS.MIN_ZOOM, ZOOM_CONSTANTS.MAX_ZOOM]) // Min 10%, Max 700%
       .filter((event) => {
         // Prevent zoom during marquee selection or component dragging
         if (isMarqueeActive) return false;
@@ -89,19 +90,25 @@ export const useEventHandlers = ({
         }
 
         // Allow middle mouse button for pan
-        if (event.type === "mousedown" && event.button === 1) {
+        if (
+          event.type === "mousedown" &&
+          event.button === INTERACTION.MIDDLE_MOUSE_BUTTON
+        ) {
           return true;
         }
 
         // Allow right mouse button for pan
-        if (event.type === "mousedown" && event.button === 2) {
+        if (
+          event.type === "mousedown" &&
+          event.button === INTERACTION.RIGHT_MOUSE_BUTTON
+        ) {
           return true;
         }
 
         // Allow pan with space + left click
         if (
           event.type === "mousedown" &&
-          event.button === 0 &&
+          event.button === INTERACTION.LEFT_MOUSE_BUTTON &&
           isSpacePressed
         ) {
           return true;
@@ -148,13 +155,16 @@ export const useEventHandlers = ({
         const centerY = event.clientY - rect.top;
 
         // Determine zoom direction and factor
-        const zoomIntensity = 0.015; // Increased from 0.007 for faster zoom
+        const zoomIntensity = ZOOM_CONSTANTS.ZOOM_INTENSITY; // Zoom sensitivity
         const delta = -event.deltaY * zoomIntensity;
         const scaleFactor = Math.exp(delta);
 
         // Calculate new scale with limits
         const currentScale = transform.k;
-        const newScale = Math.max(0.1, Math.min(7, currentScale * scaleFactor));
+        const newScale = Math.max(
+          ZOOM_CONSTANTS.MIN_ZOOM,
+          Math.min(ZOOM_CONSTANTS.MAX_ZOOM, currentScale * scaleFactor)
+        );
 
         if (
           newScale !== currentScale &&
@@ -185,7 +195,10 @@ export const useEventHandlers = ({
     let globalTouchCenter = { x: 0, y: 0 };
 
     const handleGlobalTouchStart = (event: TouchEvent) => {
-      if (event.touches.length === 2 && containerRef.current) {
+      if (
+        event.touches.length === INTERACTION.MIN_TOUCH_POINTS &&
+        containerRef.current
+      ) {
         // Check if the touch is within our container
         const rect = containerRef.current.getBoundingClientRect();
         const touch1 = event.touches[0];
@@ -213,7 +226,7 @@ export const useEventHandlers = ({
 
     const handleGlobalTouchMove = (event: TouchEvent) => {
       if (
-        event.touches.length === 2 &&
+        event.touches.length === INTERACTION.MIN_TOUCH_POINTS &&
         globalTouchStartDistance > 0 &&
         containerRef.current
       ) {
@@ -239,8 +252,8 @@ export const useEventHandlers = ({
 
         const scale = currentDistance / globalTouchStartDistance;
         const newScale = Math.max(
-          0.1,
-          Math.min(7, globalTouchStartTransform.k * scale)
+          ZOOM_CONSTANTS.MIN_ZOOM,
+          Math.min(ZOOM_CONSTANTS.MAX_ZOOM, globalTouchStartTransform.k * scale)
         );
 
         // Calculate the center point in transform space
@@ -271,7 +284,7 @@ export const useEventHandlers = ({
     };
 
     const handleGlobalTouchEnd = (event: TouchEvent) => {
-      if (event.touches.length < 2) {
+      if (event.touches.length < INTERACTION.MIN_TOUCH_POINTS) {
         globalTouchStartDistance = 0;
       }
     };

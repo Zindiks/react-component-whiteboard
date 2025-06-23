@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { RefreshCw, Minus, Plus } from "lucide-react";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
+import { WIDGET_CONSTANTS } from "../../constants/appConstants";
 
 interface ScrollingTextProps {
   initialText?: string;
@@ -11,7 +12,7 @@ interface ScrollingTextProps {
 
 export const ScrollingText: React.FC<ScrollingTextProps> = ({
   initialText = "Welcome to the Scrolling Text Component! Edit this text and watch it scroll...",
-  width = 400,
+  width = WIDGET_CONSTANTS.SCROLLING_TEXT_DEFAULT_WIDTH,
   height = 100,
 }) => {
   // States

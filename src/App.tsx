@@ -8,6 +8,15 @@ import { Component } from "./types/whiteboard";
 import { useWhiteboardState } from "./hooks/useWhiteboardState";
 import { useZoomControls } from "./hooks/useZoomControls";
 import { usePanControls } from "./hooks/usePanControls";
+import {
+  LAYOUT_CONSTANTS,
+  COMPONENT_SIZES,
+  Z_INDEX,
+  COLORS,
+  ANIMATIONS,
+  TYPOGRAPHY,
+  PERCENTAGE,
+} from "./constants/appConstants";
 import { useSidebarControls } from "./hooks/useSidebarControls";
 import { useDragAndDrop } from "./hooks/useDragAndDrop";
 import { useEventHandlers } from "./hooks/useEventHandlers";
@@ -222,16 +231,27 @@ const CustomGrid = () => {
   // Overview/Minimap functionality
   const getWhiteboardBounds = useCallback(() => {
     if (components.length === 0) {
-      return { minX: 0, minY: 0, maxX: 1000, maxY: 1000 };
+      return {
+        minX: 0,
+        minY: 0,
+        maxX: LAYOUT_CONSTANTS.DEFAULT_WHITEBOARD_SIZE,
+        maxY: LAYOUT_CONSTANTS.DEFAULT_WHITEBOARD_SIZE,
+      };
     }
 
-    const padding = 200;
+    const padding = LAYOUT_CONSTANTS.WHITEBOARD_PADDING;
     const bounds = components.reduce(
       (acc, comp) => ({
         minX: Math.min(acc.minX, comp.x),
         minY: Math.min(acc.minY, comp.y),
-        maxX: Math.max(acc.maxX, comp.x + (comp.width || 200)),
-        maxY: Math.max(acc.maxY, comp.y + (comp.height || 200)),
+        maxX: Math.max(
+          acc.maxX,
+          comp.x + (comp.width || COMPONENT_SIZES.DEFAULT_WIDTH)
+        ),
+        maxY: Math.max(
+          acc.maxY,
+          comp.y + (comp.height || COMPONENT_SIZES.DEFAULT_HEIGHT)
+        ),
       }),
       { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
     );
@@ -249,12 +269,14 @@ const CustomGrid = () => {
       if (!svgRef.current || !zoomBehavior.current) return;
 
       const svg = d3.select(svgRef.current);
-      const targetX = component.x + (component.width || 200) / 2;
-      const targetY = component.y + (component.height || 200) / 2;
+      const targetX =
+        component.x + (component.width || COMPONENT_SIZES.DEFAULT_WIDTH) / 2;
+      const targetY =
+        component.y + (component.height || COMPONENT_SIZES.DEFAULT_HEIGHT) / 2;
 
       svg
         .transition()
-        .duration(750)
+        .duration(ANIMATIONS.NAVIGATION_DURATION)
         .call(
           zoomBehavior.current.transform,
           d3.zoomIdentity
@@ -290,10 +312,10 @@ const CustomGrid = () => {
             top: `${Math.min(marqueeStart.y, marqueeEnd.y)}px`,
             width: `${Math.abs(marqueeEnd.x - marqueeStart.x)}px`,
             height: `${Math.abs(marqueeEnd.y - marqueeStart.y)}px`,
-            border: "2px dashed #3b82f6",
-            backgroundColor: "rgba(59, 130, 246, 0.1)",
+            border: COLORS.MARQUEE_BORDER,
+            backgroundColor: COLORS.PRIMARY_BLUE_LIGHT,
             pointerEvents: "none",
-            zIndex: 9999,
+            zIndex: Z_INDEX.MARQUEE_SELECTION,
           }}
         />
       )}
@@ -306,24 +328,24 @@ const CustomGrid = () => {
             left: "50%",
             top: "50%",
             transform: "translate(-50%, -50%)",
-            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            backgroundColor: COLORS.BLACK_OVERLAY,
             color: "white",
             padding: "8px 16px",
-            borderRadius: "12px",
+            borderRadius: TYPOGRAPHY.BORDER_RADIUS_LARGE,
             fontSize: "16px",
-            fontWeight: "500",
+            fontWeight: TYPOGRAPHY.FONT_WEIGHT_MEDIUM,
             fontFamily: "monospace",
             pointerEvents: "none",
-            zIndex: 10000,
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+            zIndex: Z_INDEX.ZOOM_INDICATOR,
+            boxShadow: `0 2px 8px ${COLORS.BLACK_SHADOW}`,
             backdropFilter: "blur(4px)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
+            border: `1px solid ${COLORS.WHITE_BORDER}`,
             animation: isActivelyZooming
-              ? "zoomFadeIn 0.2s ease-out"
-              : "zoomFadeOut 0.3s ease-in",
+              ? ANIMATIONS.ZOOM_FADE_IN
+              : ANIMATIONS.ZOOM_FADE_OUT,
           }}
         >
-          {Math.round(transform.k * 100)}%
+          {Math.round(transform.k * PERCENTAGE.HUNDRED_PERCENT)}%
         </div>
       )}
 
@@ -394,11 +416,11 @@ const CustomGrid = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgba(59, 130, 246, 0.1)",
-            border: "3px dashed #3b82f6",
-            borderRadius: "12px",
+            backgroundColor: COLORS.PRIMARY_BLUE_LIGHT,
+            border: `3px dashed ${COLORS.PRIMARY_BLUE}`,
+            borderRadius: TYPOGRAPHY.BORDER_RADIUS_LARGE,
             pointerEvents: "none",
-            zIndex: 1000,
+            zIndex: Z_INDEX.DRAG_OVERLAY,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -406,13 +428,13 @@ const CustomGrid = () => {
         >
           <div
             style={{
-              backgroundColor: "rgba(59, 130, 246, 0.9)",
+              backgroundColor: COLORS.PRIMARY_BLUE_DARK,
               color: "white",
               padding: "16px 24px",
-              borderRadius: "8px",
+              borderRadius: TYPOGRAPHY.BORDER_RADIUS_MEDIUM,
               fontSize: "18px",
-              fontWeight: "600",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+              fontWeight: TYPOGRAPHY.FONT_WEIGHT_SEMIBOLD,
+              boxShadow: `0 8px 32px ${COLORS.BLACK_SHADOW_STRONG}`,
             }}
           >
             {dragType === "image"
@@ -432,10 +454,10 @@ const CustomGrid = () => {
             left: "50%",
             transform: "translate(-50%, -50%)",
             backgroundColor: "white",
-            borderRadius: "12px",
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+            borderRadius: TYPOGRAPHY.BORDER_RADIUS_LARGE,
+            boxShadow: `0 8px 32px ${COLORS.BLACK_SHADOW_STRONG}`,
             border: "1px solid #e2e8f0",
-            zIndex: 10001,
+            zIndex: Z_INDEX.OVERVIEW_MODAL,
             maxWidth: "80vw",
             maxHeight: "80vh",
             overflow: "hidden",

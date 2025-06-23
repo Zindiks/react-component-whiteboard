@@ -9,6 +9,7 @@
 import { useCallback, useState } from "react";
 import * as d3 from "d3";
 import { Component } from "../types/whiteboard";
+import { COMPONENT_SIZES } from "../constants/appConstants";
 
 export interface PanControlsState {
   isPanning: boolean;
@@ -87,8 +88,10 @@ export const usePanControls = ({
       // Convert component coordinates to screen coordinates
       const screenX = comp.x * transform.k + transform.x;
       const screenY = comp.y * transform.k + transform.y;
-      const compWidth = (comp.width || 200) * transform.k;
-      const compHeight = (comp.height || 200) * transform.k;
+      const compWidth =
+        (comp.width || COMPONENT_SIZES.DEFAULT_WIDTH) * transform.k;
+      const compHeight =
+        (comp.height || COMPONENT_SIZES.DEFAULT_HEIGHT) * transform.k;
 
       return (
         screenX < right &&

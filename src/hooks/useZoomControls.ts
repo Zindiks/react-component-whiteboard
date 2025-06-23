@@ -9,8 +9,11 @@
 import { useCallback, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Component } from "../types/whiteboard";
-
-const ZOOM_INDICATOR_TIMEOUT_MS = 200; // Duration to show zoom indicator
+import {
+  ZOOM_CONSTANTS,
+  COMPONENT_SIZES,
+  ANIMATIONS,
+} from "../constants/appConstants";
 
 export interface ZoomControlsState {
   transform: d3.ZoomTransform;
@@ -82,7 +85,7 @@ export const useZoomControls = ({
     zoomIndicatorTimeoutRef.current = setTimeout(() => {
       setIsActivelyZooming(false);
       setShowZoomIndicator(false);
-    }, ZOOM_INDICATOR_TIMEOUT_MS);
+    }, ZOOM_CONSTANTS.ZOOM_INDICATOR_TIMEOUT_MS);
   }, []);
 
   const applyTransform = useCallback(
@@ -99,7 +102,7 @@ export const useZoomControls = ({
     const svg = d3.select(svgRef.current);
     svg
       .transition()
-      .duration(750)
+      .duration(ANIMATIONS.NAVIGATION_DURATION)
       .call(zoomBehavior.current.transform, d3.zoomIdentity);
   }, [svgRef]);
 
@@ -107,13 +110,19 @@ export const useZoomControls = ({
     if (!svgRef.current || !zoomBehavior.current || components.length === 0)
       return;
 
-    const padding = 50;
+    const padding = ZOOM_CONSTANTS.FIT_TO_CONTENT_PADDING;
     const bounds = components.reduce(
       (acc, comp) => ({
         minX: Math.min(acc.minX, comp.x),
         minY: Math.min(acc.minY, comp.y),
-        maxX: Math.max(acc.maxX, comp.x + (comp.width || 200)),
-        maxY: Math.max(acc.maxY, comp.y + (comp.height || 200)),
+        maxX: Math.max(
+          acc.maxX,
+          comp.x + (comp.width || COMPONENT_SIZES.DEFAULT_WIDTH)
+        ),
+        maxY: Math.max(
+          acc.maxY,
+          comp.y + (comp.height || COMPONENT_SIZES.DEFAULT_HEIGHT)
+        ),
       }),
       { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
     );
@@ -126,13 +135,13 @@ export const useZoomControls = ({
     const scale = Math.min(
       window.innerWidth / width,
       window.innerHeight / height,
-      7 // Max zoom level (700%)
+      ZOOM_CONSTANTS.MAX_ZOOM // Max zoom level
     );
 
     const svg = d3.select(svgRef.current);
     svg
       .transition()
-      .duration(750)
+      .duration(ANIMATIONS.NAVIGATION_DURATION)
       .call(
         zoomBehavior.current.transform,
         d3.zoomIdentity
@@ -153,13 +162,19 @@ export const useZoomControls = ({
     const selectedComps = components.filter((comp) =>
       selectedComponents.includes(comp.id)
     );
-    const padding = 50;
+    const padding = ZOOM_CONSTANTS.FIT_TO_CONTENT_PADDING;
     const bounds = selectedComps.reduce(
       (acc, comp) => ({
         minX: Math.min(acc.minX, comp.x),
         minY: Math.min(acc.minY, comp.y),
-        maxX: Math.max(acc.maxX, comp.x + (comp.width || 200)),
-        maxY: Math.max(acc.maxY, comp.y + (comp.height || 200)),
+        maxX: Math.max(
+          acc.maxX,
+          comp.x + (comp.width || COMPONENT_SIZES.DEFAULT_WIDTH)
+        ),
+        maxY: Math.max(
+          acc.maxY,
+          comp.y + (comp.height || COMPONENT_SIZES.DEFAULT_HEIGHT)
+        ),
       }),
       { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
     );
@@ -172,13 +187,13 @@ export const useZoomControls = ({
     const scale = Math.min(
       window.innerWidth / width,
       window.innerHeight / height,
-      7 // Max zoom level (700%)
+      ZOOM_CONSTANTS.MAX_ZOOM // Max zoom level
     );
 
     const svg = d3.select(svgRef.current);
     svg
       .transition()
-      .duration(750)
+      .duration(ANIMATIONS.NAVIGATION_DURATION)
       .call(
         zoomBehavior.current.transform,
         d3.zoomIdentity

@@ -1,19 +1,92 @@
 import { useState, useCallback } from "react";
 import { Component, InitialPosition } from "../types/whiteboard";
+import { INITIAL_POSITIONS } from "../constants/appConstants";
 
 const DEFAULT_COMPONENTS: Component[] = [
-  { id: 1, x: 100, y: 100, type: "timer", zIndex: 1 },
-  { id: 2, x: 300, y: 200, type: "weather", zIndex: 2 },
-  { id: 3, x: 600, y: 100, type: "bitcoin", zIndex: 3 },
-  { id: 4, x: 100, y: 400, type: "currency", zIndex: 4 },
-  { id: 5, x: 400, y: 400, type: "confetti", zIndex: 5 },
-  { id: 6, x: 700, y: 400, type: "note", zIndex: 6 },
-  { id: 7, x: 1000, y: 100, type: "watch", zIndex: 7 },
-  { id: 8, x: 1000, y: 400, type: "scrollingtext", zIndex: 8 },
-  { id: 9, x: 500, y: 200, type: "youtubeVideo", zIndex: 9 },
-  { id: 10, x: 800, y: 200, type: "soundcloud", zIndex: 10 },
-  { id: 11, x: 300, y: 600, type: "spotify", zIndex: 11 },
-  { id: 12, x: 600, y: 600, type: "stylishlink", zIndex: 12 },
+  {
+    id: 1,
+    x: INITIAL_POSITIONS.TIMER.x,
+    y: INITIAL_POSITIONS.TIMER.y,
+    type: "timer",
+    zIndex: 1,
+  },
+  {
+    id: 2,
+    x: INITIAL_POSITIONS.WEATHER.x,
+    y: INITIAL_POSITIONS.WEATHER.y,
+    type: "weather",
+    zIndex: 2,
+  },
+  {
+    id: 3,
+    x: INITIAL_POSITIONS.BITCOIN.x,
+    y: INITIAL_POSITIONS.BITCOIN.y,
+    type: "bitcoin",
+    zIndex: 3,
+  },
+  {
+    id: 4,
+    x: INITIAL_POSITIONS.CURRENCY.x,
+    y: INITIAL_POSITIONS.CURRENCY.y,
+    type: "currency",
+    zIndex: 4,
+  },
+  {
+    id: 5,
+    x: INITIAL_POSITIONS.CONFETTI.x,
+    y: INITIAL_POSITIONS.CONFETTI.y,
+    type: "confetti",
+    zIndex: 5,
+  },
+  {
+    id: 6,
+    x: INITIAL_POSITIONS.NOTE.x,
+    y: INITIAL_POSITIONS.NOTE.y,
+    type: "note",
+    zIndex: 6,
+  },
+  {
+    id: 7,
+    x: INITIAL_POSITIONS.WATCH.x,
+    y: INITIAL_POSITIONS.WATCH.y,
+    type: "watch",
+    zIndex: 7,
+  },
+  {
+    id: 8,
+    x: INITIAL_POSITIONS.SCROLLING_TEXT.x,
+    y: INITIAL_POSITIONS.SCROLLING_TEXT.y,
+    type: "scrollingtext",
+    zIndex: 8,
+  },
+  {
+    id: 9,
+    x: INITIAL_POSITIONS.YOUTUBE_VIDEO.x,
+    y: INITIAL_POSITIONS.YOUTUBE_VIDEO.y,
+    type: "youtubeVideo",
+    zIndex: 9,
+  },
+  {
+    id: 10,
+    x: INITIAL_POSITIONS.SOUNDCLOUD.x,
+    y: INITIAL_POSITIONS.SOUNDCLOUD.y,
+    type: "soundcloud",
+    zIndex: 10,
+  },
+  {
+    id: 11,
+    x: INITIAL_POSITIONS.SPOTIFY.x,
+    y: INITIAL_POSITIONS.SPOTIFY.y,
+    type: "spotify",
+    zIndex: 11,
+  },
+  {
+    id: 12,
+    x: INITIAL_POSITIONS.STYLISH_LINK.x,
+    y: INITIAL_POSITIONS.STYLISH_LINK.y,
+    type: "stylishlink",
+    zIndex: 12,
+  },
 ];
 
 export const useWhiteboardState = () => {

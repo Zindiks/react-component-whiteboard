@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import * as d3 from "d3";
 import { Component } from "../types/whiteboard";
+import { COMPONENT_SIZES } from "../constants/appConstants";
 
 interface UseComponentCreatorsProps {
   components: Component[];
@@ -27,7 +28,7 @@ export const useComponentCreators = ({
           const naturalHeight = tempImg.naturalHeight;
 
           // Scale down if the image is too large
-          const maxSize = 400; // Maximum dimension
+          const maxSize = COMPONENT_SIZES.MAX_IMAGE_SIZE; // Maximum dimension
           let width = naturalWidth;
           let height = naturalHeight;
 
@@ -85,8 +86,8 @@ export const useComponentCreators = ({
             x: whiteboardX,
             y: whiteboardY,
             type: "imageShape",
-            width: 200,
-            height: 150,
+            width: COMPONENT_SIZES.IMAGE_FALLBACK_WIDTH,
+            height: COMPONENT_SIZES.IMAGE_FALLBACK_HEIGHT,
             zIndex: highestZIndex + 1,
             imageSrc,
           };
@@ -115,8 +116,8 @@ export const useComponentCreators = ({
   const createYouTubeComponentAtMouse = useCallback(
     (youtubeUrl: string): void => {
       // Default size for YouTube videos (4:3 aspect ratio)
-      const width = 400;
-      const height = 300; // 400 * 3/4 = 300
+      const width = COMPONENT_SIZES.YOUTUBE_WIDTH;
+      const height = COMPONENT_SIZES.YOUTUBE_HEIGHT;
 
       // Convert screen coordinates to whiteboard coordinates and center on mouse position
       const whiteboardX =
@@ -160,8 +161,8 @@ export const useComponentCreators = ({
   const createSoundCloudComponentAtMouse = useCallback(
     (soundcloudUrl: string): void => {
       // Default size for SoundCloud widgets
-      const width = 400;
-      const height = 200;
+      const width = COMPONENT_SIZES.SOUNDCLOUD_WIDTH;
+      const height = COMPONENT_SIZES.SOUNDCLOUD_HEIGHT;
 
       // Convert screen coordinates to whiteboard coordinates and center on mouse position
       const whiteboardX =
@@ -205,8 +206,8 @@ export const useComponentCreators = ({
   const createSpotifyComponentAtMouse = useCallback(
     (spotifyUrl: string): void => {
       // Default size for Spotify widgets
-      const width = 400;
-      const height = 200;
+      const width = COMPONENT_SIZES.SPOTIFY_WIDTH;
+      const height = COMPONENT_SIZES.SPOTIFY_HEIGHT;
 
       // Convert screen coordinates to whiteboard coordinates and center on mouse position
       const whiteboardX =
