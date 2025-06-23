@@ -5,6 +5,8 @@
  * different types of URLs (images, YouTube, SoundCloud, Spotify, etc.)
  */
 
+import { urlLogger } from "./componentLoggers";
+
 /**
  * Checks if a string is likely an image URL
  * Supports various image formats, data URLs, blob URLs, and common image hosting domains
@@ -232,7 +234,7 @@ export const extractImageFromHtml = (htmlText: string): string | null => {
 
     return null;
   } catch (error) {
-    console.error("Error extracting image from HTML:", error);
+    urlLogger.error("Error extracting image from HTML", { error });
     return null;
   }
 };

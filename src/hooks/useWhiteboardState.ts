@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Component, InitialPosition } from "../types/whiteboard";
 import { INITIAL_POSITIONS } from "../constants/appConstants";
+import { stateLogger } from "../utils/componentLoggers";
 
 const DEFAULT_COMPONENTS: Component[] = [
   {
@@ -98,7 +99,7 @@ export const useWhiteboardState = () => {
   const [copiedComponents, setCopiedComponents] = useState<Component[]>([]);
 
   const handleDeleteComponent = useCallback((id: number) => {
-    console.log(`Deleting component with ID: ${id}`);
+    stateLogger.debug("Deleting component", { componentId: id });
     setComponents((prev) => prev.filter((component) => component.id !== id));
     setSelectedComponents((prev) =>
       prev.filter((selectedId) => selectedId !== id)
@@ -122,7 +123,12 @@ export const useWhiteboardState = () => {
         0
       );
 
-      console.log(`Adding new ${type} component with ID: ${newId}`);
+      stateLogger.debug("Adding new component", {
+        componentType: type,
+        componentId: newId,
+        position: { x, y },
+        zIndex: highestZIndex + 1,
+      });
 
       // Create base component
       const newComponent: Component = {
@@ -172,7 +178,10 @@ export const useWhiteboardState = () => {
 
   const handleResizeComponent = useCallback(
     (id: number, width: number, height: number) => {
-      console.log(`Resizing component ${id} to ${width}x${height}`);
+      stateLogger.debug("Resizing component", {
+        componentId: id,
+        dimensions: { width, height },
+      });
       setComponents((prev) =>
         prev.map((component) =>
           component.id === id ? { ...component, width, height } : component
@@ -183,7 +192,10 @@ export const useWhiteboardState = () => {
   );
 
   const handleTextChange = useCallback((id: number, text: string) => {
-    console.log(`Changing text for component ${id} to: ${text}`);
+    stateLogger.debug("Changing component text", {
+      componentId: id,
+      textLength: text.length,
+    });
     setComponents((prev) =>
       prev.map((component) =>
         component.id === id ? { ...component, text } : component
@@ -192,7 +204,11 @@ export const useWhiteboardState = () => {
   }, []);
 
   const handleImageChange = useCallback((id: number, imageSrc: string) => {
-    console.log(`Changing image for component ${id} to: ${imageSrc}`);
+    stateLogger.debug("Changing component image", {
+      componentId: id,
+      imageUrl:
+        imageSrc.substring(0, 100) + (imageSrc.length > 100 ? "..." : ""),
+    });
     setComponents((prev) =>
       prev.map((component) =>
         component.id === id ? { ...component, imageSrc } : component

@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import * as d3 from "d3";
 import { Component } from "../types/whiteboard";
 import { COMPONENT_SIZES } from "../constants/appConstants";
+import { widgetLogger } from "../utils/componentLoggers";
 
 interface UseComponentCreatorsProps {
   components: Component[];
@@ -68,7 +69,9 @@ export const useComponentCreators = ({
         };
 
         tempImg.onerror = () => {
-          console.error("Failed to load image from URL:", imageSrc);
+          widgetLogger.error("Failed to load image from URL", {
+            imageUrl: imageSrc,
+          });
           // Fallback to default size with whiteboard coordinates
           const whiteboardX =
             (mousePosition.x - transform.x) / transform.k - 100;
@@ -145,7 +148,11 @@ export const useComponentCreators = ({
 
       setComponents((prev) => [...prev, newComponent]);
       setSelectedComponents([newId]); // Select the new component
-      console.log(`Created YouTube video component from URL: ${youtubeUrl}`);
+      widgetLogger.info("Created YouTube video component", {
+        componentId: newId,
+        youtubeUrl,
+        position: { x: whiteboardX, y: whiteboardY },
+      });
     },
     [
       components,
@@ -190,7 +197,11 @@ export const useComponentCreators = ({
 
       setComponents((prev) => [...prev, newComponent]);
       setSelectedComponents([newId]); // Select the new component
-      console.log(`Created SoundCloud component from URL: ${soundcloudUrl}`);
+      widgetLogger.info("Created SoundCloud component", {
+        componentId: newId,
+        soundcloudUrl,
+        position: { x: whiteboardX, y: whiteboardY },
+      });
     },
     [
       components,
@@ -235,7 +246,11 @@ export const useComponentCreators = ({
 
       setComponents((prev) => [...prev, newComponent]);
       setSelectedComponents([newId]); // Select the new component
-      console.log(`Created Spotify component from URL: ${spotifyUrl}`);
+      widgetLogger.info("Created Spotify component", {
+        componentId: newId,
+        spotifyUrl,
+        position: { x: whiteboardX, y: whiteboardY },
+      });
     },
     [
       components,

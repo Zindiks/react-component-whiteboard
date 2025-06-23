@@ -14,6 +14,8 @@ import {
   isSoundCloudUrl,
   isSpotifyUrl,
 } from "../utils/urlDetection";
+import { COMPONENT_SIZES } from "../constants/appConstants";
+import { dragDropLogger } from "../utils/componentLoggers";
 
 export interface UseDragAndDropProps {
   transform: d3.ZoomTransform;
@@ -216,9 +218,18 @@ export const useDragAndDrop = ({
           };
 
           tempImg.onerror = () => {
-            console.error("Failed to load image for dimension calculation");
+            dragDropLogger.error(
+              "Failed to load image for dimension calculation",
+              { imageSrc }
+            );
             // Fallback to default size
-            createImageComponent(x, y, imageSrc, 200, 150);
+            createImageComponent(
+              x,
+              y,
+              imageSrc,
+              COMPONENT_SIZES.DEFAULT_WIDTH,
+              COMPONENT_SIZES.DEFAULT_HEIGHT
+            );
           };
 
           tempImg.src = imageSrc;
@@ -335,9 +346,18 @@ export const useDragAndDrop = ({
           };
 
           tempImg.onerror = () => {
-            console.error("Failed to load image URL for dimension calculation");
+            dragDropLogger.error(
+              "Failed to load image URL for dimension calculation",
+              { imageUrl }
+            );
             // Fallback to default size
-            createImageComponent(x, y, imageUrl, 200, 150);
+            createImageComponent(
+              x,
+              y,
+              imageUrl,
+              COMPONENT_SIZES.DEFAULT_WIDTH,
+              COMPONENT_SIZES.DEFAULT_HEIGHT
+            );
           };
 
           tempImg.crossOrigin = "anonymous"; // Try to handle CORS

@@ -140,6 +140,28 @@ src/
 └── styles/              # Global styles
 ```
 
+## ⚙️ Configuration
+
+### Environment Variables
+
+Create a `.env` file in the project root to configure the application:
+
+```env
+# Logging Configuration
+VITE_LOG_LEVEL=DEBUG              # Log level: ERROR, WARN, INFO, DEBUG, TRACE
+VITE_FORCE_CONSOLE_LOGS=true      # Force console output (overrides defaults)
+VITE_ENABLE_REMOTE_LOGGING=false  # Enable remote logging service
+VITE_LOG_ENDPOINT=https://your-logging-service.com/api/logs
+```
+
+### Logging System
+
+The application uses a structured logging system that replaces all console statements. See `LOGGING.md` for detailed documentation.
+
+- **Development**: DEBUG level logs with console output
+- **Production**: ERROR level logs only, no console output by default
+- **Component-specific loggers**: Pre-configured for different app modules
+
 ## 🔧 Development
 
 ### Code Architecture

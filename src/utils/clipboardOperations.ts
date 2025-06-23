@@ -7,6 +7,7 @@
  */
 
 import { Component } from "../types/whiteboard";
+import { clipboardLogger } from "./componentLoggers";
 import {
   isImageUrl,
   isYouTubeUrl,
@@ -83,7 +84,10 @@ export const copySelectedComponents = (
 
   if (selectedShapeComponents.length > 0) {
     setCopiedComponents(selectedShapeComponents);
-    console.log(`Copied ${selectedShapeComponents.length} shape component(s)`);
+    clipboardLogger.debug("Copied shape components", {
+      count: selectedShapeComponents.length,
+      componentIds: selectedShapeComponents.map((c) => c.id),
+    });
   }
 
   return selectedShapeComponents.length;
@@ -236,9 +240,11 @@ export const handleComponentPaste = async (
     const newIds = newComponents.map((c) => c.id);
     setSelectedComponents(newIds);
 
-    console.log(
-      `Pasted ${newComponents.length} shape component(s) at mouse position`
-    );
+    clipboardLogger.info("Pasted copied components", {
+      count: newComponents.length,
+      componentTypes: newComponents.map((c) => c.type),
+      mousePosition,
+    });
     return;
   }
 
@@ -260,10 +266,12 @@ export const handleComponentPaste = async (
     const textProcessed = await processClipboardText(clipboardText, creators);
 
     if (!textProcessed) {
-      console.log("No supported content found in clipboard");
+      clipboardLogger.debug("No supported content found in clipboard");
     }
   } catch (error) {
-    console.log("Clipboard access failed or no image content found:", error);
+    clipboardLogger.warn("Clipboard access failed or no image content found", {
+      error,
+    });
   }
 };
 
@@ -292,9 +300,9 @@ export const handleImagePasteFromClipboard = async (
       return;
     }
 
-    console.log("No image content found in clipboard");
+    clipboardLogger.debug("No image content found in clipboard");
   } catch (error) {
-    console.log("Failed to paste image from clipboard:", error);
+    clipboardLogger.error("Failed to paste image from clipboard", { error });
   }
 };
 
