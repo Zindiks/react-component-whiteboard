@@ -9,6 +9,7 @@ import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
 import { Component } from "./types/whiteboard";
 import { useWhiteboardState } from "./hooks/useWhiteboardState";
 import { useZoomControls } from "./hooks/useZoomControls";
+import { usePanControls } from "./hooks/usePanControls";
 import {
   isYouTubeUrl,
   isSoundCloudUrl,
@@ -65,15 +66,8 @@ const CustomGrid = () => {
     selectedComponents,
   });
 
-  // Marquee selection state
-  const [isMarqueeActive, setIsMarqueeActive] = useState(false);
-  const [marqueeStart, setMarqueeStart] = useState({ x: 0, y: 0 });
-  const [marqueeEnd, setMarqueeEnd] = useState({ x: 0, y: 0 });
-
-  // Pan state
-  const [isPanning, setIsPanning] = useState(false);
-  const [isSpacePressed, setIsSpacePressed] = useState(false);
-  const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
+  // Mouse position tracking for paste operations
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   // Overview/Minimap state
   const [showOverview, setShowOverview] = useState(false);
@@ -85,8 +79,24 @@ const CustomGrid = () => {
   const [isDragOverBoard, setIsDragOverBoard] = useState(false);
   const [dragType, setDragType] = useState<"component" | "image" | null>(null);
 
-  // Mouse position tracking for paste operations
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  // Use pan controls hook
+  const {
+    isSpacePressed,
+    isMarqueeActive,
+    marqueeStart,
+    marqueeEnd,
+    setIsSpacePressed,
+    handleMouseDown: panHandleMouseDown,
+    handleMouseMove: panHandleMouseMove,
+    handleMouseUp: panHandleMouseUp,
+    handleContextMenu: panHandleContextMenu,
+  } = usePanControls({
+    components,
+    transform,
+    applyTransform,
+    setSelectedComponents,
+    setMousePosition,
+  });
 
   // Copy-paste functionality for all shape components
   const handleCopyComponents = useCallback(() => {
@@ -371,35 +381,6 @@ const CustomGrid = () => {
     await handleImagePasteFromClipboard(createImageComponentAtMouse);
   }, [createImageComponentAtMouse]);
 
-  // Enhanced pan and zoom utilities
-  const getEventCoordinates = (event: MouseEvent | React.MouseEvent) => ({
-    x: event.clientX,
-    y: event.clientY,
-  });
-
-  // Marquee selection utilities
-  const getComponentsInMarquee = useCallback(() => {
-    const left = Math.min(marqueeStart.x, marqueeEnd.x);
-    const right = Math.max(marqueeStart.x, marqueeEnd.x);
-    const top = Math.min(marqueeStart.y, marqueeEnd.y);
-    const bottom = Math.max(marqueeStart.y, marqueeEnd.y);
-
-    return components.filter((comp) => {
-      // Convert component coordinates to screen coordinates
-      const screenX = comp.x * transform.k + transform.x;
-      const screenY = comp.y * transform.k + transform.y;
-      const compWidth = (comp.width || 200) * transform.k;
-      const compHeight = (comp.height || 200) * transform.k;
-
-      return (
-        screenX < right &&
-        screenX + compWidth > left &&
-        screenY < bottom &&
-        screenY + compHeight > top
-      );
-    });
-  }, [marqueeStart, marqueeEnd, components, transform]);
-
   useEffect(() => {
     if (!svgRef.current) return;
 
@@ -668,98 +649,13 @@ const CustomGrid = () => {
       }
     };
 
-    // Mouse event handlers for marquee selection and panning
-    const handleMouseDown = (event: MouseEvent) => {
-      const coords = getEventCoordinates(event);
-
-      // Check if we clicked on a component (prevent marquee when clicking components)
-      const target = event.target as HTMLElement;
-      const isComponentClick = target.closest("[data-component]") !== null;
-
-      // Check if we clicked on the sidebar or control panel (prevent marquee when clicking UI)
-      const isSidebarClick = target.closest("[data-sidebar]") !== null;
-      const isControlPanelClick =
-        target.closest("[data-control-panel]") !== null;
-      const isUIClick = isSidebarClick || isControlPanelClick;
-
-      if (
-        event.button === 0 &&
-        !isSpacePressed &&
-        !isComponentClick &&
-        !isUIClick
-      ) {
-        // Left click without space on empty area - start marquee selection
-        setIsMarqueeActive(true);
-        setMarqueeStart(coords);
-        setMarqueeEnd(coords);
-      } else if (
-        event.button === 1 ||
-        event.button === 2 ||
-        (event.button === 0 && isSpacePressed)
-      ) {
-        // Middle, right, or space+left click - start panning (but not on UI elements)
-        if (!isUIClick) {
-          setIsPanning(true);
-          setLastPanPoint(coords);
-          event.preventDefault();
-        }
-      }
-    };
-
-    const handleMouseMove = (event: MouseEvent) => {
-      const coords = getEventCoordinates(event);
-
-      if (isMarqueeActive) {
-        setMarqueeEnd(coords);
-      } else if (isPanning) {
-        const deltaX = coords.x - lastPanPoint.x;
-        const deltaY = coords.y - lastPanPoint.y;
-
-        const newTransform = transform.translate(
-          deltaX / transform.k,
-          deltaY / transform.k
-        );
-        applyTransform(newTransform);
-        setLastPanPoint(coords);
-      }
-
-      // Update mouse position for paste operations
-      setMousePosition(coords);
-    };
-
-    const handleMouseUp = (event: MouseEvent) => {
-      if (isMarqueeActive) {
-        // Complete marquee selection
-        const selectedInMarquee = getComponentsInMarquee();
-        if (event.ctrlKey || event.metaKey) {
-          // Add to existing selection
-          setSelectedComponents((prev) => [
-            ...new Set([...prev, ...selectedInMarquee.map((comp) => comp.id)]),
-          ]);
-        } else {
-          // Replace selection
-          setSelectedComponents(selectedInMarquee.map((comp) => comp.id));
-        }
-        setIsMarqueeActive(false);
-      } else if (isPanning) {
-        setIsPanning(false);
-      }
-    };
-
-    // Context menu prevention for right-click pan
-    const handleContextMenu = (event: MouseEvent) => {
-      if (event.button === 2) {
-        event.preventDefault();
-      }
-    };
-
     // Add event listeners
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-    window.addEventListener("mousedown", handleMouseDown);
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-    window.addEventListener("contextmenu", handleContextMenu);
+    window.addEventListener("mousedown", panHandleMouseDown);
+    window.addEventListener("mousemove", panHandleMouseMove);
+    window.addEventListener("mouseup", panHandleMouseUp);
+    window.addEventListener("contextmenu", panHandleContextMenu);
 
     return () => {
       svg.selectAll("*").remove();
@@ -773,34 +669,33 @@ const CustomGrid = () => {
       // Cleanup window event listeners
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
-      window.removeEventListener("mousedown", handleMouseDown);
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("contextmenu", handleContextMenu);
+      window.removeEventListener("mousedown", panHandleMouseDown);
+      window.removeEventListener("mousemove", panHandleMouseMove);
+      window.removeEventListener("mouseup", panHandleMouseUp);
+      window.removeEventListener("contextmenu", panHandleContextMenu);
     };
   }, [
     handleDeleteSelected,
     isMarqueeActive,
-    isPanning,
     isSpacePressed,
-    lastPanPoint,
-    marqueeStart,
-    marqueeEnd,
-    transform,
-    getComponentsInMarquee,
+    setIsSpacePressed,
     resetZoom,
     zoomToFit,
     zoomToSelection,
-    showZoomIndicatorTemporarily,
     showOverview,
     handleCopyComponents,
     handlePasteComponents,
     handlePasteImageFromClipboard,
     setSelectedComponents,
-    applyTransform,
+    zoomBehavior,
+    panHandleMouseDown,
+    panHandleMouseMove,
+    panHandleMouseUp,
+    panHandleContextMenu,
     previousZoomScale,
     setTransform,
-    zoomBehavior,
+    showZoomIndicatorTemporarily,
+    transform,
   ]);
 
   // Cleanup timeout on unmount
