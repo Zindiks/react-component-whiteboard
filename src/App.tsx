@@ -8,6 +8,7 @@ import { DraggableComponent } from "./components/DraggableWhiteboardComponent";
 import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
 import { Component } from "./types/whiteboard";
 import { useWhiteboardState } from "./hooks/useWhiteboardState";
+import { useZoomControls } from "./hooks/useZoomControls";
 import {
   isYouTubeUrl,
   isSoundCloudUrl,
@@ -44,7 +45,25 @@ const CustomGrid = () => {
 
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [transform, setTransform] = useState(d3.zoomIdentity);
+
+  // Use zoom controls hook
+  const {
+    transform,
+    showZoomIndicator,
+    isActivelyZooming,
+    setTransform,
+    showZoomIndicatorTemporarily,
+    applyTransform,
+    resetZoom,
+    zoomToFit,
+    zoomToSelection,
+    handleZoom,
+    refs: { zoomBehavior, zoomIndicatorTimeoutRef, previousZoomScale },
+  } = useZoomControls({
+    svgRef,
+    components,
+    selectedComponents,
+  });
 
   // Marquee selection state
   const [isMarqueeActive, setIsMarqueeActive] = useState(false);
@@ -55,12 +74,6 @@ const CustomGrid = () => {
   const [isPanning, setIsPanning] = useState(false);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
-
-  // Zoom indicator state
-  const [showZoomIndicator, setShowZoomIndicator] = useState(false);
-  const [isActivelyZooming, setIsActivelyZooming] = useState(false);
-  const zoomIndicatorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const previousZoomScale = useRef<number>(1);
 
   // Overview/Minimap state
   const [showOverview, setShowOverview] = useState(false);
@@ -74,10 +87,6 @@ const CustomGrid = () => {
 
   // Mouse position tracking for paste operations
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-  const zoomBehavior = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(
-    null
-  );
 
   // Copy-paste functionality for all shape components
   const handleCopyComponents = useCallback(() => {
@@ -367,123 +376,6 @@ const CustomGrid = () => {
     x: event.clientX,
     y: event.clientY,
   });
-
-  const showZoomIndicatorTemporarily = useCallback(() => {
-    // Only show for actual zoom gestures, not manual buttons
-    setIsActivelyZooming(true);
-    setShowZoomIndicator(true);
-
-    // Clear existing timeout
-    if (zoomIndicatorTimeoutRef.current) {
-      clearTimeout(zoomIndicatorTimeoutRef.current);
-    }
-
-    // Set new timeout to hide indicator after 800ms (shorter for better UX)
-    zoomIndicatorTimeoutRef.current = setTimeout(() => {
-      setIsActivelyZooming(false);
-      setShowZoomIndicator(false);
-    }, 800);
-  }, []);
-
-  const applyTransform = (newTransform: d3.ZoomTransform) => {
-    if (!svgRef.current || !zoomBehavior.current) return;
-    const svg = d3.select(svgRef.current);
-    svg.call(zoomBehavior.current.transform, newTransform);
-  };
-
-  const resetZoom = useCallback(() => {
-    if (!svgRef.current || !zoomBehavior.current) return;
-    const svg = d3.select(svgRef.current);
-    svg
-      .transition()
-      .duration(750)
-      .call(zoomBehavior.current.transform, d3.zoomIdentity);
-  }, []);
-
-  const zoomToFit = useCallback(() => {
-    if (!svgRef.current || !zoomBehavior.current || components.length === 0)
-      return;
-
-    const padding = 50;
-    const bounds = components.reduce(
-      (acc, comp) => ({
-        minX: Math.min(acc.minX, comp.x),
-        minY: Math.min(acc.minY, comp.y),
-        maxX: Math.max(acc.maxX, comp.x + (comp.width || 200)),
-        maxY: Math.max(acc.maxY, comp.y + (comp.height || 200)),
-      }),
-      { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
-    );
-
-    const width = bounds.maxX - bounds.minX + padding * 2;
-    const height = bounds.maxY - bounds.minY + padding * 2;
-    const centerX = bounds.minX + (bounds.maxX - bounds.minX) / 2;
-    const centerY = bounds.minY + (bounds.maxY - bounds.minY) / 2;
-
-    const scale = Math.min(
-      window.innerWidth / width,
-      window.innerHeight / height,
-      7 // Max zoom level (700%)
-    );
-
-    const svg = d3.select(svgRef.current);
-    svg
-      .transition()
-      .duration(750)
-      .call(
-        zoomBehavior.current.transform,
-        d3.zoomIdentity
-          .translate(window.innerWidth / 2, window.innerHeight / 2)
-          .scale(scale)
-          .translate(-centerX, -centerY)
-      );
-  }, [components]);
-
-  const zoomToSelection = useCallback(() => {
-    if (
-      !svgRef.current ||
-      !zoomBehavior.current ||
-      selectedComponents.length === 0
-    )
-      return;
-
-    const selectedComps = components.filter((comp) =>
-      selectedComponents.includes(comp.id)
-    );
-    const padding = 50;
-    const bounds = selectedComps.reduce(
-      (acc, comp) => ({
-        minX: Math.min(acc.minX, comp.x),
-        minY: Math.min(acc.minY, comp.y),
-        maxX: Math.max(acc.maxX, comp.x + (comp.width || 200)),
-        maxY: Math.max(acc.maxY, comp.y + (comp.height || 200)),
-      }),
-      { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
-    );
-
-    const width = bounds.maxX - bounds.minX + padding * 2;
-    const height = bounds.maxY - bounds.minY + padding * 2;
-    const centerX = bounds.minX + (bounds.maxX - bounds.minX) / 2;
-    const centerY = bounds.minY + (bounds.maxY - bounds.minY) / 2;
-
-    const scale = Math.min(
-      window.innerWidth / width,
-      window.innerHeight / height,
-      7 // Max zoom level (700%)
-    );
-
-    const svg = d3.select(svgRef.current);
-    svg
-      .transition()
-      .duration(750)
-      .call(
-        zoomBehavior.current.transform,
-        d3.zoomIdentity
-          .translate(window.innerWidth / 2, window.innerHeight / 2)
-          .scale(scale)
-          .translate(-centerX, -centerY)
-      );
-  }, [components, selectedComponents]);
 
   // Marquee selection utilities
   const getComponentsInMarquee = useCallback(() => {
@@ -905,23 +797,21 @@ const CustomGrid = () => {
     handlePasteComponents,
     handlePasteImageFromClipboard,
     setSelectedComponents,
+    applyTransform,
+    previousZoomScale,
+    setTransform,
+    zoomBehavior,
   ]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
+    const timeoutRef = zoomIndicatorTimeoutRef;
     return () => {
-      if (zoomIndicatorTimeoutRef.current) {
-        clearTimeout(zoomIndicatorTimeoutRef.current);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
     };
-  }, []);
-
-  const handleZoom = useCallback((factor: number) => {
-    if (!svgRef.current || !zoomBehavior.current) return;
-    const svg = d3.select(svgRef.current);
-    zoomBehavior.current.scaleBy(svg, factor);
-    // Don't show indicator for manual button clicks
-  }, []);
+  }, [zoomIndicatorTimeoutRef]);
 
   // Category and sidebar handlers
   const handleCategoryClick = useCallback(
@@ -1370,26 +1260,29 @@ const CustomGrid = () => {
     };
   }, [components]);
 
-  const navigateToComponent = useCallback((component: Component) => {
-    if (!svgRef.current || !zoomBehavior.current) return;
+  const navigateToComponent = useCallback(
+    (component: Component) => {
+      if (!svgRef.current || !zoomBehavior.current) return;
 
-    const svg = d3.select(svgRef.current);
-    const targetX = component.x + (component.width || 200) / 2;
-    const targetY = component.y + (component.height || 200) / 2;
+      const svg = d3.select(svgRef.current);
+      const targetX = component.x + (component.width || 200) / 2;
+      const targetY = component.y + (component.height || 200) / 2;
 
-    svg
-      .transition()
-      .duration(750)
-      .call(
-        zoomBehavior.current.transform,
-        d3.zoomIdentity
-          .translate(window.innerWidth / 2, window.innerHeight / 2)
-          .scale(1)
-          .translate(-targetX, -targetY)
-      );
+      svg
+        .transition()
+        .duration(750)
+        .call(
+          zoomBehavior.current.transform,
+          d3.zoomIdentity
+            .translate(window.innerWidth / 2, window.innerHeight / 2)
+            .scale(1)
+            .translate(-targetX, -targetY)
+        );
 
-    setShowOverview(false);
-  }, []);
+      setShowOverview(false);
+    },
+    [zoomBehavior]
+  );
 
   return (
     <div
