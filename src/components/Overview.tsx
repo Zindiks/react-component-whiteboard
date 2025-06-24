@@ -88,6 +88,8 @@ export const Overview: React.FC<OverviewProps> = ({
         return "#3b82f6";
       case "imageShape":
         return "#6b7280";
+      case "pdfShape":
+        return "#dc2626";
       case "rectangle":
         return "#3b82f6";
       case "ellipse":

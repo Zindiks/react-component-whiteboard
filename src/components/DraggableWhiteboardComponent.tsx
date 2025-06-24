@@ -28,6 +28,7 @@ import {
   LineShape,
   TextShape,
   ImageShape,
+  PdfShape,
 } from "./shapes";
 import { FloatingHeader } from "./widgets/FloatingHeader";
 import {
@@ -353,6 +354,30 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         }}
       />
     ),
+    pdfShape: () => (
+      <PdfShape
+        x={0}
+        y={0}
+        width={width || 400}
+        height={height || 500}
+        selected={selected}
+        onSelect={() => onSelect(id)}
+        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+        pdfSrc={imageSrc} // Reuse imageSrc for PDF data URL
+        pdfName={text} // Reuse text for PDF filename
+        onPdfChange={(newPdfSrc, newPdfName) => {
+          widgetLogger.debug("PDF changed", {
+            componentId: id,
+            pdfName: newPdfName,
+            pdfSize: newPdfSrc.length,
+          });
+          onImageChange?.(id, newPdfSrc); // Reuse onImageChange for PDF
+          if (newPdfName) {
+            onTextChange?.(id, newPdfName); // Store PDF name in text field
+          }
+        }}
+      />
+    ),
   };
 
   const renderComponent = () => {
@@ -377,6 +402,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     "line",
     "text",
     "imageShape",
+    "pdfShape",
   ].includes(type);
 
   // Function to get component metadata for floating header

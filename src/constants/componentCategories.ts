@@ -148,6 +148,12 @@ export const COMPONENT_CATEGORIES: Category[] = [
         icon: "🖼️",
         description: "Image shape",
       },
+      {
+        type: "pdfShape",
+        label: "PDF",
+        icon: "📄",
+        description: "PDF document viewer",
+      },
     ],
   },
 ];

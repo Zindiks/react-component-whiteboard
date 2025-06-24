@@ -24,6 +24,7 @@ export const COPYABLE_SHAPE_TYPES = [
   "line",
   "text",
   "imageShape",
+  "pdfShape",
 ];
 
 /**
@@ -31,6 +32,7 @@ export const COPYABLE_SHAPE_TYPES = [
  */
 export interface ComponentCreators {
   createImageComponentAtMouse: (imageSrc: string) => Promise<void>;
+  createPdfComponentAtMouse: (pdfSrc: string, pdfName?: string) => void;
   createYouTubeComponentAtMouse: (youtubeUrl: string) => void;
   createSoundCloudComponentAtMouse: (soundcloudUrl: string) => void;
   createSpotifyComponentAtMouse: (spotifyUrl: string) => void;

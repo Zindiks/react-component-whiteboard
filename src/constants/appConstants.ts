@@ -47,6 +47,12 @@ export const COMPONENT_SIZES = {
   // Text note fallback dimensions when image load fails
   IMAGE_FALLBACK_WIDTH: 200,
   IMAGE_FALLBACK_HEIGHT: 150,
+
+  // PDF viewer dimensions
+  PDF_WIDTH: 400,
+  PDF_HEIGHT: 500,
+  PDF_MIN_WIDTH: 300,
+  PDF_MIN_HEIGHT: 400,
 } as const;
 
 // Layout and Spacing Constants

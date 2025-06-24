@@ -115,6 +115,48 @@ export const useComponentCreators = ({
     ]
   );
 
+  // Helper function to create a PDF component at mouse position
+  const createPdfComponentAtMouse = useCallback(
+    (pdfSrc: string, pdfName?: string): void => {
+      // Convert screen coordinates to whiteboard coordinates and center on mouse position
+      const width = COMPONENT_SIZES.PDF_WIDTH;
+      const height = COMPONENT_SIZES.PDF_HEIGHT;
+      const whiteboardX =
+        (mousePosition.x - transform.x) / transform.k - width / 2;
+      const whiteboardY =
+        (mousePosition.y - transform.y) / transform.k - height / 2;
+
+      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const highestZIndex = Math.max(
+        ...components.map((c) => c.zIndex || 0),
+        0
+      );
+
+      const newComponent: Component = {
+        id: newId,
+        x: whiteboardX,
+        y: whiteboardY,
+        type: "pdfShape",
+        width,
+        height,
+        zIndex: highestZIndex + 1,
+        imageSrc: pdfSrc, // Store PDF data URL in imageSrc field
+        text: pdfName, // Store PDF name in text field
+      };
+
+      setComponents((prev) => [...prev, newComponent]);
+      setSelectedComponents([newId]); // Select the new component
+    },
+    [
+      components,
+      mousePosition.x,
+      mousePosition.y,
+      transform,
+      setComponents,
+      setSelectedComponents,
+    ]
+  );
+
   // Helper function to create a YouTube component at mouse position
   const createYouTubeComponentAtMouse = useCallback(
     (youtubeUrl: string): void => {
@@ -264,6 +306,7 @@ export const useComponentCreators = ({
 
   return {
     createImageComponentAtMouse,
+    createPdfComponentAtMouse,
     createYouTubeComponentAtMouse,
     createSoundCloudComponentAtMouse,
     createSpotifyComponentAtMouse,

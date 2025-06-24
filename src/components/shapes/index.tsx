@@ -18,3 +18,6 @@ export type { TextShapeProps } from "./TextShape";
 
 export { ImageShape } from "./ImageShape";
 export type { ImageShapeProps } from "./ImageShape";
+
+export { PdfShape } from "./PdfShape";
+export type { PdfShapeProps } from "./PdfShape";

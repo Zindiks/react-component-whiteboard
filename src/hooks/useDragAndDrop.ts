@@ -136,6 +136,33 @@ export const useDragAndDrop = ({
       setComponents((prev) => [...prev, newComponent]);
     };
 
+    const createPdfComponent = (
+      x: number,
+      y: number,
+      pdfSrc: string,
+      pdfName?: string
+    ) => {
+      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const highestZIndex = Math.max(
+        ...components.map((c) => c.zIndex || 0),
+        0
+      );
+
+      const newComponent: Component = {
+        id: newId,
+        x,
+        y,
+        type: "pdfShape",
+        width: COMPONENT_SIZES.PDF_WIDTH,
+        height: COMPONENT_SIZES.PDF_HEIGHT,
+        zIndex: highestZIndex + 1,
+        imageSrc: pdfSrc, // Store PDF data URL in imageSrc field
+        text: pdfName, // Store PDF name in text field
+      };
+
+      setComponents((prev) => [...prev, newComponent]);
+    };
+
     const createMediaComponent = (
       x: number,
       y: number,
@@ -186,6 +213,7 @@ export const useDragAndDrop = ({
       // Handle image file drops from outside browser (files) - check first
       const files = Array.from(event.dataTransfer?.files || []);
       const imageFile = files.find((file) => file.type.startsWith("image/"));
+      const pdfFile = files.find((file) => file.type === "application/pdf");
 
       if (imageFile) {
         // Convert screen coordinates to whiteboard coordinates
@@ -236,6 +264,30 @@ export const useDragAndDrop = ({
         };
 
         reader.readAsDataURL(imageFile);
+        return;
+      }
+
+      // Handle PDF file drops from outside browser (files)
+      if (pdfFile) {
+        // Convert screen coordinates to whiteboard coordinates
+        const x = (event.clientX - transform.x) / transform.k;
+        const y = (event.clientY - transform.y) / transform.k;
+
+        // Read the file as data URL
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const pdfSrc = e.target?.result as string;
+          createPdfComponent(x, y, pdfSrc, pdfFile.name);
+        };
+
+        reader.onerror = () => {
+          dragDropLogger.error("Failed to load PDF file", {
+            fileName: pdfFile.name,
+            fileSize: pdfFile.size,
+          });
+        };
+
+        reader.readAsDataURL(pdfFile);
         return;
       }
 
