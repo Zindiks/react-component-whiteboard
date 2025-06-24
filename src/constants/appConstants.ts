@@ -173,9 +173,9 @@ export const INITIAL_POSITIONS = {
 
 // Grid Background Constants
 export const GRID_CONSTANTS = {
-  SIZE: 30, // Larger grid cell size for visibility
-  COLOR: "#ff0000", // Bright red for debugging
-  STROKE_WIDTH: 2, // Thick grid lines for visibility
-  OPACITY: 1, // Fully opaque grid
+  SIZE: 20, // Base grid cell size in pixels
+  COLOR: "#e0e0e0", // Light gray grid lines
+  STROKE_WIDTH: 0.5, // Base stroke width
+  OPACITY: 0.6, // Base opacity
   ENABLED: true as boolean, // Grid enabled by default
 } as const;

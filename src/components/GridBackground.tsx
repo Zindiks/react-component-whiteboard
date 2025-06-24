@@ -24,22 +24,52 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
 
     const gridGroup = d3.select(gridRef.current);
 
+    // Always clear all existing content first
+    gridGroup.selectAll("*").remove();
+
     if (!enabled) {
-      // Clear grid if disabled
-      gridGroup.selectAll("line").remove();
       return;
     }
 
-    // Clear existing grid lines only (avoid clearing React-managed elements)
-    gridGroup.selectAll("line").remove();
+    // Dynamic grid parameters based on zoom level
+    const baseGridSize = GRID_CONSTANTS.SIZE;
 
-    // Grid parameters
-    const gridSize = GRID_CONSTANTS.SIZE;
-    const strokeWidth = GRID_CONSTANTS.STROKE_WIDTH / transform.k; // Scale stroke width with zoom
-    const opacity = Math.min(
-      1,
-      GRID_CONSTANTS.OPACITY * Math.sqrt(transform.k)
-    ); // Adjust opacity with zoom
+    // Calculate dynamic grid size - use multiple levels
+    let gridSize = baseGridSize;
+    let gridLevel = 1;
+
+    // Determine which grid level to show based on zoom
+    if (transform.k < 0.25) {
+      // Very zoomed out - use large grid (4x base size)
+      gridSize = baseGridSize * 4;
+      gridLevel = 4;
+    } else if (transform.k < 0.5) {
+      // Zoomed out - use medium-large grid (2x base size)
+      gridSize = baseGridSize * 2;
+      gridLevel = 2;
+    } else if (transform.k > 2) {
+      // Zoomed in - use smaller grid (half base size)
+      gridSize = baseGridSize * 0.5;
+      gridLevel = 0.5;
+    } else if (transform.k > 4) {
+      // Very zoomed in - use very small grid (quarter base size)
+      gridSize = baseGridSize * 0.25;
+      gridLevel = 0.25;
+    }
+
+    // Dynamic stroke width - thinner at high zoom, thicker at low zoom
+    const strokeWidth = Math.max(
+      0.2,
+      Math.min(3, GRID_CONSTANTS.STROKE_WIDTH / transform.k)
+    );
+
+    // Dynamic opacity - more visible when grid is larger, less when smaller
+    let opacity: number = GRID_CONSTANTS.OPACITY;
+    if (gridLevel >= 2) {
+      opacity = Math.min(1, GRID_CONSTANTS.OPACITY * 1.5); // More visible for large grids
+    } else if (gridLevel <= 0.5) {
+      opacity = Math.max(0.2, GRID_CONSTANTS.OPACITY * 0.7); // Less visible for small grids
+    }
 
     // Calculate visible bounds in world coordinates
     const bounds = {
@@ -71,7 +101,8 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
         .attr("y2", endY)
         .attr("stroke", GRID_CONSTANTS.COLOR)
         .attr("stroke-width", strokeWidth)
-        .attr("opacity", opacity);
+        .attr("opacity", opacity)
+        .attr("pointer-events", "none");
     }
 
     // Generate and add horizontal lines
@@ -84,7 +115,8 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
         .attr("y2", y)
         .attr("stroke", GRID_CONSTANTS.COLOR)
         .attr("stroke-width", strokeWidth)
-        .attr("opacity", opacity);
+        .attr("opacity", opacity)
+        .attr("pointer-events", "none");
     }
   }, [transform, width, height, enabled]);
 
@@ -93,18 +125,16 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
     const currentRef = gridRef.current;
     return () => {
       if (currentRef) {
-        d3.select(currentRef).selectAll("*").remove();
+        try {
+          d3.select(currentRef).selectAll("*").remove();
+        } catch (error) {
+          // Silently handle cleanup errors
+          console.warn("Grid cleanup warning:", error);
+        }
       }
     };
   }, []);
 
-  return (
-    <g ref={gridRef} className="grid-background">
-      {/* Debug: Always visible test rectangle */}
-      <rect x="10" y="10" width="200" height="100" fill="blue" opacity="0.7" />
-      <text x="20" y="60" fill="white" fontSize="16" fontWeight="bold">
-        GRID DEBUG
-      </text>
-    </g>
-  );
+  // Return empty group - D3 will manage all content
+  return <g ref={gridRef} className="grid-background" />;
 };
