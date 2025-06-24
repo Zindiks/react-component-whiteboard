@@ -6,7 +6,7 @@
  */
 
 import React from "react";
-import { Plus, Minus, Grid3x3, Magnet } from "lucide-react";
+import { Plus, Minus, Grid3x3, Magnet, MoreHorizontal } from "lucide-react";
 import { Button } from "./ui/button";
 
 export interface ControlPanelProps {
@@ -14,6 +14,8 @@ export interface ControlPanelProps {
   selectedComponents: number[];
   showGrid: boolean;
   onToggleGrid: () => void;
+  gridStyle: "line" | "dotted";
+  onToggleGridStyle: () => void;
   snapToGrid: boolean;
   onToggleSnap: () => void;
 }
@@ -23,6 +25,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   selectedComponents,
   showGrid,
   onToggleGrid,
+  gridStyle,
+  onToggleGridStyle,
   snapToGrid,
   onToggleSnap,
 }) => {
@@ -56,6 +60,24 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         >
           <Grid3x3 className="w-4 h-4" />
         </Button>
+        {showGrid && (
+          <Button
+            onClick={onToggleGridStyle}
+            variant="ghost"
+            size="sm"
+            title={
+              gridStyle === "line"
+                ? "Switch to Dotted Grid"
+                : "Switch to Line Grid"
+            }
+          >
+            {gridStyle === "line" ? (
+              <MoreHorizontal className="w-4 h-4" />
+            ) : (
+              <Grid3x3 className="w-4 h-4" />
+            )}
+          </Button>
+        )}
         <Button
           onClick={onToggleSnap}
           variant={snapToGrid ? "default" : "ghost"}

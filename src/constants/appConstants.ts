@@ -174,8 +174,16 @@ export const INITIAL_POSITIONS = {
 // Grid Background Constants
 export const GRID_CONSTANTS = {
   SIZE: 20, // Base grid cell size in pixels
-  COLOR: "#e0e0e0", // Light gray grid lines
+  COLOR: "#b0b0b0", // Light gray grid lines
   STROKE_WIDTH: 0.5, // Base stroke width
   OPACITY: 0.6, // Base opacity
   ENABLED: true as boolean, // Grid enabled by default
+  DOT_SIZE: 1.5, // Dot radius for dotted grid style
+  STYLE: "line" as "line" | "dotted", // Default grid style
+} as const;
+
+// Grid style options
+export const GRID_STYLES = {
+  LINE: "line" as const,
+  DOTTED: "dotted" as const,
 } as const;

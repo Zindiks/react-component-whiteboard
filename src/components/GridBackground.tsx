@@ -6,11 +6,13 @@ import { usePerformance } from "../hooks/usePerformance";
 interface GridBackgroundProps {
   transform: d3.ZoomTransform;
   enabled?: boolean;
+  style?: "line" | "dotted";
 }
 
 export const GridBackground: React.FC<GridBackgroundProps> = ({
   transform,
   enabled = GRID_CONSTANTS.ENABLED,
+  style = GRID_CONSTANTS.STYLE,
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const { throttleRAF } = usePerformance({ targetFPS: 120 });
@@ -54,14 +56,27 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
         `translate(${transform.x},${transform.y}) scale(${transform.k})`
       );
 
-    // Add grid lines to pattern
-    pattern
-      .append("path")
-      .attr("d", `M ${gridSize} 0 L 0 0 0 ${gridSize}`)
-      .attr("fill", "none")
-      .attr("stroke", GRID_CONSTANTS.COLOR)
-      .attr("stroke-width", GRID_CONSTANTS.STROKE_WIDTH / transform.k)
-      .attr("opacity", opacity);
+    if (style === "dotted") {
+      // Create dotted pattern using a circle at the center of each grid cell
+      const dotSize = GRID_CONSTANTS.DOT_SIZE / transform.k; // Scale dot size inversely with zoom
+
+      pattern
+        .append("circle")
+        .attr("cx", gridSize / 2) // Center horizontally
+        .attr("cy", gridSize / 2) // Center vertically
+        .attr("r", dotSize)
+        .attr("fill", GRID_CONSTANTS.COLOR)
+        .attr("opacity", opacity);
+    } else {
+      // Create line pattern (L-shaped lines at grid intersections)
+      pattern
+        .append("path")
+        .attr("d", `M ${gridSize} 0 L 0 0 0 ${gridSize}`)
+        .attr("fill", "none")
+        .attr("stroke", GRID_CONSTANTS.COLOR)
+        .attr("stroke-width", GRID_CONSTANTS.STROKE_WIDTH / transform.k)
+        .attr("opacity", opacity);
+    }
 
     // Apply pattern to cover entire viewport
     svg
@@ -70,7 +85,7 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
       .attr("height", "100%")
       .attr("fill", "url(#grid-pattern)")
       .attr("pointer-events", "none");
-  }, [transform, enabled]);
+  }, [transform, enabled, style]);
 
   // Create throttled version of updateGrid
   const throttledUpdateGrid = useRef<(() => void) | null>(null);
@@ -83,7 +98,7 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
     if (throttledUpdateGrid.current) {
       throttledUpdateGrid.current();
     }
-  }, [transform, enabled]);
+  }, [transform, enabled, style]);
 
   // Cleanup function
   useEffect(() => {

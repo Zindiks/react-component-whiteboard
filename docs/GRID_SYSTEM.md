@@ -14,7 +14,8 @@ The whiteboard features a high-performance grid system that provides visual alig
 
 ### Features
 
-- ✅ **Visual Grid**: Clean line-based grid overlay
+- ✅ **Visual Grid**: Clean line-based or dotted grid overlay
+- ✅ **Grid Styles**: Switch between line and dotted patterns
 - ✅ **Snap-to-Grid**: Components snap to grid intersections
 - ✅ **Dynamic Opacity**: Grid visibility adapts to zoom level
 - ✅ **Performance Optimized**: Uses efficient SVG patterns
@@ -32,13 +33,15 @@ export const GRID_CONSTANTS = {
   STROKE_WIDTH: 0.5, // Line thickness
   OPACITY: 0.6, // Base opacity
   ENABLED: true, // Default enabled state
+  DOT_SIZE: 1.5, // Dot radius for dotted grid style
+  STYLE: "line", // Default grid style ("line" | "dotted")
 } as const;
 ```
 
 ### Usage
 
 ```tsx
-<GridBackground transform={transform} enabled={showGrid} />
+<GridBackground transform={transform} enabled={showGrid} style={gridStyle} />
 ```
 
 ## Controls
@@ -48,6 +51,12 @@ export const GRID_CONSTANTS = {
 - **Button**: Grid icon (📐) in control panel
 - **Function**: Show/hide grid overlay
 - **Keyboard**: No shortcut (uses button only)
+
+### Grid Style Toggle
+
+- **Button**: Style icon (⋯/📐) in control panel (visible when grid is enabled)
+- **Function**: Switch between line and dotted grid styles
+- **Styles**: Line grid (L-shaped patterns) or dotted grid (circles)
 
 ### Snap-to-Grid Toggle
 
@@ -59,10 +68,11 @@ export const GRID_CONSTANTS = {
 
 ### Performance Optimizations
 
-- **SVG Patterns**: Single pattern element vs hundreds of lines
+- **SVG Patterns**: Single pattern element vs hundreds of lines/circles
 - **GPU Acceleration**: `transform: translateZ(0)` and `willChange: transform`
 - **Throttled Updates**: RAF-based updates for smooth panning
 - **Minimal DOM**: One SVG element with pattern definition
+- **Efficient Dotted Grid**: SVG circle patterns instead of individual DOM elements
 
 ### Zoom Adaptation
 
@@ -110,11 +120,11 @@ docs/
 - ❌ **CanvasGridBackground**: Canvas-based rendering
 - ❌ **GridBackgroundOptimized**: Enhanced SVG version
 
-### Dotted Grid Style (Removed for Performance)
+### Previous Dotted Grid (Removed for Performance)
 
-- ❌ **Reason**: Created too many DOM elements (400+ circles)
-- ❌ **Impact**: Caused severe performance degradation
-- ❌ **Solution**: Focused on optimized line grid only
+- ❌ **Old Implementation**: Created individual DOM elements for each dot
+- ❌ **Impact**: Caused severe performance degradation (400+ elements)
+- ❌ **Solution**: Replaced with efficient SVG pattern-based dotted grid
 
 ## Best Practices
 
@@ -124,13 +134,15 @@ docs/
 2. Use snap-to-grid for precise positioning
 3. Grid size (20px) works well for most components
 4. Grid opacity automatically adapts to zoom level
+5. Switch between line and dotted styles based on preference
 
 ### Performance
 
-1. Grid uses efficient SVG patterns (not individual lines)
+1. Grid uses efficient SVG patterns (not individual lines/dots)
 2. GPU acceleration ensures smooth panning/zooming
 3. Throttled updates maintain 120fps target
 4. Minimal memory footprint
+5. Both line and dotted styles are equally performant
 
 ## Future Considerations
 
@@ -140,6 +152,7 @@ docs/
 - Grid color theming
 - Grid spacing based on zoom level
 - Magnetic snap strength adjustment
+- Additional grid styles (dashed, custom patterns)
 
 ### Constraints
 

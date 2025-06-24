@@ -91,6 +91,11 @@ const CustomGrid = () => {
   // Grid toggle state
   const [showGrid, setShowGrid] = useState(GRID_CONSTANTS.ENABLED);
 
+  // Grid style state
+  const [gridStyle, setGridStyle] = useState<"line" | "dotted">(
+    GRID_CONSTANTS.STYLE
+  );
+
   // Snap to grid toggle state
   const [snapToGrid, setSnapToGrid] = useState(true);
 
@@ -375,7 +380,11 @@ const CustomGrid = () => {
         height="100%"
         style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}
       >
-        <GridBackground transform={transform} enabled={showGrid} />
+        <GridBackground
+          transform={transform}
+          enabled={showGrid}
+          style={gridStyle}
+        />
       </svg>
 
       {/* Main SVG for zoom/pan behavior */}
@@ -473,6 +482,10 @@ const CustomGrid = () => {
         selectedComponents={selectedComponents}
         showGrid={showGrid}
         onToggleGrid={() => setShowGrid(!showGrid)}
+        gridStyle={gridStyle}
+        onToggleGridStyle={() =>
+          setGridStyle(gridStyle === "line" ? "dotted" : "line")
+        }
         snapToGrid={snapToGrid}
         onToggleSnap={() => setSnapToGrid(!snapToGrid)}
       />
