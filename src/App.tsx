@@ -96,6 +96,14 @@ const CustomGrid = () => {
     GRID_CONSTANTS.STYLE
   );
 
+  // Grid size state
+  const [gridSize, setGridSize] = useState<number>(GRID_CONSTANTS.SIZE);
+
+  // Dynamic grid sizing state
+  const [dynamicGridSizing, setDynamicGridSizing] = useState<boolean>(
+    GRID_CONSTANTS.DYNAMIC_SIZING
+  );
+
   // Snap to grid toggle state
   const [snapToGrid, setSnapToGrid] = useState(true);
 
@@ -384,6 +392,8 @@ const CustomGrid = () => {
           transform={transform}
           enabled={showGrid}
           style={gridStyle}
+          size={gridSize}
+          dynamicSizing={dynamicGridSizing}
         />
       </svg>
 
@@ -485,6 +495,12 @@ const CustomGrid = () => {
         gridStyle={gridStyle}
         onToggleGridStyle={() =>
           setGridStyle(gridStyle === "line" ? "dotted" : "line")
+        }
+        gridSize={gridSize}
+        onGridSizeChange={setGridSize}
+        dynamicGridSizing={dynamicGridSizing}
+        onToggleDynamicGridSizing={() =>
+          setDynamicGridSizing(!dynamicGridSizing)
         }
         snapToGrid={snapToGrid}
         onToggleSnap={() => setSnapToGrid(!snapToGrid)}

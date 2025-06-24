@@ -6,8 +6,24 @@
  */
 
 import React from "react";
-import { Plus, Minus, Grid3x3, Magnet, MoreHorizontal } from "lucide-react";
+import {
+  Plus,
+  Minus,
+  Grid3x3,
+  Magnet,
+  Circle,
+  Settings,
+  Zap,
+} from "lucide-react";
 import { Button } from "./ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { GRID_CONSTANTS } from "../constants/appConstants";
 
 export interface ControlPanelProps {
   onZoom: (factor: number) => void;
@@ -16,6 +32,10 @@ export interface ControlPanelProps {
   onToggleGrid: () => void;
   gridStyle: "line" | "dotted";
   onToggleGridStyle: () => void;
+  gridSize: number;
+  onGridSizeChange: (size: number) => void;
+  dynamicGridSizing: boolean;
+  onToggleDynamicGridSizing: () => void;
   snapToGrid: boolean;
   onToggleSnap: () => void;
 }
@@ -27,6 +47,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   onToggleGrid,
   gridStyle,
   onToggleGridStyle,
+  gridSize,
+  onGridSizeChange,
+  dynamicGridSizing,
+  onToggleDynamicGridSizing,
   snapToGrid,
   onToggleSnap,
 }) => {
@@ -67,14 +91,14 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             size="sm"
             title={
               gridStyle === "line"
-                ? "Switch to Dotted Grid"
-                : "Switch to Line Grid"
+                ? "Current: Line Grid - Click for Dotted Grid"
+                : "Current: Dotted Grid - Click for Line Grid"
             }
           >
             {gridStyle === "line" ? (
-              <MoreHorizontal className="w-4 h-4" />
-            ) : (
               <Grid3x3 className="w-4 h-4" />
+            ) : (
+              <Circle className="w-4 h-4" />
             )}
           </Button>
         )}
@@ -87,8 +111,47 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           <Magnet className="w-4 h-4" />
         </Button>
       </div>
+
+      {/* Advanced Grid Controls */}
+      {showGrid && (
+        <div className="flex gap-2 items-center">
+          <Button
+            onClick={onToggleDynamicGridSizing}
+            variant={dynamicGridSizing ? "default" : "ghost"}
+            size="sm"
+            title={
+              dynamicGridSizing
+                ? "Disable Dynamic Grid Sizing"
+                : "Enable Dynamic Grid Sizing"
+            }
+          >
+            <Zap className="w-4 h-4" />
+          </Button>
+
+          <Select
+            value={gridSize.toString()}
+            onValueChange={(value) => onGridSizeChange(parseInt(value))}
+          >
+            <SelectTrigger className="w-16 h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {GRID_CONSTANTS.SIZES.map((size) => (
+                <SelectItem key={size} value={size.toString()}>
+                  {size}px
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
       <p className="text-sm mt-2">
         Mode: Selection{snapToGrid && " (Snap)"}
+        {showGrid && (
+          <span className="text-gray-600 ml-2">
+            | Grid: {gridSize}px {gridStyle} {dynamicGridSizing && "(Dynamic)"}
+          </span>
+        )}
         {selectedComponents.length > 0 && (
           <span className="text-blue-600 ml-2">
             ({selectedComponents.length} selected)

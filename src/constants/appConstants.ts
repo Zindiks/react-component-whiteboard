@@ -10,7 +10,7 @@ export const ZOOM_CONSTANTS = {
   MIN_ZOOM: 0.1, // Minimum zoom level (10%)
   MAX_ZOOM: 7, // Maximum zoom level (700%)
   ZOOM_INTENSITY: 0.015, // Zoom sensitivity for wheel events
-  PAN_SENSITIVITY: 2.0, // Pan sensitivity for two-finger trackpad scrolling
+  PAN_SENSITIVITY: 2.0, // Pan sensitivity for two-finger trackpad scrolling. Value chosen based on initial testing; review and validation.
   ZOOM_INDICATOR_TIMEOUT_MS: 200, // Duration to show zoom indicator
   RESET_ZOOM: 1, // Default zoom level (100%)
   FIT_TO_CONTENT_PADDING: 50, // Padding around content when fitting to view
@@ -178,8 +178,11 @@ export const GRID_CONSTANTS = {
   STROKE_WIDTH: 0.5, // Base stroke width
   OPACITY: 0.6, // Base opacity
   ENABLED: true as boolean, // Grid enabled by default
-  DOT_SIZE: 1.5, // Dot radius for dotted grid style
+  DOT_SIZE: 1.5, // Dot size on screen in pixels (stays constant while spacing changes)
+  DOT_SIZES: [1, 1.5, 2, 2.5] as const, // Available dot sizes for fine-tuning
   STYLE: "line" as "line" | "dotted", // Default grid style
+  DYNAMIC_SIZING: true, // Enable dynamic grid sizing based on zoom
+  SIZES: [10, 20, 40, 80] as const, // Available grid sizes
 } as const;
 
 // Grid style options
