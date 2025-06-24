@@ -1,140 +1,142 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import * as d3 from "d3";
 import { GRID_CONSTANTS } from "../constants/appConstants";
+import { usePerformance } from "../hooks/usePerformance";
 
 interface GridBackgroundProps {
   transform: d3.ZoomTransform;
-  width: number;
-  height: number;
   enabled?: boolean;
+  size?: number;
+  color?: string;
+  opacity?: number;
+  dynamicSizing?: boolean;
 }
 
 export const GridBackground: React.FC<GridBackgroundProps> = ({
   transform,
-  width,
-  height,
   enabled = GRID_CONSTANTS.ENABLED,
+  size = GRID_CONSTANTS.SIZE,
+  color = GRID_CONSTANTS.COLOR,
+  opacity = GRID_CONSTANTS.OPACITY,
+  dynamicSizing = true,
 }) => {
-  const gridRef = useRef<SVGGElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const { throttleRAF } = usePerformance({ targetFPS: 120 });
 
-  useEffect(() => {
-    if (!gridRef.current) {
-      return;
-    }
+  // Throttled grid update function using SVG patterns
+  const updateGrid = useCallback(() => {
+    if (!svgRef.current) return;
 
-    const gridGroup = d3.select(gridRef.current);
+    const svg = d3.select(svgRef.current);
 
-    // Always clear all existing content first
-    gridGroup.selectAll("*").remove();
+    // Clear existing content
+    svg.selectAll("*").remove();
 
-    if (!enabled) {
-      return;
-    }
+    if (!enabled) return;
 
-    // Dynamic grid parameters based on zoom level
-    const baseGridSize = GRID_CONSTANTS.SIZE;
-
-    // Calculate dynamic grid size - use multiple levels
+    // Calculate dynamic grid size based on zoom level
+    const baseGridSize = size;
     let gridSize = baseGridSize;
-    let gridLevel = 1;
 
-    // Determine which grid level to show based on zoom
-    if (transform.k < 0.25) {
-      // Very zoomed out - use large grid (4x base size)
-      gridSize = baseGridSize * 4;
-      gridLevel = 4;
-    } else if (transform.k < 0.5) {
-      // Zoomed out - use medium-large grid (2x base size)
-      gridSize = baseGridSize * 2;
-      gridLevel = 2;
+    if (dynamicSizing) {
+      // Adjust grid size based on zoom level for better visibility
+      if (transform.k < 0.25) {
+        gridSize = baseGridSize * 4; // Larger grid when zoomed out
+      } else if (transform.k < 0.5) {
+        gridSize = baseGridSize * 2; // Medium grid
+      } else if (transform.k > 3) {
+        gridSize = baseGridSize / 2; // Smaller grid when zoomed in
+      }
+    }
+
+    // Calculate dynamic opacity with smooth transitions
+    let dynamicOpacity = opacity;
+    if (transform.k < 0.2) {
+      dynamicOpacity = opacity * 0.2;
+    } else if (transform.k < 0.4) {
+      dynamicOpacity = opacity * 0.4;
+    } else if (transform.k < 0.7) {
+      dynamicOpacity = opacity * 0.7;
     } else if (transform.k > 2) {
-      // Zoomed in - use smaller grid (half base size)
-      gridSize = baseGridSize * 0.5;
-      gridLevel = 0.5;
-    } else if (transform.k > 4) {
-      // Very zoomed in - use very small grid (quarter base size)
-      gridSize = baseGridSize * 0.25;
-      gridLevel = 0.25;
+      dynamicOpacity = Math.min(opacity * 1.2, 1); // Slightly more visible when zoomed in
     }
 
-    // Dynamic stroke width - thinner at high zoom, thicker at low zoom
-    const strokeWidth = Math.max(
-      0.2,
-      Math.min(3, GRID_CONSTANTS.STROKE_WIDTH / transform.k)
-    );
+    // Create pattern definition
+    const defs = svg.append("defs");
+    const pattern = defs
+      .append("pattern")
+      .attr("id", "grid-pattern")
+      .attr("width", gridSize)
+      .attr("height", gridSize)
+      .attr("patternUnits", "userSpaceOnUse")
+      .attr(
+        "patternTransform",
+        `translate(${transform.x},${transform.y}) scale(${transform.k})`
+      );
 
-    // Dynamic opacity - more visible when grid is larger, less when smaller
-    let opacity: number = GRID_CONSTANTS.OPACITY;
-    if (gridLevel >= 2) {
-      opacity = Math.min(1, GRID_CONSTANTS.OPACITY * 1.5); // More visible for large grids
-    } else if (gridLevel <= 0.5) {
-      opacity = Math.max(0.2, GRID_CONSTANTS.OPACITY * 0.7); // Less visible for small grids
-    }
+    // Create line pattern (L-shaped lines at grid intersections)
+    const dynamicStrokeWidth =
+      (GRID_CONSTANTS.STROKE_WIDTH / transform.k) * (gridSize / baseGridSize);
 
-    // Calculate visible bounds in world coordinates
-    const bounds = {
-      left: (-transform.x - width) / transform.k,
-      top: (-transform.y - height) / transform.k,
-      right: (-transform.x + width * 2) / transform.k,
-      bottom: (-transform.y + height * 2) / transform.k,
-    };
+    pattern
+      .append("path")
+      .attr("d", `M ${gridSize} 0 L 0 0 0 ${gridSize}`)
+      .attr("fill", "none")
+      .attr("stroke", color)
+      .attr("stroke-width", dynamicStrokeWidth)
+      .attr("opacity", dynamicOpacity);
 
-    // Snap to grid
-    const startX = Math.floor(bounds.left / gridSize) * gridSize;
-    const startY = Math.floor(bounds.top / gridSize) * gridSize;
-    const endX = Math.ceil(bounds.right / gridSize) * gridSize;
-    const endY = Math.ceil(bounds.bottom / gridSize) * gridSize;
+    // Apply pattern to cover entire viewport
+    svg
+      .append("rect")
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .attr("fill", "url(#grid-pattern)")
+      .attr("pointer-events", "none");
+  }, [transform, enabled, size, color, opacity, dynamicSizing]);
 
-    // Apply transform to the grid group
-    gridGroup.attr(
-      "transform",
-      `translate(${transform.x}, ${transform.y}) scale(${transform.k})`
-    );
+  // Create throttled version of updateGrid
+  const throttledUpdateGrid = useRef<(() => void) | null>(null);
 
-    // Generate and add vertical lines
-    for (let x = startX; x <= endX; x += gridSize) {
-      gridGroup
-        .append("line")
-        .attr("x1", x)
-        .attr("y1", startY)
-        .attr("x2", x)
-        .attr("y2", endY)
-        .attr("stroke", GRID_CONSTANTS.COLOR)
-        .attr("stroke-width", strokeWidth)
-        .attr("opacity", opacity)
-        .attr("pointer-events", "none");
-    }
-
-    // Generate and add horizontal lines
-    for (let y = startY; y <= endY; y += gridSize) {
-      gridGroup
-        .append("line")
-        .attr("x1", startX)
-        .attr("y1", y)
-        .attr("x2", endX)
-        .attr("y2", y)
-        .attr("stroke", GRID_CONSTANTS.COLOR)
-        .attr("stroke-width", strokeWidth)
-        .attr("opacity", opacity)
-        .attr("pointer-events", "none");
-    }
-  }, [transform, width, height, enabled]);
-
-  // Cleanup function to avoid React/D3 conflicts
   useEffect(() => {
-    const currentRef = gridRef.current;
+    throttledUpdateGrid.current = throttleRAF(updateGrid);
+  }, [updateGrid, throttleRAF]);
+
+  useEffect(() => {
+    if (throttledUpdateGrid.current) {
+      throttledUpdateGrid.current();
+    }
+  }, [transform, enabled]);
+
+  // Cleanup function
+  useEffect(() => {
+    const currentRef = svgRef.current;
     return () => {
       if (currentRef) {
         try {
           d3.select(currentRef).selectAll("*").remove();
         } catch (error) {
-          // Silently handle cleanup errors
           console.warn("Grid cleanup warning:", error);
         }
       }
     };
   }, []);
 
-  // Return empty group - D3 will manage all content
-  return <g ref={gridRef} className="grid-background" />;
+  return (
+    <svg
+      ref={svgRef}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        zIndex: -1,
+        // GPU acceleration
+        willChange: "transform",
+        transform: "translateZ(0)",
+      }}
+    />
+  );
 };

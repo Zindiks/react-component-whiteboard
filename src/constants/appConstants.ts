@@ -10,7 +10,7 @@ export const ZOOM_CONSTANTS = {
   MIN_ZOOM: 0.1, // Minimum zoom level (10%)
   MAX_ZOOM: 7, // Maximum zoom level (700%)
   ZOOM_INTENSITY: 0.015, // Zoom sensitivity for wheel events
-  PAN_SENSITIVITY: 1.0, // Pan sensitivity for two-finger trackpad scrolling
+  PAN_SENSITIVITY: 2.0, // Pan sensitivity for two-finger trackpad scrolling. Value chosen based on initial testing; review and validation.
   ZOOM_INDICATOR_TIMEOUT_MS: 200, // Duration to show zoom indicator
   RESET_ZOOM: 1, // Default zoom level (100%)
   FIT_TO_CONTENT_PADDING: 50, // Padding around content when fitting to view
@@ -174,8 +174,10 @@ export const INITIAL_POSITIONS = {
 // Grid Background Constants
 export const GRID_CONSTANTS = {
   SIZE: 20, // Base grid cell size in pixels
-  COLOR: "#e0e0e0", // Light gray grid lines
+  COLOR: "#b0b0b0", // Light gray grid lines
   STROKE_WIDTH: 0.5, // Base stroke width
   OPACITY: 0.6, // Base opacity
   ENABLED: true as boolean, // Grid enabled by default
+  DYNAMIC_SIZING: true, // Enable dynamic grid sizing based on zoom
+  SIZES: [10, 20, 40, 80] as const, // Available grid sizes
 } as const;
