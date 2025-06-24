@@ -36,6 +36,8 @@ export interface UseEventHandlersProps {
   setShowOverview: (show: boolean) => void;
   showGrid: boolean;
   setShowGrid: (show: boolean) => void;
+  snapToGrid: boolean;
+  setSnapToGrid: (snap: boolean) => void;
   resetZoom: () => void;
   zoomToFit: () => void;
   zoomToSelection: () => void;
@@ -67,6 +69,8 @@ export const useEventHandlers = ({
   setShowOverview,
   showGrid,
   setShowGrid,
+  snapToGrid,
+  setSnapToGrid,
   resetZoom,
   zoomToFit,
   zoomToSelection,
@@ -370,6 +374,9 @@ export const useEventHandlers = ({
       } else if (event.key === "4" || event.key === "g" || event.key === "G") {
         event.preventDefault();
         setShowGrid(!showGrid);
+      } else if (event.key === "5" || event.key === "s" || event.key === "S") {
+        event.preventDefault();
+        setSnapToGrid(!snapToGrid);
       } else if (event.key === "Escape") {
         // Close overview if open, otherwise deselect all components
         if (showOverview) {
@@ -440,6 +447,8 @@ export const useEventHandlers = ({
     setShowOverview,
     showGrid,
     setShowGrid,
+    snapToGrid,
+    setSnapToGrid,
     handleCopyComponents,
     handlePasteComponents,
     handlePasteImageFromClipboard,

@@ -6,7 +6,7 @@
  */
 
 import React from "react";
-import { Plus, Minus, Grid3x3 } from "lucide-react";
+import { Plus, Minus, Grid3x3, Magnet } from "lucide-react";
 import { Button } from "./ui/button";
 
 export interface ControlPanelProps {
@@ -14,6 +14,8 @@ export interface ControlPanelProps {
   selectedComponents: number[];
   showGrid: boolean;
   onToggleGrid: () => void;
+  snapToGrid: boolean;
+  onToggleSnap: () => void;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -21,6 +23,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   selectedComponents,
   showGrid,
   onToggleGrid,
+  snapToGrid,
+  onToggleSnap,
 }) => {
   return (
     <div
@@ -52,9 +56,17 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         >
           <Grid3x3 className="w-4 h-4" />
         </Button>
+        <Button
+          onClick={onToggleSnap}
+          variant={snapToGrid ? "default" : "ghost"}
+          size="sm"
+          title={snapToGrid ? "Disable Snap to Grid" : "Enable Snap to Grid"}
+        >
+          <Magnet className="w-4 h-4" />
+        </Button>
       </div>
       <p className="text-sm mt-2">
-        Mode: Selection
+        Mode: Selection{snapToGrid && " (Snap)"}
         {selectedComponents.length > 0 && (
           <span className="text-blue-600 ml-2">
             ({selectedComponents.length} selected)

@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { Component, InitialPosition } from "../types/whiteboard";
 import { INITIAL_POSITIONS } from "../constants/appConstants";
 import { stateLogger } from "../utils/componentLoggers";
+import { getDynamicGridSize, snapPointToGrid } from "../utils/gridUtils";
 
 const DEFAULT_COMPONENTS: Component[] = [
   {
@@ -217,7 +218,15 @@ export const useWhiteboardState = () => {
   }, []);
 
   const handleDrag = useCallback(
-    (id: number, deltaX: number, deltaY: number) => {
+    (
+      id: number,
+      deltaX: number,
+      deltaY: number,
+      zoomLevel: number = 1,
+      enableSnap: boolean = true
+    ) => {
+      const gridSize = getDynamicGridSize(zoomLevel);
+
       if (selectedComponents.length > 1 && selectedComponents.includes(id)) {
         // Moving multiple selected components
         setComponents((prevComponents) =>
@@ -226,11 +235,23 @@ export const useWhiteboardState = () => {
               (pos) => pos.id === component.id
             );
             if (initialPos && selectedComponents.includes(component.id)) {
-              return {
-                ...component,
-                x: initialPos.x + deltaX,
-                y: initialPos.y + deltaY,
-              };
+              const newX = initialPos.x + deltaX;
+              const newY = initialPos.y + deltaY;
+
+              if (enableSnap) {
+                const snapped = snapPointToGrid(newX, newY, gridSize);
+                return {
+                  ...component,
+                  x: snapped.x,
+                  y: snapped.y,
+                };
+              } else {
+                return {
+                  ...component,
+                  x: newX,
+                  y: newY,
+                };
+              }
             }
             return component;
           })
@@ -240,15 +261,28 @@ export const useWhiteboardState = () => {
         const initialPos = initialPositions.find((pos) => pos.id === id);
         if (initialPos) {
           setComponents((prevComponents) =>
-            prevComponents.map((component) =>
-              component.id === id
-                ? {
+            prevComponents.map((component) => {
+              if (component.id === id) {
+                const newX = initialPos.x + deltaX;
+                const newY = initialPos.y + deltaY;
+
+                if (enableSnap) {
+                  const snapped = snapPointToGrid(newX, newY, gridSize);
+                  return {
                     ...component,
-                    x: initialPos.x + deltaX,
-                    y: initialPos.y + deltaY,
-                  }
-                : component
-            )
+                    x: snapped.x,
+                    y: snapped.y,
+                  };
+                } else {
+                  return {
+                    ...component,
+                    x: newX,
+                    y: newY,
+                  };
+                }
+              }
+              return component;
+            })
           );
         }
       }

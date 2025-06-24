@@ -82,6 +82,9 @@ const CustomGrid = () => {
   // Grid toggle state
   const [showGrid, setShowGrid] = useState(GRID_CONSTANTS.ENABLED);
 
+  // Snap to grid toggle state
+  const [snapToGrid, setSnapToGrid] = useState(true);
+
   // Overview/Minimap state
   const [showOverview, setShowOverview] = useState(false);
   const overviewRef = useRef<HTMLDivElement>(null);
@@ -195,6 +198,14 @@ const CustomGrid = () => {
     await handleImagePasteFromClipboard(createImageComponentAtMouse);
   }, [createImageComponentAtMouse]);
 
+  // Wrapper for handleDrag that includes current zoom level for dynamic snap-to-grid
+  const handleDragWithSnap = useCallback(
+    (id: number, deltaX: number, deltaY: number) => {
+      handleDrag(id, deltaX, deltaY, transform.k, snapToGrid); // Pass current zoom level and snap state
+    },
+    [handleDrag, transform.k, snapToGrid]
+  );
+
   // Use event handlers hook
   useEventHandlers({
     svgRef,
@@ -208,6 +219,8 @@ const CustomGrid = () => {
     setShowOverview,
     showGrid,
     setShowGrid,
+    snapToGrid,
+    setSnapToGrid,
     resetZoom,
     zoomToFit,
     zoomToSelection,
@@ -401,7 +414,7 @@ const CustomGrid = () => {
               y={component.y}
               id={component.id}
               type={component.type}
-              onDrag={handleDrag}
+              onDrag={handleDragWithSnap}
               onDragStart={handleDragStart}
               onSelect={handleSelect}
               onDelete={handleDeleteComponent}
@@ -427,6 +440,8 @@ const CustomGrid = () => {
         selectedComponents={selectedComponents}
         showGrid={showGrid}
         onToggleGrid={() => setShowGrid(!showGrid)}
+        snapToGrid={snapToGrid}
+        onToggleSnap={() => setSnapToGrid(!snapToGrid)}
       />
 
       {/* Component Footer and Sidebar */}
