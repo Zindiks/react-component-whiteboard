@@ -200,8 +200,28 @@ const CustomGrid = () => {
 
   // Wrapper for handleDrag that includes current zoom level for dynamic snap-to-grid
   const handleDragWithSnap = useCallback(
-    (id: number, deltaX: number, deltaY: number) => {
-      handleDrag(id, deltaX, deltaY, transform.k, snapToGrid); // Pass current zoom level and snap state
+    (
+      id: number,
+      deltaX: number,
+      deltaY: number,
+      isShiftPressed: boolean = false
+    ) => {
+      let finalDeltaX = deltaX;
+      let finalDeltaY = deltaY;
+
+      // Apply axis lock if Shift is pressed
+      if (isShiftPressed) {
+        // Determine which axis has more movement to lock to that axis
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          // Lock to horizontal axis
+          finalDeltaY = 0;
+        } else {
+          // Lock to vertical axis
+          finalDeltaX = 0;
+        }
+      }
+
+      handleDrag(id, finalDeltaX, finalDeltaY, transform.k, snapToGrid); // Pass current zoom level and snap state
     },
     [handleDrag, transform.k, snapToGrid]
   );

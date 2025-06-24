@@ -43,7 +43,12 @@ interface DraggableComponentProps {
   y: number;
   id: number;
   type: string;
-  onDrag: (id: number, deltaX: number, deltaY: number) => void;
+  onDrag: (
+    id: number,
+    deltaX: number,
+    deltaY: number,
+    isShiftPressed?: boolean
+  ) => void;
   onDragStart: (id: number) => void;
   onSelect: (id: number) => void;
   onDelete: (id: number) => void;
@@ -89,6 +94,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+  const [isAxisLocked, setIsAxisLocked] = useState(false);
 
   // Utility function to check if the clicked element is interactive
   const isInteractiveElement = (element: HTMLElement): boolean => {
@@ -167,13 +173,20 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       const deltaX = (currentMousePos.x - dragStartPos.x) / transform.k;
       const deltaY = (currentMousePos.y - dragStartPos.y) / transform.k;
 
-      onDrag(id, deltaX, deltaY);
+      // Detect if Shift key is pressed for axis lock
+      const isShiftPressed = event.shiftKey;
+
+      // Update axis lock state for visual feedback
+      setIsAxisLocked(isShiftPressed);
+
+      onDrag(id, deltaX, deltaY, isShiftPressed);
     },
     [isDragging, dragStartPos, transform.k, onDrag, id]
   );
 
   const handleMouseUp = () => {
     setIsDragging(false);
+    setIsAxisLocked(false);
   };
 
   useEffect(() => {
@@ -393,11 +406,27 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         />
       )}
 
+      {/* Axis lock indicator */}
+      {isAxisLocked && isDragging && (
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            left: `${x - 20}px`,
+            top: `${y - 20}px`,
+            zIndex: (zIndex || 0) + 1000,
+          }}
+        >
+          <div className="bg-orange-500 text-white text-xs px-2 py-1 rounded shadow-lg flex items-center">
+            🔒 Axis Lock
+          </div>
+        </div>
+      )}
+
       <div
         data-component="true"
         className={`absolute pointer-events-auto ${
           selected ? "ring-2 ring-blue-500" : ""
-        } group`}
+        } ${isAxisLocked && isDragging ? "ring-2 ring-orange-400" : ""} group`}
         style={{
           left: `${x}px`,
           top: `${y}px`,
