@@ -209,3 +209,10 @@ export const GRID_CONSTANTS = {
   DYNAMIC_SIZING: true, // Enable dynamic grid sizing based on zoom
   SIZES: [10, 20, 40, 80] as const, // Available grid sizes
 } as const;
+
+// Marquee Selection Constants
+export const MARQUEE_CONSTANTS = {
+  /** Minimum width/height in pixels for meaningful marquee selection.
+   * Prevents accidental component selection from tiny mouse movements. */
+  MIN_SELECTION_SIZE: 5,
+} as const;
