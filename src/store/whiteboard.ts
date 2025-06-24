@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
+import { GRID_CONSTANTS } from "../constants/appConstants";
 
 // Connection type definition
 export interface Connection {
@@ -106,7 +107,7 @@ export const useWhiteboardStore = create<WhiteboardState>()(
   subscribeWithSelector((set, get) => ({
     // Initial state
     transform: { x: 0, y: 0, k: 1 },
-    gridSize: 20,
+    gridSize: GRID_CONSTANTS.SIZE,
     gridVisible: true,
     components: [],
     selectedComponents: [],

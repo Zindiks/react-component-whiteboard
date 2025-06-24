@@ -10,7 +10,7 @@ export const ZOOM_CONSTANTS = {
   MIN_ZOOM: 0.1, // Minimum zoom level (10%)
   MAX_ZOOM: 7, // Maximum zoom level (700%)
   ZOOM_INTENSITY: 0.015, // Zoom sensitivity for wheel events
-  PAN_SENSITIVITY: 1.0, // Pan sensitivity for two-finger trackpad scrolling
+  PAN_SENSITIVITY: 2.0, // Pan sensitivity for two-finger trackpad scrolling
   ZOOM_INDICATOR_TIMEOUT_MS: 200, // Duration to show zoom indicator
   RESET_ZOOM: 1, // Default zoom level (100%)
   FIT_TO_CONTENT_PADDING: 50, // Padding around content when fitting to view

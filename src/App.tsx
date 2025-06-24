@@ -1,9 +1,11 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import * as d3 from "d3";
 import { ComponentFooter } from "./components/ComponentFooter";
 import { CategorySidebar } from "./components/CategorySidebar";
 import { DraggableComponent } from "./components/DraggableWhiteboardComponent";
 import { GridBackground } from "./components/GridBackground";
+import { FPSMonitor } from "./components/FPSMonitor";
+import { usePerformance } from "./hooks/usePerformance";
 import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
 import { Component } from "./types/whiteboard";
 import { useWhiteboardState } from "./hooks/useWhiteboardState";
@@ -35,6 +37,13 @@ import {
 } from "./utils/clipboardOperations";
 
 const CustomGrid = () => {
+  // Performance optimizations
+  const { getGPUStyle } = usePerformance({
+    targetFPS: 120,
+    enableGPUAcceleration: true,
+    batchUpdates: true,
+  });
+
   // Use whiteboard state hook
   const {
     components,
@@ -330,6 +339,25 @@ const CustomGrid = () => {
     [zoomBehavior]
   );
 
+  // Memoize the GPU-optimized transform container style
+  const transformContainerStyle = useMemo(
+    () =>
+      getGPUStyle({
+        position: "absolute",
+        top: 0,
+        left: 0,
+        transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.k})`,
+        pointerEvents: "none",
+      }),
+    [transform.x, transform.y, transform.k, getGPUStyle]
+  );
+
+  // Memoize sorted components for performance
+  const sortedComponents = useMemo(
+    () => [...components].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0)),
+    [components]
+  );
+
   return (
     <div
       ref={containerRef}
@@ -347,12 +375,7 @@ const CustomGrid = () => {
         height="100%"
         style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}
       >
-        <GridBackground
-          transform={transform}
-          width={window.innerWidth}
-          height={window.innerHeight}
-          enabled={showGrid}
-        />
+        <GridBackground transform={transform} enabled={showGrid} />
       </svg>
 
       {/* Main SVG for zoom/pan behavior */}
@@ -415,45 +438,35 @@ const CustomGrid = () => {
         </div>
       )}
 
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.k})`,
-          pointerEvents: "none",
-        }}
-      >
-        {/* Sort components by z-index before rendering */}
-        {[...components]
-          .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
-          .map((component) => (
-            <DraggableComponent
-              key={component.id}
-              x={component.x}
-              y={component.y}
-              id={component.id}
-              type={component.type}
-              onDrag={handleDragWithSnap}
-              onDragStart={handleDragStart}
-              onSelect={handleSelect}
-              onDelete={handleDeleteComponent}
-              onResize={handleResizeComponent}
-              onTextChange={handleTextChange}
-              onImageChange={handleImageChange}
-              selected={selectedComponents.includes(component.id)}
-              selectedCount={selectedComponents.length}
-              transform={transform}
-              zIndex={component.zIndex || 0}
-              imageSrc={component.imageSrc}
-              width={component.width}
-              height={component.height}
-              text={component.text}
-              youtubeUrl={component.youtubeUrl}
-              soundcloudUrl={component.soundcloudUrl}
-              spotifyUrl={component.spotifyUrl}
-            />
-          ))}
+      <div style={transformContainerStyle}>
+        {/* Render sorted components with GPU acceleration */}
+        {sortedComponents.map((component) => (
+          <DraggableComponent
+            key={component.id}
+            x={component.x}
+            y={component.y}
+            id={component.id}
+            type={component.type}
+            onDrag={handleDragWithSnap}
+            onDragStart={handleDragStart}
+            onSelect={handleSelect}
+            onDelete={handleDeleteComponent}
+            onResize={handleResizeComponent}
+            onTextChange={handleTextChange}
+            onImageChange={handleImageChange}
+            selected={selectedComponents.includes(component.id)}
+            selectedCount={selectedComponents.length}
+            transform={transform}
+            zIndex={component.zIndex || 0}
+            imageSrc={component.imageSrc}
+            width={component.width}
+            height={component.height}
+            text={component.text}
+            youtubeUrl={component.youtubeUrl}
+            soundcloudUrl={component.soundcloudUrl}
+            spotifyUrl={component.spotifyUrl}
+          />
+        ))}
       </div>
       <ControlPanel
         onZoom={handleZoom}
@@ -543,6 +556,9 @@ const CustomGrid = () => {
           />
         </div>
       )}
+
+      {/* FPS Monitor for performance tracking */}
+      <FPSMonitor enabled={true} position="top-right" />
     </div>
   );
 };

@@ -1,6 +1,13 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
 import * as d3 from "d3";
 import { widgetLogger } from "../utils/componentLoggers";
+import { usePerformance } from "../hooks/usePerformance";
 import { Timer } from "./widgets/Timer";
 import { Weather } from "./widgets/Weather";
 import { BitcoinChart } from "./widgets/BitcoinChart";
@@ -96,6 +103,26 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const [isAxisLocked, setIsAxisLocked] = useState(false);
 
+  // Performance optimizations
+  const { throttleRAF, getGPUStyle, batchUpdate } = usePerformance({
+    targetFPS: 120,
+    enableGPUAcceleration: true,
+    batchUpdates: true,
+  });
+
+  const componentRef = useRef<HTMLDivElement>(null);
+
+  // Memoize GPU-optimized styles
+  const optimizedStyles = useMemo(
+    () =>
+      getGPUStyle({
+        left: `${x}px`,
+        top: `${y}px`,
+        zIndex: zIndex,
+      }),
+    [x, y, zIndex, getGPUStyle]
+  );
+
   // Utility function to check if the clicked element is interactive
   const isInteractiveElement = (element: HTMLElement): boolean => {
     return !!(
@@ -165,8 +192,13 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     onDelete(id);
   };
 
-  const handleMouseMove = useCallback(
-    (event: MouseEvent) => {
+  // Create throttled mouse move handler
+  const throttledMouseMoveRef = useRef<((event: MouseEvent) => void) | null>(
+    null
+  );
+
+  useEffect(() => {
+    throttledMouseMoveRef.current = throttleRAF((event: MouseEvent) => {
       if (!isDragging) return;
 
       const currentMousePos = { x: event.clientX, y: event.clientY };
@@ -176,13 +208,28 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       // Detect if Shift key is pressed for axis lock
       const isShiftPressed = event.shiftKey;
 
-      // Update axis lock state for visual feedback
-      setIsAxisLocked(isShiftPressed);
+      // Batch state updates for performance
+      batchUpdate(() => {
+        setIsAxisLocked(isShiftPressed);
+      });
 
       onDrag(id, deltaX, deltaY, isShiftPressed);
-    },
-    [isDragging, dragStartPos, transform.k, onDrag, id]
-  );
+    });
+  }, [
+    isDragging,
+    dragStartPos,
+    transform.k,
+    onDrag,
+    id,
+    throttleRAF,
+    batchUpdate,
+  ]);
+
+  const handleMouseMove = useCallback((event: MouseEvent) => {
+    if (throttledMouseMoveRef.current) {
+      throttledMouseMoveRef.current(event);
+    }
+  }, []);
 
   const handleMouseUp = () => {
     setIsDragging(false);
@@ -410,11 +457,11 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       {isAxisLocked && isDragging && (
         <div
           className="absolute pointer-events-none"
-          style={{
+          style={getGPUStyle({
             left: `${x - 20}px`,
             top: `${y - 20}px`,
             zIndex: (zIndex || 0) + 1000,
-          }}
+          })}
         >
           <div className="bg-orange-500 text-white text-xs px-2 py-1 rounded shadow-lg flex items-center">
             🔒 Axis Lock
@@ -423,15 +470,12 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       )}
 
       <div
+        ref={componentRef}
         data-component="true"
         className={`absolute pointer-events-auto ${
           selected ? "ring-2 ring-blue-500" : ""
         } ${isAxisLocked && isDragging ? "ring-2 ring-orange-400" : ""} group`}
-        style={{
-          left: `${x}px`,
-          top: `${y}px`,
-          zIndex: zIndex,
-        }}
+        style={optimizedStyles}
         onMouseDown={
           isShapeComponent ? handleShapeMouseDown : handleComponentMouseDown
         }
