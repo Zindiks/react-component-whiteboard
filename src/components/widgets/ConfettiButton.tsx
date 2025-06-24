@@ -151,18 +151,20 @@ export const ConfettiButton: React.FC<ConfettiButtonProps> = ({
   };
 
   return (
-    <Card
-      className="overflow-hidden bg-white shadow-sm"
-      style={{ width, height }}
-    >
+    <Card className="overflow-hidden" style={{ width, height }}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <Sparkles size={20} className="text-purple-600" />
+            <Sparkles
+              size={20}
+              className="text-purple-600 dark:text-purple-400"
+            />
             <h3 className="font-semibold text-sm">Confetti Button</h3>
           </div>
           <div className="text-right">
-            <p className="text-lg font-bold text-purple-600">{clickCount}</p>
+            <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
+              {clickCount}
+            </p>
             <p className="text-xs text-muted-foreground">clicks</p>
           </div>
         </div>
@@ -192,7 +194,9 @@ export const ConfettiButton: React.FC<ConfettiButtonProps> = ({
               className="flex flex-col items-center justify-center h-auto p-2 text-xs"
               title={effect.name}
             >
-              <div className="text-purple-500 mb-1">{effect.icon}</div>
+              <div className="text-purple-500 dark:text-purple-400 mb-1">
+                {effect.icon}
+              </div>
               <span className="text-muted-foreground">{effect.name}</span>
             </Button>
           ))}

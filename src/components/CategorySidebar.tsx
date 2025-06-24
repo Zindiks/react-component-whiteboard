@@ -34,22 +34,22 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
 
   return (
     <div
-      className="fixed left-4 top-1/2 transform -translate-y-1/2 w-80 bg-white shadow-2xl rounded-2xl z-50 transition-all duration-300 border border-gray-200"
+      className="fixed left-4 top-1/2 transform -translate-y-1/2 w-80 bg-background shadow-2xl rounded-2xl z-50 transition-all duration-300 border"
       style={{ maxHeight: "calc(100vh - 120px)" }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 rounded-t-2xl">
+      <div className="flex items-center justify-between p-4 border-b rounded-t-2xl">
         <div className="flex items-center gap-3">
           <span className="text-2xl">{category.icon}</span>
-          <h2 className="text-lg font-semibold text-gray-800">
+          <h2 className="text-lg font-semibold text-foreground">
             {category.name}
           </h2>
         </div>
         <button
           onClick={onClose}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          className="p-2 hover:bg-muted rounded-full transition-colors"
         >
-          <X className="w-5 h-5 text-gray-500" />
+          <X className="w-5 h-5 text-muted-foreground" />
         </button>
       </div>
 
@@ -66,26 +66,26 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
               onDragStart={(e) => handleDragStart(e, component.type)}
               onDragEnd={handleDragEnd}
               className={`
-                  p-4 border border-gray-200 rounded-xl bg-white
+                  p-4 border rounded-xl bg-card
                   cursor-grab active:cursor-grabbing
-                  hover:border-blue-400 hover:bg-blue-50 hover:shadow-md
+                  hover:border-primary hover:bg-muted hover:shadow-md
                   transition-all duration-200 shadow-sm
                   ${
                     draggedComponent === component.type
-                      ? "opacity-50 border-blue-500 bg-blue-100 shadow-lg"
+                      ? "opacity-50 border-primary bg-muted shadow-lg"
                       : ""
                   }
                 `}
             >
               <div className="flex items-center gap-3">
-                <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                <div className="flex-shrink-0 w-10 h-10 bg-muted rounded-full flex items-center justify-center">
                   <span className="text-xl">{component.icon}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-800 truncate">
+                  <h3 className="font-semibold text-foreground truncate">
                     {component.label}
                   </h3>
-                  <p className="text-sm text-gray-600 truncate">
+                  <p className="text-sm text-muted-foreground truncate">
                     {component.description}
                   </p>
                 </div>

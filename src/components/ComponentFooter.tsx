@@ -14,7 +14,7 @@ export const ComponentFooter: React.FC<FooterProps> = ({
 }) => {
   return (
     <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
-      <div className="bg-white border border-gray-200 shadow-xl rounded-full px-4 py-3">
+      <div className="bg-background border shadow-xl rounded-full px-4 py-3">
         <div className="flex gap-2">
           {categories.map((category) => (
             <button
@@ -25,8 +25,8 @@ export const ComponentFooter: React.FC<FooterProps> = ({
                 transition-all duration-200 min-w-[60px] h-[50px]
                 ${
                   activeCategory === category.name
-                    ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
-                    : "bg-gray-50 text-gray-700 hover:bg-gray-100 border-2 border-transparent hover:shadow-md"
+                    ? "bg-primary/10 text-primary border-2 border-primary/30"
+                    : "bg-muted text-foreground hover:bg-muted/80 border-2 border-transparent hover:shadow-md"
                 }
               `}
             >

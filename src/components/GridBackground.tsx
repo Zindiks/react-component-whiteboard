@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useCallback } from "react";
 import * as d3 from "d3";
-import { GRID_CONSTANTS } from "../constants/appConstants";
+import { useTheme } from "next-themes";
+import { GRID_CONSTANTS, THEME_COLORS } from "../constants/appConstants";
 import { usePerformance } from "../hooks/usePerformance";
 
 interface GridBackgroundProps {
@@ -16,12 +17,28 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
   transform,
   enabled = GRID_CONSTANTS.ENABLED,
   size = GRID_CONSTANTS.SIZE,
-  color = GRID_CONSTANTS.COLOR,
+  color,
   opacity = GRID_CONSTANTS.OPACITY,
   dynamicSizing = true,
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const { throttleRAF } = usePerformance({ targetFPS: 120 });
+  const { theme } = useTheme();
+
+  // Get theme-aware grid color
+  const getGridColor = useCallback(() => {
+    if (color) return color; // Use provided color if available
+
+    // Fallback to theme-aware color or default
+    if (theme === "dark") {
+      return THEME_COLORS.dark.GRID_COLOR;
+    } else if (theme === "light") {
+      return THEME_COLORS.light.GRID_COLOR;
+    }
+
+    // System theme or fallback
+    return GRID_CONSTANTS.COLOR;
+  }, [color, theme]);
 
   // Throttled grid update function using SVG patterns
   const updateGrid = useCallback(() => {
@@ -52,13 +69,13 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
     // Calculate dynamic opacity with smooth transitions
     let dynamicOpacity = opacity;
     if (transform.k < 0.2) {
-      dynamicOpacity = opacity * 0.2;
+      dynamicOpacity = Math.max(opacity * 0.3, 0.2); // Reduced minimum visibility
     } else if (transform.k < 0.4) {
-      dynamicOpacity = opacity * 0.4;
+      dynamicOpacity = Math.max(opacity * 0.5, 0.3); // Reduced minimum visibility
     } else if (transform.k < 0.7) {
-      dynamicOpacity = opacity * 0.7;
+      dynamicOpacity = Math.max(opacity * 0.7, 0.45); // Reduced minimum visibility
     } else if (transform.k > 2) {
-      dynamicOpacity = Math.min(opacity * 1.2, 1); // Slightly more visible when zoomed in
+      dynamicOpacity = Math.min(opacity * 1.1, 0.85); // Slightly less visible when zoomed in
     }
 
     // Create pattern definition
@@ -82,7 +99,7 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
       .append("path")
       .attr("d", `M ${gridSize} 0 L 0 0 0 ${gridSize}`)
       .attr("fill", "none")
-      .attr("stroke", color)
+      .attr("stroke", getGridColor())
       .attr("stroke-width", dynamicStrokeWidth)
       .attr("opacity", dynamicOpacity);
 
@@ -93,7 +110,7 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
       .attr("height", "100%")
       .attr("fill", "url(#grid-pattern)")
       .attr("pointer-events", "none");
-  }, [transform, enabled, size, color, opacity, dynamicSizing]);
+  }, [transform, enabled, size, opacity, dynamicSizing, getGridColor]);
 
   // Create throttled version of updateGrid
   const throttledUpdateGrid = useRef<(() => void) | null>(null);

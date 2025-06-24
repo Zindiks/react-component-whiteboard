@@ -99,7 +99,7 @@ export const TextNote: React.FC<TextNoteProps> = ({
   return (
     <Card
       ref={noteRef}
-      className="resize overflow-auto min-w-[300px] min-h-[200px] max-w-[600px] max-h-[400px] bg-white shadow-sm"
+      className="resize overflow-auto min-w-[300px] min-h-[200px] max-w-[600px] max-h-[400px]"
       style={{ width: currentWidth, height: currentHeight }}
     >
       <CardContent className="p-4">
@@ -107,7 +107,7 @@ export const TextNote: React.FC<TextNoteProps> = ({
           <div className="flex items-center space-x-2">
             <FileText
               size={WIDGET_CONSTANTS.TEXT_NOTE_ICON_SIZE}
-              className="text-green-600"
+              className="text-green-600 dark:text-green-400"
             />
             <h3 className="font-semibold text-sm">Text Note</h3>
           </div>
@@ -152,22 +152,22 @@ export const TextNote: React.FC<TextNoteProps> = ({
                 components={{
                   // Custom styling for markdown elements
                   h1: ({ children }) => (
-                    <h1 className="text-lg font-bold mb-2 text-gray-900">
+                    <h1 className="text-lg font-bold mb-2 text-foreground">
                       {children}
                     </h1>
                   ),
                   h2: ({ children }) => (
-                    <h2 className="text-base font-bold mb-2 text-gray-800">
+                    <h2 className="text-base font-bold mb-2 text-foreground">
                       {children}
                     </h2>
                   ),
                   h3: ({ children }) => (
-                    <h3 className="text-sm font-bold mb-1 text-gray-800">
+                    <h3 className="text-sm font-bold mb-1 text-foreground">
                       {children}
                     </h3>
                   ),
                   p: ({ children }) => (
-                    <p className="mb-2 text-gray-700 leading-relaxed">
+                    <p className="mb-2 text-foreground leading-relaxed">
                       {children}
                     </p>
                   ),
@@ -178,42 +178,42 @@ export const TextNote: React.FC<TextNoteProps> = ({
                     <ol className="mb-2 ml-4 list-decimal">{children}</ol>
                   ),
                   li: ({ children }) => (
-                    <li className="mb-1 text-gray-700">{children}</li>
+                    <li className="mb-1 text-foreground">{children}</li>
                   ),
                   blockquote: ({ children }) => (
-                    <blockquote className="border-l-4 border-gray-300 pl-3 italic text-gray-600 my-2">
+                    <blockquote className="border-l-4 border-border pl-3 italic text-muted-foreground my-2">
                       {children}
                     </blockquote>
                   ),
                   code: ({ children, className }) => {
                     const isInline = !className;
                     return isInline ? (
-                      <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono text-gray-800">
+                      <code className="bg-muted px-1 py-0.5 rounded text-xs font-mono text-foreground">
                         {children}
                       </code>
                     ) : (
-                      <code className="block bg-gray-100 p-2 rounded text-xs font-mono text-gray-800 overflow-auto">
+                      <code className="block bg-muted p-2 rounded text-xs font-mono text-foreground overflow-auto">
                         {children}
                       </code>
                     );
                   },
                   pre: ({ children }) => (
-                    <pre className="bg-gray-100 p-2 rounded text-xs font-mono text-gray-800 overflow-auto mb-2">
+                    <pre className="bg-muted p-2 rounded text-xs font-mono text-foreground overflow-auto mb-2">
                       {children}
                     </pre>
                   ),
                   strong: ({ children }) => (
-                    <strong className="font-semibold text-gray-900">
+                    <strong className="font-semibold text-foreground">
                       {children}
                     </strong>
                   ),
                   em: ({ children }) => (
-                    <em className="italic text-gray-700">{children}</em>
+                    <em className="italic text-foreground">{children}</em>
                   ),
                   a: ({ children, href }) => (
                     <a
                       href={href}
-                      className="text-blue-600 hover:text-blue-800 underline"
+                      className="text-primary hover:text-primary/80 underline"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -230,8 +230,8 @@ export const TextNote: React.FC<TextNoteProps> = ({
 
         {/* Footer */}
         {isEditing && (
-          <div className="px-3 py-2 border-t border-gray-200 bg-gray-50">
-            <p className="text-xs text-gray-500">
+          <div className="px-3 py-2 border-t bg-muted">
+            <p className="text-xs text-muted-foreground">
               Ctrl+S to save • Esc to cancel • Supports GitHub Flavored Markdown
             </p>
           </div>
@@ -239,24 +239,24 @@ export const TextNote: React.FC<TextNoteProps> = ({
 
         {/* Resize Handles */}
         <div
-          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-gray-300 opacity-0 hover:opacity-100 transition-opacity"
+          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-muted-foreground/30 opacity-0 hover:opacity-100 transition-opacity"
           onMouseDown={(e) => handleResizeStart("se", e)}
           title="Resize"
         >
           <div className="absolute bottom-1 right-1 w-2 h-2">
-            <div className="w-full h-px bg-gray-600 mb-px"></div>
-            <div className="w-full h-px bg-gray-600"></div>
+            <div className="w-full h-px bg-foreground mb-px"></div>
+            <div className="w-full h-px bg-foreground"></div>
           </div>
         </div>
 
         <div
-          className="absolute bottom-0 right-2 left-2 h-2 cursor-s-resize opacity-0 hover:opacity-30 hover:bg-gray-400 transition-all"
+          className="absolute bottom-0 right-2 left-2 h-2 cursor-s-resize opacity-0 hover:opacity-30 hover:bg-muted-foreground transition-all"
           onMouseDown={(e) => handleResizeStart("s", e)}
           title="Resize height"
         ></div>
 
         <div
-          className="absolute top-2 bottom-2 right-0 w-2 cursor-e-resize opacity-0 hover:opacity-30 hover:bg-gray-400 transition-all"
+          className="absolute top-2 bottom-2 right-0 w-2 cursor-e-resize opacity-0 hover:opacity-30 hover:bg-muted-foreground transition-all"
           onMouseDown={(e) => handleResizeStart("e", e)}
           title="Resize width"
         ></div>

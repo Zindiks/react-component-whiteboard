@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { ThemeToggle } from "./ThemeToggle";
 import { GRID_CONSTANTS } from "../constants/appConstants";
 
 export interface ControlPanelProps {
@@ -45,17 +46,13 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   return (
     <div
       data-control-panel
+      className="flex flex-col gap-2 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border rounded-lg shadow-lg p-3"
       style={{
         position: "absolute",
         bottom: "10px",
         left: "10px",
-        backgroundColor: "white",
-        padding: "10px",
-        borderRadius: "5px",
-        boxShadow: "0 0 10px rgba(0,0,0,0.1)",
         maxWidth: "250px",
       }}
-      className="flex flex-col gap-2"
     >
       <div className="flex gap-2">
         <Button onClick={() => onZoom(1.4)} variant={"ghost"} size="sm">
@@ -80,6 +77,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         >
           <Magnet className="w-4 h-4" />
         </Button>
+        <ThemeToggle />
       </div>
 
       {/* Advanced Grid Controls */}

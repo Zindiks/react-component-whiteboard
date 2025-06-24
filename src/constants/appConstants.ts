@@ -88,6 +88,34 @@ export const COLORS = {
   MARQUEE_BORDER: "2px dashed #3b82f6",
 } as const;
 
+// Theme-aware Colors
+export const THEME_COLORS = {
+  light: {
+    BACKGROUND: "#ffffff",
+    SURFACE: "#f8fafc",
+    TEXT_PRIMARY: "#1e293b",
+    TEXT_SECONDARY: "#64748b",
+    BORDER: "#e2e8f0",
+    GRID_COLOR: "#64748b", // Moderately dark slate for good visibility in light mode
+    CONTROL_PANEL_BG: "rgba(255, 255, 255, 0.95)",
+    SIDEBAR_BG: "#ffffff",
+    CARD_BG: "#ffffff",
+    HOVER_BG: "#f1f5f9",
+  },
+  dark: {
+    BACKGROUND: "#0f172a",
+    SURFACE: "#1e293b",
+    TEXT_PRIMARY: "#f1f5f9",
+    TEXT_SECONDARY: "#94a3b8",
+    BORDER: "#334155",
+    GRID_COLOR: "#78716c", // Slightly more muted stone color for dark mode
+    CONTROL_PANEL_BG: "rgba(30, 41, 59, 0.95)",
+    SIDEBAR_BG: "#1e293b",
+    CARD_BG: "#1e293b",
+    HOVER_BG: "#334155",
+  },
+} as const;
+
 // Animation and Transition Constants
 export const ANIMATIONS = {
   ZOOM_FADE_IN: "zoomFadeIn 0.2s ease-out",
@@ -176,7 +204,7 @@ export const GRID_CONSTANTS = {
   SIZE: 20, // Base grid cell size in pixels
   COLOR: "#b0b0b0", // Light gray grid lines
   STROKE_WIDTH: 0.5, // Base stroke width
-  OPACITY: 0.6, // Base opacity
+  OPACITY: 0.65, // Reduced base opacity for subtler appearance
   ENABLED: true as boolean, // Grid enabled by default
   DYNAMIC_SIZING: true, // Enable dynamic grid sizing based on zoom
   SIZES: [10, 20, 40, 80] as const, // Available grid sizes

@@ -106,18 +106,18 @@ export const Overview: React.FC<OverviewProps> = ({
   return (
     <div className="flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between p-4 border-b">
         <div>
-          <h3 className="text-lg font-semibold text-gray-800">
+          <h3 className="text-lg font-semibold text-foreground">
             Whiteboard Overview
           </h3>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             {components.length} components • Click to navigate
           </p>
         </div>
         <button
           onClick={onClose}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          className="p-2 hover:bg-muted rounded-full transition-colors"
           aria-label="Close overview"
         >
           ✕
@@ -127,7 +127,7 @@ export const Overview: React.FC<OverviewProps> = ({
       {/* Overview Canvas */}
       <div className="p-4">
         <div
-          className="relative border border-gray-300 rounded-lg overflow-hidden"
+          className="relative border rounded-lg overflow-hidden"
           style={{
             width: `${overviewWidth}px`,
             height: `${overviewHeight}px`,
@@ -218,42 +218,41 @@ export const Overview: React.FC<OverviewProps> = ({
         </div>
 
         {/* Statistics */}
-        <div className="mt-4 grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg text-sm">
+        <div className="mt-4 grid grid-cols-3 gap-4 p-3 bg-muted rounded-lg text-sm">
           <div className="text-center">
-            <div className="font-semibold text-gray-800">
+            <div className="font-semibold text-foreground">
               {components.length}
             </div>
-            <div className="text-gray-500">Components</div>
+            <div className="text-muted-foreground">Components</div>
           </div>
           <div className="text-center">
-            <div className="font-semibold text-gray-800">
+            <div className="font-semibold text-foreground">
               {selectedComponents.length}
             </div>
-            <div className="text-gray-500">Selected</div>
+            <div className="text-muted-foreground">Selected</div>
           </div>
           <div className="text-center">
-            <div className="font-semibold text-gray-800">
+            <div className="font-semibold text-foreground">
               {Math.round(transform.k * 100)}%
             </div>
-            <div className="text-gray-500">Zoom</div>
+            <div className="text-muted-foreground">Zoom</div>
           </div>
         </div>
 
         {/* Instructions */}
-        <div className="mt-3 text-xs text-gray-600 space-y-1">
+        <div className="mt-3 text-xs text-muted-foreground space-y-1">
           <p>
             <strong>Navigation:</strong>
           </p>
           <p>• Click any component to navigate to it</p>
           <p>
-            • Press <kbd className="px-1 py-0.5 bg-gray-200 rounded">3</kbd> or{" "}
-            <kbd className="px-1 py-0.5 bg-gray-200 rounded">O</kbd> to toggle
+            • Press <kbd className="px-1 py-0.5 bg-muted rounded">3</kbd> or{" "}
+            <kbd className="px-1 py-0.5 bg-muted rounded">O</kbd> to toggle
             overview
           </p>
           <p>
-            • Press{" "}
-            <kbd className="px-1 py-0.5 bg-gray-200 rounded">Escape</kbd> to
-            close
+            • Press <kbd className="px-1 py-0.5 bg-muted rounded">Escape</kbd>{" "}
+            to close
           </p>
         </div>
       </div>

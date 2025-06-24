@@ -80,13 +80,15 @@ export const Timer: React.FC<TimerProps> = ({
   };
 
   return (
-    <Card className="min-w-[200px] overflow-hidden bg-white border border-gray-200 shadow-sm">
+    <Card className="min-w-[200px] overflow-hidden">
       <CardContent className="p-6">
         <div className="text-center">
           <div
             className={cn(
               "text-3xl font-mono font-bold mb-4 transition-colors",
-              isRunning ? "text-green-600" : "text-muted-foreground"
+              isRunning
+                ? "text-green-600 dark:text-green-400"
+                : "text-muted-foreground"
             )}
           >
             {formatTime(time)}
