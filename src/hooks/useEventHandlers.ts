@@ -3,9 +3,18 @@
  *
  * This hook manages all global event handling for the whiteboard including:
  * - D3 zoom behavior setup
- * - Global wheel/touch handlers for zoom gestures
- * - Keyboard shortcuts and event handling
+ * - Global wheel/touch handlers for zoom and pan gestures
+ * - Two-finger trackpad panning (hover without click)
+ * - Keyboard shortcuts and event handling (with input field detection)
  * - Event listener setup and cleanup
+ *
+ * IMPORTANT: Keyboard shortcuts are disabled when user is typing in input fields
+ * to prevent interference with normal text input. Only Escape key works in inputs.
+ *
+ * Trackpad Gestures:
+ * - Two-finger scroll: Pan the whiteboard
+ * - Ctrl/Cmd + two-finger scroll: Zoom in/out
+ * - Two-finger pinch: Zoom (touch devices)
  */
 
 import { useEffect } from "react";
@@ -136,17 +145,19 @@ export const useEventHandlers = ({
 
     // Global zoom event handlers to capture zoom gestures everywhere within the whiteboard
     const handleGlobalWheel = (event: WheelEvent) => {
-      // Only handle zoom gestures (Ctrl/Cmd + wheel or pinch) and only when inside our container
-      if ((event.ctrlKey || event.metaKey) && containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const isInsideContainer =
-          event.clientX >= rect.left &&
-          event.clientX <= rect.right &&
-          event.clientY >= rect.top &&
-          event.clientY <= rect.bottom;
+      if (!containerRef.current) return;
 
-        if (!isInsideContainer) return; // Don't handle zoom outside our container
+      const rect = containerRef.current.getBoundingClientRect();
+      const isInsideContainer =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom;
 
+      if (!isInsideContainer) return; // Don't handle events outside our container
+
+      // Handle zoom gestures (Ctrl/Cmd + wheel or pinch)
+      if (event.ctrlKey || event.metaKey) {
         event.preventDefault();
         event.stopPropagation();
 
@@ -186,6 +197,22 @@ export const useEventHandlers = ({
           const svg = d3.select(svgRef.current);
           svg.call(zoomBehavior.current.transform, newTransform);
         }
+      }
+      // Handle two-finger pan (trackpad scrolling without modifier keys)
+      else if (!event.shiftKey && svgRef.current && zoomBehavior.current) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Apply pan transform (invert deltaX/Y for natural scrolling feel)
+        const deltaX = -event.deltaX * ZOOM_CONSTANTS.PAN_SENSITIVITY;
+        const deltaY = -event.deltaY * ZOOM_CONSTANTS.PAN_SENSITIVITY;
+
+        const newTransform = d3.zoomIdentity
+          .translate(transform.x + deltaX, transform.y + deltaY)
+          .scale(transform.k);
+
+        const svg = d3.select(svgRef.current);
+        svg.call(zoomBehavior.current.transform, newTransform);
       }
     };
 
@@ -299,8 +326,26 @@ export const useEventHandlers = ({
     });
     document.addEventListener("touchend", handleGlobalTouchEnd);
 
+    // Utility function to check if user is typing in an input field
+    const isUserTyping = (): boolean => {
+      const activeElement = document.activeElement;
+      return !!(
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.tagName === "SELECT" ||
+          activeElement.hasAttribute("contenteditable") ||
+          (activeElement as HTMLElement).isContentEditable)
+      );
+    };
+
     // Enhanced keyboard event handling
     const handleKeyDown = (event: KeyboardEvent) => {
+      // If user is typing, don't interfere with their input except for Escape
+      if (isUserTyping() && event.key !== "Escape") {
+        return;
+      }
+
       // Prevent default for our custom shortcuts
       if (event.key === " ") {
         event.preventDefault();
@@ -345,7 +390,8 @@ export const useEventHandlers = ({
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key === " ") {
+      // Only handle space key release if not typing
+      if (event.key === " " && !isUserTyping()) {
         setIsSpacePressed(false);
       }
     };

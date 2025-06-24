@@ -89,8 +89,14 @@ npm run electron:dist
 
 ### Basic Operations
 
-- **Pan**: Hold `Space` + click and drag, or use middle/right mouse button
-- **Zoom**: `Ctrl/Cmd` + mouse wheel, or use zoom controls
+- **Pan**:
+  - Two-finger scroll on trackpad (natural scrolling)
+  - Hold `Space` + click and drag
+  - Middle/right mouse button + drag
+- **Zoom**:
+  - `Ctrl/Cmd` + trackpad scroll (pinch-to-zoom)
+  - `Ctrl/Cmd` + mouse wheel
+  - Use zoom controls in the interface
 - **Select**: Click on components, drag for marquee selection
 - **Delete**: Select components and press `Delete` or `Backspace`
 

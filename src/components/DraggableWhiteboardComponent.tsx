@@ -90,38 +90,68 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
 
+  // Utility function to check if the clicked element is interactive
+  const isInteractiveElement = (element: HTMLElement): boolean => {
+    return !!(
+      element &&
+      (element.tagName === "INPUT" ||
+        element.tagName === "TEXTAREA" ||
+        element.tagName === "SELECT" ||
+        element.tagName === "BUTTON" ||
+        element.tagName === "A" ||
+        element.hasAttribute("contenteditable") ||
+        element.closest(
+          "input, textarea, select, button, a, [contenteditable]"
+        ))
+    );
+  };
+
   // Mouse down handler for dragging (applies to entire component)
   const handleComponentMouseDown = (event: React.MouseEvent) => {
+    // If clicking on an interactive element, let it handle the event naturally
+    if (isInteractiveElement(event.target as HTMLElement)) {
+      return;
+    }
+
     event.preventDefault();
     event.stopPropagation();
 
+    // Always prepare for dragging when clicking on a component
+    setIsDragging(true);
+    const mousePos = { x: event.clientX, y: event.clientY };
+    setDragStartPos(mousePos);
+
     if (!selected) {
-      // Clicking an unselected component selects it
+      // If clicking an unselected component, select it first then start drag
       onSelect(id);
-    } else {
-      // Clicking a selected component starts dragging all selected
-      setIsDragging(true);
-      const mousePos = { x: event.clientX, y: event.clientY };
-      setDragStartPos(mousePos);
-      onDragStart(id);
     }
+
+    // Start dragging for this component (whether it was selected or not)
+    onDragStart(id);
   };
 
   // Shape-specific mouse down handler for dragging
   const handleShapeMouseDown = (event: React.MouseEvent) => {
+    // If clicking on an interactive element, let it handle the event naturally
+    if (isInteractiveElement(event.target as HTMLElement)) {
+      return;
+    }
+
     event.preventDefault();
     event.stopPropagation();
 
+    // Always prepare for dragging when clicking on a shape
+    setIsDragging(true);
+    const mousePos = { x: event.clientX, y: event.clientY };
+    setDragStartPos(mousePos);
+
     if (!selected) {
-      // Clicking an unselected component selects it
+      // If clicking an unselected shape, select it first then start drag
       onSelect(id);
-    } else {
-      // Clicking a selected component starts dragging all selected
-      setIsDragging(true);
-      const mousePos = { x: event.clientX, y: event.clientY };
-      setDragStartPos(mousePos);
-      onDragStart(id);
     }
+
+    // Start dragging for this shape (whether it was selected or not)
+    onDragStart(id);
   };
 
   const handleDeleteClick = (event: React.MouseEvent) => {
