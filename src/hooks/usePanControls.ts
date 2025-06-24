@@ -9,7 +9,7 @@
 import { useCallback, useState, useEffect } from "react";
 import * as d3 from "d3";
 import { Component } from "../types/whiteboard";
-import { COMPONENT_SIZES } from "../constants/appConstants";
+import { COMPONENT_SIZES, MARQUEE_CONSTANTS } from "../constants/appConstants";
 
 export interface PanControlsState {
   isPanning: boolean;
@@ -90,7 +90,10 @@ export const usePanControls = ({
     // Only select if marquee has meaningful size (avoid accidental selections)
     const marqueeWidth = right - left;
     const marqueeHeight = bottom - top;
-    if (marqueeWidth < 5 || marqueeHeight < 5) {
+    if (
+      marqueeWidth < MARQUEE_CONSTANTS.MIN_SELECTION_SIZE ||
+      marqueeHeight < MARQUEE_CONSTANTS.MIN_SELECTION_SIZE
+    ) {
       return [];
     }
 
