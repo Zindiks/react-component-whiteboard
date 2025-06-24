@@ -92,10 +92,6 @@ const CustomGrid = () => {
   const [showGrid, setShowGrid] = useState(GRID_CONSTANTS.ENABLED);
 
   // Grid style state
-  const [gridStyle, setGridStyle] = useState<"line" | "dotted">(
-    GRID_CONSTANTS.STYLE
-  );
-
   // Grid size state
   const [gridSize, setGridSize] = useState<number>(GRID_CONSTANTS.SIZE);
 
@@ -391,7 +387,6 @@ const CustomGrid = () => {
         <GridBackground
           transform={transform}
           enabled={showGrid}
-          style={gridStyle}
           size={gridSize}
           dynamicSizing={dynamicGridSizing}
         />
@@ -492,10 +487,6 @@ const CustomGrid = () => {
         selectedComponents={selectedComponents}
         showGrid={showGrid}
         onToggleGrid={() => setShowGrid(!showGrid)}
-        gridStyle={gridStyle}
-        onToggleGridStyle={() =>
-          setGridStyle(gridStyle === "line" ? "dotted" : "line")
-        }
         gridSize={gridSize}
         onGridSizeChange={setGridSize}
         dynamicGridSizing={dynamicGridSizing}

@@ -6,15 +6,7 @@
  */
 
 import React from "react";
-import {
-  Plus,
-  Minus,
-  Grid3x3,
-  Magnet,
-  Circle,
-  Settings,
-  Zap,
-} from "lucide-react";
+import { Plus, Minus, Grid3x3, Magnet, Zap } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   Select,
@@ -30,8 +22,6 @@ export interface ControlPanelProps {
   selectedComponents: number[];
   showGrid: boolean;
   onToggleGrid: () => void;
-  gridStyle: "line" | "dotted";
-  onToggleGridStyle: () => void;
   gridSize: number;
   onGridSizeChange: (size: number) => void;
   dynamicGridSizing: boolean;
@@ -45,8 +35,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   selectedComponents,
   showGrid,
   onToggleGrid,
-  gridStyle,
-  onToggleGridStyle,
   gridSize,
   onGridSizeChange,
   dynamicGridSizing,
@@ -84,24 +72,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         >
           <Grid3x3 className="w-4 h-4" />
         </Button>
-        {showGrid && (
-          <Button
-            onClick={onToggleGridStyle}
-            variant="ghost"
-            size="sm"
-            title={
-              gridStyle === "line"
-                ? "Current: Line Grid - Click for Dotted Grid"
-                : "Current: Dotted Grid - Click for Line Grid"
-            }
-          >
-            {gridStyle === "line" ? (
-              <Grid3x3 className="w-4 h-4" />
-            ) : (
-              <Circle className="w-4 h-4" />
-            )}
-          </Button>
-        )}
         <Button
           onClick={onToggleSnap}
           variant={snapToGrid ? "default" : "ghost"}
@@ -149,7 +119,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         Mode: Selection{snapToGrid && " (Snap)"}
         {showGrid && (
           <span className="text-gray-600 ml-2">
-            | Grid: {gridSize}px {gridStyle} {dynamicGridSizing && "(Dynamic)"}
+            | Grid: {gridSize}px {dynamicGridSizing && "(Dynamic)"}
           </span>
         )}
         {selectedComponents.length > 0 && (

@@ -178,15 +178,6 @@ export const GRID_CONSTANTS = {
   STROKE_WIDTH: 0.5, // Base stroke width
   OPACITY: 0.6, // Base opacity
   ENABLED: true as boolean, // Grid enabled by default
-  DOT_SIZE: 1.5, // Dot size on screen in pixels (stays constant while spacing changes)
-  DOT_SIZES: [1, 1.5, 2, 2.5] as const, // Available dot sizes for fine-tuning
-  STYLE: "line" as "line" | "dotted", // Default grid style
   DYNAMIC_SIZING: true, // Enable dynamic grid sizing based on zoom
   SIZES: [10, 20, 40, 80] as const, // Available grid sizes
-} as const;
-
-// Grid style options
-export const GRID_STYLES = {
-  LINE: "line" as const,
-  DOTTED: "dotted" as const,
 } as const;

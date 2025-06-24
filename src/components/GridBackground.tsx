@@ -6,7 +6,6 @@ import { usePerformance } from "../hooks/usePerformance";
 interface GridBackgroundProps {
   transform: d3.ZoomTransform;
   enabled?: boolean;
-  style?: "line" | "dotted";
   size?: number;
   color?: string;
   opacity?: number;
@@ -16,7 +15,6 @@ interface GridBackgroundProps {
 export const GridBackground: React.FC<GridBackgroundProps> = ({
   transform,
   enabled = GRID_CONSTANTS.ENABLED,
-  style = GRID_CONSTANTS.STYLE,
   size = GRID_CONSTANTS.SIZE,
   color = GRID_CONSTANTS.COLOR,
   opacity = GRID_CONSTANTS.OPACITY,
@@ -76,33 +74,17 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
         `translate(${transform.x},${transform.y}) scale(${transform.k})`
       );
 
-    if (style === "dotted") {
-      // Create dotted pattern using a circle at the center of each grid cell
-      // Keep dots at consistent screen size while spacing (grid pattern) changes with zoom
-      // This gives the effect of dots staying the same visual size but varying density
-      const screenDotSize = GRID_CONSTANTS.DOT_SIZE; // Target size on screen in pixels
-      const patternDotSize = screenDotSize / transform.k; // Adjust for zoom to maintain screen size
+    // Create line pattern (L-shaped lines at grid intersections)
+    const dynamicStrokeWidth =
+      (GRID_CONSTANTS.STROKE_WIDTH / transform.k) * (gridSize / baseGridSize);
 
-      pattern
-        .append("circle")
-        .attr("cx", gridSize / 2) // Center horizontally
-        .attr("cy", gridSize / 2) // Center vertically
-        .attr("r", patternDotSize)
-        .attr("fill", color)
-        .attr("opacity", dynamicOpacity);
-    } else {
-      // Create line pattern (L-shaped lines at grid intersections)
-      const dynamicStrokeWidth =
-        (GRID_CONSTANTS.STROKE_WIDTH / transform.k) * (gridSize / baseGridSize);
-
-      pattern
-        .append("path")
-        .attr("d", `M ${gridSize} 0 L 0 0 0 ${gridSize}`)
-        .attr("fill", "none")
-        .attr("stroke", color)
-        .attr("stroke-width", dynamicStrokeWidth)
-        .attr("opacity", dynamicOpacity);
-    }
+    pattern
+      .append("path")
+      .attr("d", `M ${gridSize} 0 L 0 0 0 ${gridSize}`)
+      .attr("fill", "none")
+      .attr("stroke", color)
+      .attr("stroke-width", dynamicStrokeWidth)
+      .attr("opacity", dynamicOpacity);
 
     // Apply pattern to cover entire viewport
     svg
@@ -111,7 +93,7 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
       .attr("height", "100%")
       .attr("fill", "url(#grid-pattern)")
       .attr("pointer-events", "none");
-  }, [transform, enabled, style, size, color, opacity, dynamicSizing]);
+  }, [transform, enabled, size, color, opacity, dynamicSizing]);
 
   // Create throttled version of updateGrid
   const throttledUpdateGrid = useRef<(() => void) | null>(null);
@@ -124,7 +106,7 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
     if (throttledUpdateGrid.current) {
       throttledUpdateGrid.current();
     }
-  }, [transform, enabled, style]);
+  }, [transform, enabled]);
 
   // Cleanup function
   useEffect(() => {
