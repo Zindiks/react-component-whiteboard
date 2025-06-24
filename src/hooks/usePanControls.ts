@@ -6,7 +6,7 @@
  * via marquee (click and drag) selection.
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import * as d3 from "d3";
 import { Component } from "../types/whiteboard";
 import { COMPONENT_SIZES } from "../constants/appConstants";
@@ -70,6 +70,9 @@ export const usePanControls = ({
   const [marqueeStart, setMarqueeStart] = useState({ x: 0, y: 0 });
   const [marqueeEnd, setMarqueeEnd] = useState({ x: 0, y: 0 });
 
+  // Track if we're currently in a drag operation (from sidebar or elsewhere)
+  const [isDragInProgress, setIsDragInProgress] = useState(false);
+
   const getEventCoordinates = useCallback(
     (event: MouseEvent | React.MouseEvent) => ({
       x: event.clientX,
@@ -104,6 +107,11 @@ export const usePanControls = ({
 
   const handleMouseDown = useCallback(
     (event: MouseEvent) => {
+      // Don't start marquee selection if we're in the middle of a drag operation
+      if (isDragInProgress) {
+        return;
+      }
+
       const coords = getEventCoordinates(event);
 
       // Check if we clicked on a component (prevent marquee when clicking components)
@@ -114,7 +122,9 @@ export const usePanControls = ({
       const isSidebarClick = target.closest("[data-sidebar]") !== null;
       const isControlPanelClick =
         target.closest("[data-control-panel]") !== null;
-      const isUIClick = isSidebarClick || isControlPanelClick;
+      const isDraggableElement = target.closest("[draggable='true']") !== null;
+      const isUIClick =
+        isSidebarClick || isControlPanelClick || isDraggableElement;
 
       if (
         event.button === 0 &&
@@ -139,7 +149,7 @@ export const usePanControls = ({
         }
       }
     },
-    [isSpacePressed, getEventCoordinates]
+    [isDragInProgress, isSpacePressed, getEventCoordinates]
   );
 
   const handleMouseMove = useCallback(
@@ -176,6 +186,12 @@ export const usePanControls = ({
 
   const handleMouseUp = useCallback(
     (event: MouseEvent) => {
+      // Don't complete marquee selection if we're in the middle of a drag operation
+      if (isDragInProgress && isMarqueeActive) {
+        setIsMarqueeActive(false);
+        return;
+      }
+
       if (isMarqueeActive) {
         // Complete marquee selection
         const selectedInMarquee = getComponentsInMarquee();
@@ -193,13 +209,62 @@ export const usePanControls = ({
         setIsPanning(false);
       }
     },
-    [isMarqueeActive, isPanning, getComponentsInMarquee, setSelectedComponents]
+    [
+      isDragInProgress,
+      isMarqueeActive,
+      isPanning,
+      getComponentsInMarquee,
+      setSelectedComponents,
+    ]
   );
 
   const handleContextMenu = useCallback((event: MouseEvent) => {
     if (event.button === 2) {
       event.preventDefault();
     }
+  }, []);
+
+  // Set up drag event listeners to track drag operations
+  useEffect(() => {
+    let dragEndTimeout: NodeJS.Timeout | null = null;
+
+    const clearDragState = () => {
+      setIsDragInProgress(false);
+    };
+
+    const handleDragStart = () => {
+      setIsDragInProgress(true);
+      // Clear any pending timeout
+      if (dragEndTimeout) {
+        clearTimeout(dragEndTimeout);
+        dragEndTimeout = null;
+      }
+    };
+
+    const handleDragEnd = () => {
+      // Delay clearing drag state to ensure mouse events after drop are handled
+      dragEndTimeout = setTimeout(clearDragState, 100);
+    };
+
+    const handleDrop = () => {
+      // Delay clearing drag state to ensure mouse events after drop are handled
+      dragEndTimeout = setTimeout(clearDragState, 100);
+    };
+
+    // Listen for drag events globally
+    document.addEventListener("dragstart", handleDragStart);
+    document.addEventListener("dragend", handleDragEnd);
+    document.addEventListener("drop", handleDrop);
+
+    return () => {
+      document.removeEventListener("dragstart", handleDragStart);
+      document.removeEventListener("dragend", handleDragEnd);
+      document.removeEventListener("drop", handleDrop);
+      // Clear timeout on cleanup
+      if (dragEndTimeout) {
+        clearTimeout(dragEndTimeout);
+      }
+    };
   }, []);
 
   return {
