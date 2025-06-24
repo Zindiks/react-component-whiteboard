@@ -34,6 +34,8 @@ export interface UseEventHandlersProps {
   setIsSpacePressed: (pressed: boolean) => void;
   showOverview: boolean;
   setShowOverview: (show: boolean) => void;
+  showGrid: boolean;
+  setShowGrid: (show: boolean) => void;
   resetZoom: () => void;
   zoomToFit: () => void;
   zoomToSelection: () => void;
@@ -63,6 +65,8 @@ export const useEventHandlers = ({
   setIsSpacePressed,
   showOverview,
   setShowOverview,
+  showGrid,
+  setShowGrid,
   resetZoom,
   zoomToFit,
   zoomToSelection,
@@ -363,6 +367,9 @@ export const useEventHandlers = ({
       } else if (event.key === "3" || event.key === "o" || event.key === "O") {
         event.preventDefault();
         setShowOverview(!showOverview);
+      } else if (event.key === "4" || event.key === "g" || event.key === "G") {
+        event.preventDefault();
+        setShowGrid(!showGrid);
       } else if (event.key === "Escape") {
         // Close overview if open, otherwise deselect all components
         if (showOverview) {
@@ -431,6 +438,8 @@ export const useEventHandlers = ({
     zoomToSelection,
     showOverview,
     setShowOverview,
+    showGrid,
+    setShowGrid,
     handleCopyComponents,
     handlePasteComponents,
     handlePasteImageFromClipboard,

@@ -170,3 +170,12 @@ export const INITIAL_POSITIONS = {
   SPOTIFY: { x: 300, y: 600 },
   STYLISH_LINK: { x: 600, y: 600 },
 } as const;
+
+// Grid Background Constants
+export const GRID_CONSTANTS = {
+  SIZE: 30, // Larger grid cell size for visibility
+  COLOR: "#ff0000", // Bright red for debugging
+  STROKE_WIDTH: 2, // Thick grid lines for visibility
+  OPACITY: 1, // Fully opaque grid
+  ENABLED: true as boolean, // Grid enabled by default
+} as const;

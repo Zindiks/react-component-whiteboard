@@ -6,17 +6,21 @@
  */
 
 import React from "react";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Grid3x3 } from "lucide-react";
 import { Button } from "./ui/button";
 
 export interface ControlPanelProps {
   onZoom: (factor: number) => void;
   selectedComponents: number[];
+  showGrid: boolean;
+  onToggleGrid: () => void;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({
   onZoom,
   selectedComponents,
+  showGrid,
+  onToggleGrid,
 }) => {
   return (
     <div
@@ -39,6 +43,14 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         </Button>
         <Button onClick={() => onZoom(0.7)} variant={"ghost"} size="sm">
           <Minus className="w-4 h-4" />
+        </Button>
+        <Button
+          onClick={onToggleGrid}
+          variant={showGrid ? "default" : "ghost"}
+          size="sm"
+          title={showGrid ? "Hide Grid" : "Show Grid"}
+        >
+          <Grid3x3 className="w-4 h-4" />
         </Button>
       </div>
       <p className="text-sm mt-2">

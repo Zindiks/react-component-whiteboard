@@ -106,6 +106,7 @@ npm run electron:dist
 - `Shift + 1` - Zoom to fit all components
 - `2` - Zoom to selected components
 - `3` or `O` - Toggle overview/minimap
+- `4` or `G` - Toggle grid background
 - `Escape` - Deselect all or close overview
 - `Ctrl/Cmd + C` - Copy selected components
 - `Ctrl/Cmd + V` - Paste components

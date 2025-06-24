@@ -3,6 +3,7 @@ import * as d3 from "d3";
 import { ComponentFooter } from "./components/ComponentFooter";
 import { CategorySidebar } from "./components/CategorySidebar";
 import { DraggableComponent } from "./components/DraggableWhiteboardComponent";
+import { GridBackground } from "./components/GridBackground";
 import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
 import { Component } from "./types/whiteboard";
 import { useWhiteboardState } from "./hooks/useWhiteboardState";
@@ -16,6 +17,7 @@ import {
   ANIMATIONS,
   TYPOGRAPHY,
   PERCENTAGE,
+  GRID_CONSTANTS,
 } from "./constants/appConstants";
 import { useSidebarControls } from "./hooks/useSidebarControls";
 import { useDragAndDrop } from "./hooks/useDragAndDrop";
@@ -76,6 +78,9 @@ const CustomGrid = () => {
 
   // Mouse position tracking for paste operations
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // Grid toggle state
+  const [showGrid, setShowGrid] = useState(GRID_CONSTANTS.ENABLED);
 
   // Overview/Minimap state
   const [showOverview, setShowOverview] = useState(false);
@@ -201,6 +206,8 @@ const CustomGrid = () => {
     setIsSpacePressed,
     showOverview,
     setShowOverview,
+    showGrid,
+    setShowGrid,
     resetZoom,
     zoomToFit,
     zoomToSelection,
@@ -301,7 +308,33 @@ const CustomGrid = () => {
         overflow: "hidden",
       }}
     >
-      <svg ref={svgRef}></svg>
+      {/* Grid Background SVG - separate layer behind everything */}
+      <svg
+        width="100%"
+        height="100%"
+        style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}
+      >
+        <GridBackground
+          transform={transform}
+          width={window.innerWidth}
+          height={window.innerHeight}
+          enabled={showGrid}
+        />
+      </svg>
+
+      {/* Main SVG for zoom/pan behavior */}
+      <svg
+        ref={svgRef}
+        width="100%"
+        height="100%"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          pointerEvents: "all",
+          background: "transparent",
+        }}
+      />
 
       {/* Marquee selection overlay */}
       {isMarqueeActive && (
@@ -392,6 +425,8 @@ const CustomGrid = () => {
       <ControlPanel
         onZoom={handleZoom}
         selectedComponents={selectedComponents}
+        showGrid={showGrid}
+        onToggleGrid={() => setShowGrid(!showGrid)}
       />
 
       {/* Component Footer and Sidebar */}
