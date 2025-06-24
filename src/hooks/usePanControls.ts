@@ -87,6 +87,13 @@ export const usePanControls = ({
     const top = Math.min(marqueeStart.y, marqueeEnd.y);
     const bottom = Math.max(marqueeStart.y, marqueeEnd.y);
 
+    // Only select if marquee has meaningful size (avoid accidental selections)
+    const marqueeWidth = right - left;
+    const marqueeHeight = bottom - top;
+    if (marqueeWidth < 5 || marqueeHeight < 5) {
+      return [];
+    }
+
     return components.filter((comp) => {
       // Convert component coordinates to screen coordinates
       const screenX = comp.x * transform.k + transform.x;
@@ -96,12 +103,21 @@ export const usePanControls = ({
       const compHeight =
         (comp.height || COMPONENT_SIZES.DEFAULT_HEIGHT) * transform.k;
 
-      return (
-        screenX < right &&
-        screenX + compWidth > left &&
-        screenY < bottom &&
-        screenY + compHeight > top
+      // Check if component overlaps with marquee selection
+      const componentLeft = screenX;
+      const componentRight = screenX + compWidth;
+      const componentTop = screenY;
+      const componentBottom = screenY + compHeight;
+
+      // More precise intersection check
+      const hasIntersection = !(
+        componentRight <= left ||
+        componentLeft >= right ||
+        componentBottom <= top ||
+        componentTop >= bottom
       );
+
+      return hasIntersection;
     });
   }, [marqueeStart, marqueeEnd, components, transform]);
 
@@ -133,6 +149,7 @@ export const usePanControls = ({
         !isUIClick
       ) {
         // Left click without space on empty area - start marquee selection
+        event.preventDefault(); // Prevent any default text selection
         setIsMarqueeActive(true);
         setMarqueeStart(coords);
         setMarqueeEnd(coords);
@@ -157,6 +174,7 @@ export const usePanControls = ({
       const coords = getEventCoordinates(event);
 
       if (isMarqueeActive) {
+        event.preventDefault(); // Prevent text selection during marquee
         setMarqueeEnd(coords);
       } else if (isPanning) {
         const deltaX = coords.x - lastPanPoint.x;
@@ -266,6 +284,36 @@ export const usePanControls = ({
       }
     };
   }, []);
+
+  // Prevent text selection during marquee operations
+  useEffect(() => {
+    if (isMarqueeActive) {
+      // Add CSS to prevent text selection
+      const style = document.createElement("style");
+      style.id = "marquee-no-select";
+      style.textContent = `
+        * {
+          user-select: none !important;
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Also add to body class for additional CSS targeting
+      document.body.classList.add("marquee-selecting");
+
+      return () => {
+        // Clean up when marquee ends
+        const existingStyle = document.getElementById("marquee-no-select");
+        if (existingStyle) {
+          existingStyle.remove();
+        }
+        document.body.classList.remove("marquee-selecting");
+      };
+    }
+  }, [isMarqueeActive]);
 
   return {
     // State
