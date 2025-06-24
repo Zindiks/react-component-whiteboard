@@ -371,6 +371,7 @@ const CustomGrid = () => {
     <div
       ref={containerRef}
       data-drop-zone
+      className="bg-background"
       style={{
         position: "relative",
         width: "100vw",
@@ -551,19 +552,11 @@ const CustomGrid = () => {
       {showOverview && (
         <div
           ref={overviewRef}
+          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-background border rounded-xl shadow-2xl overflow-hidden"
           style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            backgroundColor: "white",
-            borderRadius: TYPOGRAPHY.BORDER_RADIUS_LARGE,
-            boxShadow: `0 8px 32px ${COLORS.BLACK_SHADOW_STRONG}`,
-            border: "1px solid #e2e8f0",
             zIndex: Z_INDEX.OVERVIEW_MODAL,
             maxWidth: "80vw",
             maxHeight: "80vh",
-            overflow: "hidden",
           }}
         >
           <Overview

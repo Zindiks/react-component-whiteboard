@@ -106,11 +106,11 @@ export const Watch: React.FC<WatchProps> = ({ width = 280, height = 200 }) => {
   };
 
   return (
-    <Card className="relative bg-white shadow-sm" style={{ width, height }}>
+    <Card className="relative" style={{ width, height }}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <Clock size={20} className="text-blue-600" />
+            <Clock size={20} className="text-blue-600 dark:text-blue-400" />
             <h3 className="font-semibold text-sm">
               {timeZones.find((tz) => tz.value === timeZone)?.label || "Watch"}
             </h3>

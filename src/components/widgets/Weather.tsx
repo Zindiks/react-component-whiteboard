@@ -83,11 +83,15 @@ export const Weather: React.FC<WeatherProps> = ({
 
   const getWeatherIcon = (code: number) => {
     // WMO Weather interpretation codes
-    if (code === 0) return <Sun className="w-8 h-8 text-yellow-500" />;
-    if (code <= 3) return <Cloud className="w-8 h-8 text-gray-500" />;
-    if (code <= 67) return <CloudRain className="w-8 h-8 text-blue-500" />;
-    if (code <= 77) return <Snowflake className="w-8 h-8 text-blue-200" />;
-    return <Cloud className="w-8 h-8 text-gray-500" />;
+    if (code === 0)
+      return <Sun className="w-8 h-8 text-yellow-500 dark:text-yellow-400" />;
+    if (code <= 3)
+      return <Cloud className="w-8 h-8 text-gray-500 dark:text-gray-400" />;
+    if (code <= 67)
+      return <CloudRain className="w-8 h-8 text-blue-500 dark:text-blue-400" />;
+    if (code <= 77)
+      return <Snowflake className="w-8 h-8 text-blue-300 dark:text-blue-200" />;
+    return <Cloud className="w-8 h-8 text-gray-500 dark:text-gray-400" />;
   };
 
   const getWeatherDescription = (code: number): string => {
@@ -120,7 +124,7 @@ export const Weather: React.FC<WeatherProps> = ({
 
   if (loading && !weather) {
     return (
-      <Card className="min-w-[250px] bg-white border border-gray-200 shadow-sm">
+      <Card className="min-w-[250px]">
         <CardContent className="p-4">
           <div className="animate-pulse space-y-3">
             <div className="h-4 bg-muted rounded w-3/4"></div>
@@ -134,7 +138,7 @@ export const Weather: React.FC<WeatherProps> = ({
 
   if (error) {
     return (
-      <Card className="min-w-[250px] border-destructive bg-white shadow-sm">
+      <Card className="min-w-[250px] border-destructive">
         <CardContent className="p-4 text-center">
           <Cloud className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
           <div className="text-sm text-destructive mb-3">{error}</div>
@@ -155,7 +159,7 @@ export const Weather: React.FC<WeatherProps> = ({
   if (!weather) return null;
 
   return (
-    <Card className="min-w-[250px] bg-white border border-gray-200 shadow-sm">
+    <Card className="min-w-[250px]">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">

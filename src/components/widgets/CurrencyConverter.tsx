@@ -111,10 +111,7 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
 
   if (loading && Object.keys(exchangeRates).length === 0) {
     return (
-      <Card
-        className="border-gray-200 bg-white shadow-sm"
-        style={{ width, height }}
-      >
+      <Card style={{ width, height }}>
         <CardContent className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
             <RefreshCw className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
@@ -129,10 +126,7 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
 
   if (error) {
     return (
-      <Card
-        className="border-destructive/50 bg-white shadow-sm"
-        style={{ width, height }}
-      >
+      <Card className="border-destructive/50" style={{ width, height }}>
         <CardContent className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
             <p className="text-sm text-destructive mb-2">
@@ -149,14 +143,14 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
   }
 
   return (
-    <Card
-      className="border-gray-200 bg-white shadow-sm"
-      style={{ width, height }}
-    >
+    <Card style={{ width, height }}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <DollarSign size={20} className="text-green-600" />
+            <DollarSign
+              size={20}
+              className="text-green-600 dark:text-green-400"
+            />
             <h3 className="font-semibold text-sm">Currency Converter</h3>
           </div>
           <Button

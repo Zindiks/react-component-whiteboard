@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { TrendingUp, RotateCcw } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
@@ -46,7 +46,7 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const [priceChange24h, setPriceChange24h] = useState<number | null>(null);
 
-  const fetchCryptoData = async () => {
+  const fetchCryptoData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -81,18 +81,15 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCrypto]);
 
   useEffect(() => {
     fetchCryptoData();
-  }, [selectedCrypto]);
+  }, [selectedCrypto, fetchCryptoData]);
 
   if (loading && data.length === 0) {
     return (
-      <Card
-        className="border-gray-200 bg-white shadow-sm"
-        style={{ width, height }}
-      >
+      <Card style={{ width, height }}>
         <CardContent className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
             <div
@@ -110,10 +107,7 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
 
   if (error) {
     return (
-      <Card
-        className="border-destructive/50 bg-white shadow-sm"
-        style={{ width, height }}
-      >
+      <Card className="border-destructive/50" style={{ width, height }}>
         <CardContent className="p-4 flex items-center justify-center h-full">
           <div className="text-center">
             <p className="text-sm text-destructive mb-2">Error loading data:</p>
@@ -128,10 +122,7 @@ export const BitcoinChart: React.FC<CryptoChartProps> = ({
   }
 
   return (
-    <Card
-      className="border-gray-200 bg-white shadow-sm"
-      style={{ width, height }}
-    >
+    <Card style={{ width, height }}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
