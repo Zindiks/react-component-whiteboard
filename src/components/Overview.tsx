@@ -86,6 +86,8 @@ export const Overview: React.FC<OverviewProps> = ({
         return "#22c55e";
       case "stylishlink":
         return "#3b82f6";
+      case "linkpreview":
+        return "#06b6d4";
       case "imageShape":
         return "#6b7280";
       case "rectangle":

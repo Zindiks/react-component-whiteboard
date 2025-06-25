@@ -20,6 +20,7 @@ import { YouTubeVideo } from "./widgets/YouTubeVideo";
 import { SoundCloudWidget } from "./widgets/SoundCloudWidget";
 import { SpotifyWidget } from "./widgets/SpotifyWidget";
 import { StylishLink } from "./widgets/StylishLink";
+import { LinkPreview } from "./widgets/LinkPreview";
 
 import {
   RectangleShape,
@@ -43,7 +44,12 @@ import {
   Music,
   Headphones,
   ExternalLink,
+  Link,
+  Minimize2,
+  LayoutGrid,
+  Maximize2,
 } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface DraggableComponentProps {
   x: number;
@@ -102,6 +108,9 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const [isAxisLocked, setIsAxisLocked] = useState(false);
+  const [linkPreviewDisplayMode, setLinkPreviewDisplayMode] = useState<
+    "compact" | "medium" | "full"
+  >("full");
 
   // Performance optimizations
   const { throttleRAF, getGPUStyle, batchUpdate } = usePerformance({
@@ -192,6 +201,51 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     onDelete(id);
   };
 
+  // Render display mode toggle buttons for LinkPreview floating header
+  const renderLinkPreviewActions = () => (
+    <div className="flex items-center space-x-1">
+      <Button
+        variant={linkPreviewDisplayMode === "compact" ? "default" : "outline"}
+        size="sm"
+        className="h-6 w-6 p-0"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setLinkPreviewDisplayMode("compact");
+        }}
+        title="Compact view"
+      >
+        <Minimize2 className="w-3 h-3" />
+      </Button>
+      <Button
+        variant={linkPreviewDisplayMode === "medium" ? "default" : "outline"}
+        size="sm"
+        className="h-6 w-6 p-0"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setLinkPreviewDisplayMode("medium");
+        }}
+        title="Medium view"
+      >
+        <LayoutGrid className="w-3 h-3" />
+      </Button>
+      <Button
+        variant={linkPreviewDisplayMode === "full" ? "default" : "outline"}
+        size="sm"
+        className="h-6 w-6 p-0"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setLinkPreviewDisplayMode("full");
+        }}
+        title="Full view"
+      >
+        <Maximize2 className="w-3 h-3" />
+      </Button>
+    </div>
+  );
+
   // Create throttled mouse move handler
   const throttledMouseMoveRef = useRef<((event: MouseEvent) => void) | null>(
     null
@@ -274,6 +328,25 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       <SpotifyWidget initialUrl={spotifyUrl} width={width} height={height} />
     ),
     stylishlink: () => <StylishLink />,
+    linkpreview: () => (
+      <LinkPreview
+        initialUrl={text} // Use text field to store the URL
+        width={width}
+        height={height}
+        displayMode={linkPreviewDisplayMode}
+        onPreviewUpdate={(previewData) => {
+          // Store the URL in the text field and preview image in imageSrc
+          onTextChange?.(id, previewData.url);
+          if (previewData.image) {
+            onImageChange?.(id, previewData.image);
+          }
+        }}
+        onDisplayModeChange={(mode) => {
+          // Update the local state when display mode changes
+          setLinkPreviewDisplayMode(mode);
+        }}
+      />
+    ),
     // Shape components (no headers, resizable, connectable)
     rectangle: () => (
       <RectangleShape
@@ -430,6 +503,11 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         icon: ExternalLink,
         iconColor: "bg-blue-600",
       },
+      linkpreview: {
+        title: "Link Preview",
+        icon: Link,
+        iconColor: "bg-cyan-600",
+      },
       // Add more as needed
     };
     return (
@@ -447,6 +525,9 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       {selected && !isShapeComponent && selectedCount === 1 && (
         <FloatingHeader
           {...getComponentMetadata()}
+          actions={
+            type === "linkpreview" ? renderLinkPreviewActions() : undefined
+          }
           onDelete={handleDeleteClick}
           x={x}
           y={y}

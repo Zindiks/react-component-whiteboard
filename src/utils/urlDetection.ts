@@ -275,18 +275,61 @@ export const isValidHttpUrl = (text: string): boolean => {
 };
 
 /**
+ * Detects if a URL is a generic web link suitable for link preview
+ * Excludes URLs that are handled by other specific components
+ */
+export const isGenericUrl = (url: string): boolean => {
+  if (!url || typeof url !== "string") return false;
+
+  try {
+    const trimmedUrl = url.trim();
+
+    // Must be a valid URL
+    const urlObj = new URL(
+      trimmedUrl.startsWith("http") ? trimmedUrl : `https://${trimmedUrl}`
+    );
+
+    // Must be http or https
+    if (!["http:", "https:"].includes(urlObj.protocol)) {
+      return false;
+    }
+
+    // Exclude URLs that are handled by other components
+    if (isYouTubeUrl(url)) return false;
+    if (isSoundCloudUrl(url)) return false;
+    if (isSpotifyUrl(url)) return false;
+    if (isImageUrl(url)) return false;
+
+    // Must have a valid hostname
+    const hostname = urlObj.hostname.toLowerCase();
+    if (!hostname || hostname === "localhost" || hostname.startsWith("127.")) {
+      return false;
+    }
+
+    // Should have at least a domain and TLD
+    const parts = hostname.split(".");
+    if (parts.length < 2) return false;
+
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Comprehensive URL detection for different media types
  * Returns the type of URL detected or null if not recognized
  */
 export const detectUrlType = (
   url: string
-): "image" | "youtube" | "soundcloud" | "spotify" | null => {
+): "image" | "youtube" | "soundcloud" | "spotify" | "linkpreview" | null => {
   if (!url || typeof url !== "string") return null;
 
   if (isYouTubeUrl(url)) return "youtube";
   if (isSoundCloudUrl(url)) return "soundcloud";
   if (isSpotifyUrl(url)) return "spotify";
   if (isImageUrl(url)) return "image";
+  if (isGenericUrl(url)) return "linkpreview";
 
   return null;
 };

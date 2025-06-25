@@ -155,6 +155,7 @@ const CustomGrid = () => {
     createYouTubeComponentAtMouse,
     createSoundCloudComponentAtMouse,
     createSpotifyComponentAtMouse,
+    createLinkPreviewComponentAtMouse,
   } = useComponentCreators({
     components,
     setComponents,
@@ -175,6 +176,7 @@ const CustomGrid = () => {
       createYouTubeComponentAtMouse,
       createSoundCloudComponentAtMouse,
       createSpotifyComponentAtMouse,
+      createLinkPreviewComponentAtMouse,
     };
 
     // Create the component state object
@@ -205,6 +207,7 @@ const CustomGrid = () => {
     createYouTubeComponentAtMouse,
     createSoundCloudComponentAtMouse,
     createSpotifyComponentAtMouse,
+    createLinkPreviewComponentAtMouse,
     setComponents,
     setSelectedComponents,
     setCopiedComponents,

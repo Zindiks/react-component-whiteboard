@@ -13,6 +13,7 @@ import {
   isYouTubeUrl,
   isSoundCloudUrl,
   isSpotifyUrl,
+  isGenericUrl,
   extractImageFromHtml,
 } from "./urlDetection";
 
@@ -34,6 +35,7 @@ export interface ComponentCreators {
   createYouTubeComponentAtMouse: (youtubeUrl: string) => void;
   createSoundCloudComponentAtMouse: (soundcloudUrl: string) => void;
   createSpotifyComponentAtMouse: (spotifyUrl: string) => void;
+  createLinkPreviewComponentAtMouse: (url: string) => void;
 }
 
 /**
@@ -208,6 +210,12 @@ export const processClipboardText = async (
   // Finally check for image URLs
   if (isImageUrl(clipboardText)) {
     await creators.createImageComponentAtMouse(clipboardText);
+    return true;
+  }
+
+  // Check for generic URLs that can be previewed
+  if (isGenericUrl(clipboardText)) {
+    creators.createLinkPreviewComponentAtMouse(clipboardText);
     return true;
   }
 
