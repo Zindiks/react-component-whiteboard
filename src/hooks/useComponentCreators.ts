@@ -262,10 +262,52 @@ export const useComponentCreators = ({
     ]
   );
 
+  // Helper function to create a LinkPreview component at mouse position
+  const createLinkPreviewComponentAtMouse = useCallback(
+    (url: string): void => {
+      // Convert screen coordinates to whiteboard coordinates and center on mouse position
+      const width = COMPONENT_SIZES.LINK_PREVIEW_WIDTH;
+      const height = COMPONENT_SIZES.LINK_PREVIEW_HEIGHT;
+      const whiteboardX =
+        (mousePosition.x - transform.x) / transform.k - width / 2;
+      const whiteboardY =
+        (mousePosition.y - transform.y) / transform.k - height / 2;
+
+      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const highestZIndex = Math.max(
+        ...components.map((c) => c.zIndex || 0),
+        0
+      );
+
+      const newComponent: Component = {
+        id: newId,
+        x: whiteboardX,
+        y: whiteboardY,
+        type: "linkpreview",
+        width,
+        height,
+        zIndex: highestZIndex + 1,
+        text: url, // Store URL in text field
+      };
+
+      setComponents((prev) => [...prev, newComponent]);
+      setSelectedComponents([newId]); // Select the new component
+    },
+    [
+      components,
+      mousePosition.x,
+      mousePosition.y,
+      transform,
+      setComponents,
+      setSelectedComponents,
+    ]
+  );
+
   return {
     createImageComponentAtMouse,
     createYouTubeComponentAtMouse,
     createSoundCloudComponentAtMouse,
     createSpotifyComponentAtMouse,
+    createLinkPreviewComponentAtMouse,
   };
 };

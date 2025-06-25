@@ -101,6 +101,12 @@ export const COMPONENT_CATEGORIES: Category[] = [
     icon: "🌐",
     components: [
       {
+        type: "linkpreview",
+        label: "Link Preview",
+        icon: "🔗",
+        description: "Auto-generate link preview with thumbnail",
+      },
+      {
         type: "stylishlink",
         label: "Stylish Link",
         icon: "🔗",

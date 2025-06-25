@@ -47,6 +47,26 @@ export const COMPONENT_SIZES = {
   // Text note fallback dimensions when image load fails
   IMAGE_FALLBACK_WIDTH: 200,
   IMAGE_FALLBACK_HEIGHT: 150,
+
+  // PDF viewer dimensions
+  PDF_WIDTH: 400,
+  PDF_HEIGHT: 500,
+  PDF_MIN_WIDTH: 300,
+  PDF_MIN_HEIGHT: 400,
+
+  // Link preview dimensions
+  LINK_PREVIEW_WIDTH: 400,
+  LINK_PREVIEW_HEIGHT: 280,
+  LINK_PREVIEW_MIN_WIDTH: 320,
+  LINK_PREVIEW_MIN_HEIGHT: 200,
+
+  // Link preview compact mode (logo + text)
+  LINK_PREVIEW_COMPACT_WIDTH: 200,
+  LINK_PREVIEW_COMPACT_HEIGHT: 60,
+
+  // Link preview medium mode (image on side + text)
+  LINK_PREVIEW_MEDIUM_WIDTH: 280,
+  LINK_PREVIEW_MEDIUM_HEIGHT: 120,
 } as const;
 
 // Layout and Spacing Constants

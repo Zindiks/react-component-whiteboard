@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Component, InitialPosition } from "../types/whiteboard";
-import { INITIAL_POSITIONS } from "../constants/appConstants";
+import { INITIAL_POSITIONS, COMPONENT_SIZES } from "../constants/appConstants";
 import { stateLogger } from "../utils/componentLoggers";
 import { getDynamicGridSize, snapPointToGrid } from "../utils/gridUtils";
 
@@ -154,6 +154,12 @@ export const useWhiteboardState = () => {
       } else if (type === "imageShape") {
         newComponent.width = 200;
         newComponent.height = 150;
+      } else if (type === "pdfShape") {
+        newComponent.width = COMPONENT_SIZES.PDF_WIDTH;
+        newComponent.height = COMPONENT_SIZES.PDF_HEIGHT;
+      } else if (type === "linkpreview") {
+        newComponent.width = COMPONENT_SIZES.LINK_PREVIEW_WIDTH;
+        newComponent.height = COMPONENT_SIZES.LINK_PREVIEW_HEIGHT;
       }
 
       setComponents((prev) => [...prev, newComponent]);
