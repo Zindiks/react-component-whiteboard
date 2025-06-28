@@ -10,13 +10,13 @@
  */
 
 import React from "react";
-import * as d3 from "d3";
+import { ZoomTransform } from "d3-zoom";
 import { Component } from "../types/whiteboard";
 
 export interface OverviewProps {
   components: Component[];
   selectedComponents: number[];
-  transform: d3.ZoomTransform;
+  transform: ZoomTransform;
   onNavigateToComponent: (component: Component) => void;
   onClose: () => void;
   getWhiteboardBounds: () => {

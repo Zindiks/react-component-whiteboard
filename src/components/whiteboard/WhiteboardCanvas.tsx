@@ -309,6 +309,64 @@ const WhiteboardCanvas = () => {
     () => [...components].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0)),
     [components]
   );
+  // --- DragOverlay preview calculations ---
+  let previewLabel: string | undefined = undefined;
+  let previewIcon: string | undefined = undefined;
+  let previewWidth: number | undefined = undefined;
+  let previewHeight: number | undefined = undefined;
+  let previewX: number | undefined = undefined;
+  let previewY: number | undefined = undefined;
+  if (dragType && dragType !== "component") {
+    for (const cat of COMPONENT_CATEGORIES) {
+      const comp = cat.components.find((c) => c.type === dragType);
+      if (comp) {
+        previewLabel = comp.label;
+        previewIcon = comp.icon;
+        break;
+      }
+    }
+    switch (dragType as string) {
+      case "image":
+        previewWidth = 240;
+        previewHeight = 180;
+        break;
+      case "note":
+      case "text":
+        previewWidth = 200;
+        previewHeight = 80;
+        break;
+      case "rectangle":
+      case "ellipse":
+        previewWidth = 120;
+        previewHeight = 80;
+        break;
+      case "arrow":
+      case "line":
+        previewWidth = 160;
+        previewHeight = 24;
+        break;
+      case "youtubeVideo":
+      case "soundcloud":
+      case "spotify":
+        previewWidth = 320;
+        previewHeight = 180;
+        break;
+      default:
+        previewWidth = 180;
+        previewHeight = 80;
+    }
+    // Convert mouse position to whiteboard coordinates
+    let x = (mousePosition.x - transform.x) / transform.k;
+    let y = (mousePosition.y - transform.y) / transform.k;
+    // Snap to grid if enabled
+    if (snapToGrid && gridSize) {
+      x = Math.round(x / gridSize) * gridSize;
+      y = Math.round(y / gridSize) * gridSize;
+    }
+    // Convert back to screen coordinates for overlay
+    previewX = x * transform.k + transform.x;
+    previewY = y * transform.k + transform.y;
+  }
   return (
     <div
       ref={containerRef}
@@ -456,20 +514,13 @@ const WhiteboardCanvas = () => {
         message={
           dragType === "image" ? "📷 Drop image here" : "🔧 Drop component here"
         }
+        previewLabel={previewLabel}
+        previewIcon={previewIcon}
+        previewWidth={previewWidth}
+        previewHeight={previewHeight}
+        previewX={previewX}
+        previewY={previewY}
       />
-      {/* Overview/Minimap overlay */}
-      <OverviewOverlay
-        show={showOverview}
-        components={components}
-        selectedComponents={selectedComponents}
-        transform={transform}
-        onNavigateToComponent={navigateToComponent}
-        onClose={() => setShowOverview(false)}
-        getWhiteboardBounds={getWhiteboardBounds}
-        zIndex={Z_INDEX.OVERVIEW_MODAL}
-        overviewRef={overviewRef}
-      />
-      <FPSMonitor enabled={true} position="top-right" />
     </div>
   );
 };
