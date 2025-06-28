@@ -2,7 +2,6 @@ import React from "react";
 
 interface ZoomIndicatorOverlayProps {
   show: boolean;
-  isActivelyZooming: boolean;
   zoomPercent: number;
   style: React.CSSProperties;
   zIndex: number;
@@ -11,7 +10,6 @@ interface ZoomIndicatorOverlayProps {
 
 export const ZoomIndicatorOverlay: React.FC<ZoomIndicatorOverlayProps> = ({
   show,
-  isActivelyZooming,
   zoomPercent,
   style,
   zIndex,

@@ -359,7 +359,6 @@ const WhiteboardCanvas = () => {
       {/* Zoom indicator overlay */}
       <ZoomIndicatorOverlay
         show={showZoomIndicator}
-        isActivelyZooming={isActivelyZooming}
         zoomPercent={Math.round(transform.k * PERCENTAGE.HUNDRED_PERCENT)}
         style={{
           position: "absolute",
@@ -439,7 +438,6 @@ const WhiteboardCanvas = () => {
       {/* Drag overlay indicator */}
       <DragOverlay
         isDragOver={isDragOverBoard}
-        dragType={dragType || ""}
         style={{
           position: "fixed",
           top: 0,

@@ -2,7 +2,6 @@ import React from "react";
 
 interface DragOverlayProps {
   isDragOver: boolean;
-  dragType: string;
   style: React.CSSProperties;
   zIndex: number;
   message: string;
@@ -10,7 +9,6 @@ interface DragOverlayProps {
 
 export const DragOverlay: React.FC<DragOverlayProps> = ({
   isDragOver,
-  dragType,
   style,
   zIndex,
   message,
