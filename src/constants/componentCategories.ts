@@ -1,15 +1,15 @@
-export interface ComponentDefinition {
+export type ComponentDefinition = {
   type: string;
   label: string;
   icon: string;
   description: string;
-}
+};
 
-export interface Category {
+export type Category = {
   name: string;
   icon: string;
   components: ComponentDefinition[];
-}
+};
 
 export const COMPONENT_CATEGORIES: Category[] = [
   {

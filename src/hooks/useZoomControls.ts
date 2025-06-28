@@ -7,7 +7,8 @@
  */
 
 import { useCallback, useRef, useState } from "react";
-import * as d3 from "d3";
+import { select } from "d3-selection"; // Import d3-selection for SVG manipulation
+import { ZoomBehavior, ZoomTransform, zoomIdentity } from "d3-zoom"; // Import d3-zoom for zoom behavior
 import { Component } from "../types/whiteboard";
 import {
   ZOOM_CONSTANTS,
@@ -16,15 +17,15 @@ import {
 } from "../constants/appConstants";
 
 export interface ZoomControlsState {
-  transform: d3.ZoomTransform;
+  transform: ZoomTransform;
   showZoomIndicator: boolean;
   isActivelyZooming: boolean;
 }
 
 export interface ZoomControlsActions {
-  setTransform: (transform: d3.ZoomTransform) => void;
+  setTransform: (transform: ZoomTransform) => void;
   showZoomIndicatorTemporarily: () => void;
-  applyTransform: (newTransform: d3.ZoomTransform) => void;
+  applyTransform: (newTransform: ZoomTransform) => void;
   resetZoom: () => void;
   zoomToFit: () => void;
   zoomToSelection: () => void;
@@ -32,7 +33,7 @@ export interface ZoomControlsActions {
 }
 
 export interface ZoomControlsRefs {
-  zoomBehavior: React.MutableRefObject<d3.ZoomBehavior<
+  zoomBehavior: React.MutableRefObject<ZoomBehavior<
     SVGSVGElement,
     unknown
   > | null>;
@@ -58,14 +59,14 @@ export const useZoomControls = ({
   selectedComponents,
 }: UseZoomControlsProps): UseZoomControlsReturn => {
   // Transform state
-  const [transform, setTransform] = useState(d3.zoomIdentity);
+  const [transform, setTransform] = useState(zoomIdentity);
 
   // Zoom indicator state
   const [showZoomIndicator, setShowZoomIndicator] = useState(false);
   const [isActivelyZooming, setIsActivelyZooming] = useState(false);
 
   // Refs
-  const zoomBehavior = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(
+  const zoomBehavior = useRef<ZoomBehavior<SVGSVGElement, unknown> | null>(
     null
   );
   const zoomIndicatorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -89,9 +90,9 @@ export const useZoomControls = ({
   }, []);
 
   const applyTransform = useCallback(
-    (newTransform: d3.ZoomTransform) => {
+    (newTransform: ZoomTransform) => {
       if (!svgRef.current || !zoomBehavior.current) return;
-      const svg = d3.select(svgRef.current);
+      const svg = select(svgRef.current);
       svg.call(zoomBehavior.current.transform, newTransform);
     },
     [svgRef]
@@ -99,11 +100,11 @@ export const useZoomControls = ({
 
   const resetZoom = useCallback(() => {
     if (!svgRef.current || !zoomBehavior.current) return;
-    const svg = d3.select(svgRef.current);
+    const svg = select(svgRef.current);
     svg
       .transition()
       .duration(ANIMATIONS.NAVIGATION_DURATION)
-      .call(zoomBehavior.current.transform, d3.zoomIdentity);
+      .call(zoomBehavior.current.transform, zoomIdentity);
   }, [svgRef]);
 
   const zoomToFit = useCallback(() => {
@@ -138,13 +139,13 @@ export const useZoomControls = ({
       ZOOM_CONSTANTS.MAX_ZOOM // Max zoom level
     );
 
-    const svg = d3.select(svgRef.current);
+    const svg = select(svgRef.current);
     svg
       .transition()
       .duration(ANIMATIONS.NAVIGATION_DURATION)
       .call(
         zoomBehavior.current.transform,
-        d3.zoomIdentity
+        zoomIdentity
           .translate(window.innerWidth / 2, window.innerHeight / 2)
           .scale(scale)
           .translate(-centerX, -centerY)
@@ -190,13 +191,13 @@ export const useZoomControls = ({
       ZOOM_CONSTANTS.MAX_ZOOM // Max zoom level
     );
 
-    const svg = d3.select(svgRef.current);
+    const svg = select(svgRef.current);
     svg
       .transition()
       .duration(ANIMATIONS.NAVIGATION_DURATION)
       .call(
         zoomBehavior.current.transform,
-        d3.zoomIdentity
+        zoomIdentity
           .translate(window.innerWidth / 2, window.innerHeight / 2)
           .scale(scale)
           .translate(-centerX, -centerY)
@@ -206,7 +207,7 @@ export const useZoomControls = ({
   const handleZoom = useCallback(
     (factor: number) => {
       if (!svgRef.current || !zoomBehavior.current) return;
-      const svg = d3.select(svgRef.current);
+      const svg = select(svgRef.current);
       zoomBehavior.current.scaleBy(svg, factor);
       // Don't show indicator for manual button clicks
     },

@@ -18,17 +18,18 @@
  */
 
 import { useEffect } from "react";
-import * as d3 from "d3";
+import { select } from "d3-selection"; // Import d3-selection for SVG manipulation
+import { ZoomBehavior, ZoomTransform, zoomIdentity, zoom } from "d3-zoom"; // Import d3-zoom for zoom behavior
 import { ZOOM_CONSTANTS, INTERACTION } from "../constants/appConstants";
 
 export interface UseEventHandlersProps {
   svgRef: React.RefObject<SVGSVGElement>;
   containerRef: React.RefObject<HTMLDivElement>;
-  zoomBehavior: React.MutableRefObject<d3.ZoomBehavior<
+  zoomBehavior: React.MutableRefObject<ZoomBehavior<
     SVGSVGElement,
     unknown
   > | null>;
-  transform: d3.ZoomTransform;
+  transform: ZoomTransform;
   isMarqueeActive: boolean;
   isSpacePressed: boolean;
   setIsSpacePressed: (pressed: boolean) => void;
@@ -53,7 +54,7 @@ export interface UseEventHandlersProps {
   panHandleMouseUp: (event: MouseEvent) => void;
   panHandleContextMenu: (event: MouseEvent) => void;
   previousZoomScale: React.MutableRefObject<number>;
-  setTransform: (transform: d3.ZoomTransform) => void;
+  setTransform: (transform: ZoomTransform) => void;
   showZoomIndicatorTemporarily: () => void;
 }
 
@@ -90,12 +91,11 @@ export const useEventHandlers = ({
   useEffect(() => {
     if (!svgRef.current) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg = select(svgRef.current);
     svg.attr("width", window.innerWidth).attr("height", window.innerHeight);
 
     // Enhanced zoom behavior with better filtering for Mac trackpad
-    zoomBehavior.current = d3
-      .zoom<SVGSVGElement, unknown>()
+    zoomBehavior.current = zoom<SVGSVGElement, unknown>()
       .scaleExtent([ZOOM_CONSTANTS.MIN_ZOOM, ZOOM_CONSTANTS.MAX_ZOOM]) // Min 10%, Max 700%
       .filter((event) => {
         // Prevent zoom during marquee selection or component dragging
@@ -197,12 +197,12 @@ export const useEventHandlers = ({
           };
 
           // Apply zoom centered on mouse position
-          const newTransform = d3.zoomIdentity
+          const newTransform = zoomIdentity
             .translate(centerX, centerY)
             .scale(newScale)
             .translate(-pointInTransformSpace.x, -pointInTransformSpace.y);
 
-          const svg = d3.select(svgRef.current);
+          const svg = select(svgRef.current);
           svg.call(zoomBehavior.current.transform, newTransform);
         }
       }
@@ -215,11 +215,11 @@ export const useEventHandlers = ({
         const deltaX = -event.deltaX * ZOOM_CONSTANTS.PAN_SENSITIVITY;
         const deltaY = -event.deltaY * ZOOM_CONSTANTS.PAN_SENSITIVITY;
 
-        const newTransform = d3.zoomIdentity
+        const newTransform = zoomIdentity
           .translate(transform.x + deltaX, transform.y + deltaY)
           .scale(transform.k);
 
-        const svg = d3.select(svgRef.current);
+        const svg = select(svgRef.current);
         svg.call(zoomBehavior.current.transform, newTransform);
       }
     };
@@ -302,7 +302,7 @@ export const useEventHandlers = ({
         };
 
         // Apply zoom centered on pinch center
-        const newTransform = d3.zoomIdentity
+        const newTransform = zoomIdentity
           .translate(
             globalTouchCenter.x - rect.left,
             globalTouchCenter.y - rect.top
@@ -311,7 +311,7 @@ export const useEventHandlers = ({
           .translate(-centerInTransformSpace.x, -centerInTransformSpace.y);
 
         if (svgRef.current && zoomBehavior.current) {
-          const svg = d3.select(svgRef.current);
+          const svg = select(svgRef.current);
           svg.call(zoomBehavior.current.transform, newTransform);
         }
         event.preventDefault();

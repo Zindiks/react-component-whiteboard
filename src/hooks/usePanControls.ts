@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useState, useEffect } from "react";
-import * as d3 from "d3";
+import { ZoomTransform } from "d3-zoom";
 import { Component } from "../types/whiteboard";
 import { COMPONENT_SIZES, MARQUEE_CONSTANTS } from "../constants/appConstants";
 
@@ -36,8 +36,8 @@ export interface PanControlsActions {
 
 export interface UsePanControlsProps {
   components: Component[];
-  transform: d3.ZoomTransform;
-  applyTransform: (newTransform: d3.ZoomTransform) => void;
+  transform: ZoomTransform;
+  applyTransform: (newTransform: ZoomTransform) => void;
   setSelectedComponents: React.Dispatch<React.SetStateAction<number[]>>;
   setMousePosition: React.Dispatch<
     React.SetStateAction<{ x: number; y: number }>

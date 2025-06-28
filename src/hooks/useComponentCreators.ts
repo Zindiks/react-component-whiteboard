@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import * as d3 from "d3";
-import { Component } from "../types/whiteboard";
+import { ZoomTransform } from "d3-zoom";
+import { Component, Position } from "../types/whiteboard";
 import { COMPONENT_SIZES } from "../constants/appConstants";
 import { widgetLogger } from "../utils/componentLoggers";
 
@@ -8,8 +8,8 @@ interface UseComponentCreatorsProps {
   components: Component[];
   setComponents: React.Dispatch<React.SetStateAction<Component[]>>;
   setSelectedComponents: (components: number[]) => void;
-  mousePosition: { x: number; y: number };
-  transform: d3.ZoomTransform;
+  mousePosition: Position;
+  transform: ZoomTransform;
 }
 
 export const useComponentCreators = ({

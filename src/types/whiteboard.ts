@@ -1,4 +1,4 @@
-export interface Component {
+export type Component = {
   id: number;
   x: number;
   y: number;
@@ -11,12 +11,17 @@ export interface Component {
   youtubeUrl?: string; // For YouTube video components
   soundcloudUrl?: string; // For SoundCloud components
   spotifyUrl?: string; // For Spotify components
-}
+};
 
 export interface Point {
   x: number;
   y: number;
 }
+
+export type Position = {
+  x: number;
+  y: number;
+};
 
 export interface InitialPosition {
   id: number;

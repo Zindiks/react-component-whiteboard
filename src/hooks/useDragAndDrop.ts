@@ -7,7 +7,7 @@
  */
 
 import { useEffect } from "react";
-import * as d3 from "d3";
+import { ZoomTransform } from "d3-zoom";
 import { Component } from "../types/whiteboard";
 import {
   isYouTubeUrl,
@@ -18,7 +18,7 @@ import { COMPONENT_SIZES } from "../constants/appConstants";
 import { dragDropLogger } from "../utils/componentLoggers";
 
 export interface UseDragAndDropProps {
-  transform: d3.ZoomTransform;
+  transform: ZoomTransform;
   components: Component[];
   setComponents: React.Dispatch<React.SetStateAction<Component[]>>;
   setIsDragOverBoard: (isDragOver: boolean) => void;
