@@ -1,5 +1,5 @@
 import React from "react";
-import { Z_INDEX } from "../../constants/appConstants";
+import { cn } from "../../lib/utils";
 
 interface ComponentHeaderProps {
   children: React.ReactNode;
@@ -18,28 +18,20 @@ export const ComponentHeader: React.FC<ComponentHeaderProps> = ({
 }) => {
   if (!visible || !position) return null;
 
-  const headerStyle: React.CSSProperties = {
-    position: "absolute" as const,
-    left: `${position.x}px`,
-    top: `${position.y + offsetY}px`,
-    backgroundColor: "rgba(30, 41, 59, 0.95)",
-    borderRadius: "8px",
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    padding: "0 12px",
-    zIndex: Z_INDEX.COMPONENT_HEADER,
-    pointerEvents: "auto" as const,
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
-    border: "1px solid rgba(255, 255, 255, 0.1)",
-    whiteSpace: "nowrap" as const,
-    transform: "translateX(-50%)", // Center horizontally
-    width: headerWidth === "auto" ? "auto" : `${headerWidth}px`,
-  };
-
   return (
     <div
-      style={headerStyle}
+      className={cn(
+        "absolute flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg border",
+        "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+        "border-border/50",
+        "z-[10002] pointer-events-auto whitespace-nowrap",
+        "transform -translate-x-1/2"
+      )}
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y + offsetY}px`,
+        width: headerWidth === "auto" ? "auto" : `${headerWidth}px`,
+      }}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}

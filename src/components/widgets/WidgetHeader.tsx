@@ -1,20 +1,22 @@
 import React from "react";
-import { RefreshCw, Settings, X } from "lucide-react";
+import { RefreshCw, Settings, X, Eye, EyeOff } from "lucide-react";
 import { ComponentHeader } from "../ui/ComponentHeader";
-
-export interface WidgetFormattingOptions {
-  title: string;
-  refreshInterval?: number;
-  isVisible: boolean;
-  settings?: Record<string, string | number | boolean>;
-}
+import { Button } from "../ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Input } from "../ui/input";
+import { WidgetFormattingOptions } from "../../types/formatting";
 
 interface WidgetHeaderProps {
   options: WidgetFormattingOptions;
   onOptionsChange: (options: Partial<WidgetFormattingOptions>) => void;
   position: { x: number; y: number };
   visible: boolean;
-  widgetType: string;
   onRefresh?: () => void;
   onSettings?: () => void;
   onClose?: () => void;
@@ -34,7 +36,6 @@ export const WidgetHeader: React.FC<WidgetHeaderProps> = ({
   onOptionsChange,
   position,
   visible,
-  widgetType,
   onRefresh,
   onSettings,
   onClose,
@@ -58,135 +59,89 @@ export const WidgetHeader: React.FC<WidgetHeaderProps> = ({
       headerWidth="auto"
       offsetY={-40}
     >
-      {/* Widget Type Label */}
-      <div
-        style={{
-          color: "white",
-          fontSize: "12px",
-          fontWeight: "bold",
-          minWidth: "80px",
-        }}
-      >
-        {widgetType}
-      </div>
-
       {/* Title Input */}
       <div className="flex items-center gap-1">
-        <input
+        <Input
           type="text"
           value={options.title}
           onChange={(e) => handleTitleChange(e.target.value)}
           placeholder="Widget Title"
-          style={{
-            background: "rgba(255, 255, 255, 0.1)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            borderRadius: "4px",
-            color: "white",
-            padding: "4px 8px",
-            fontSize: "12px",
-            width: "120px",
-          }}
+          className="w-32 h-8 text-sm"
         />
       </div>
 
       {/* Refresh Interval */}
       <div className="flex items-center gap-1">
-        <select
-          value={options.refreshInterval || 0}
-          onChange={(e) => handleRefreshIntervalChange(Number(e.target.value))}
-          style={{
-            background: "rgba(255, 255, 255, 0.1)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            borderRadius: "4px",
-            color: "white",
-            padding: "4px 8px",
-            fontSize: "12px",
-            cursor: "pointer",
-          }}
+        <Select
+          value={String(options.refreshInterval || 0)}
+          onValueChange={(value) => handleRefreshIntervalChange(Number(value))}
         >
-          {REFRESH_INTERVALS.map((interval) => (
-            <option key={interval.value} value={interval.value}>
-              {interval.label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-20 h-8">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {REFRESH_INTERVALS.map((interval) => (
+              <SelectItem key={interval.value} value={String(interval.value)}>
+                {interval.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Visibility Toggle */}
-      <button
+      <Button
+        variant={options.isVisible ? "default" : "secondary"}
+        size="sm"
         onClick={handleVisibilityToggle}
-        style={{
-          background: options.isVisible
-            ? "rgba(255, 255, 255, 0.3)"
-            : "rgba(255, 255, 255, 0.1)",
-          border: "1px solid rgba(255, 255, 255, 0.2)",
-          borderRadius: "4px",
-          color: "white",
-          padding: "4px 8px",
-          cursor: "pointer",
-          fontSize: "12px",
-        }}
+        className="h-8 px-3"
       >
-        {options.isVisible ? "Visible" : "Hidden"}
-      </button>
+        {options.isVisible ? (
+          <>
+            <Eye className="h-3 w-3 mr-1" />
+            Visible
+          </>
+        ) : (
+          <>
+            <EyeOff className="h-3 w-3 mr-1" />
+            Hidden
+          </>
+        )}
+      </Button>
 
       {/* Action Buttons */}
       <div className="flex items-center gap-1">
         {onRefresh && (
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onRefresh}
-            style={{
-              background: "rgba(255, 255, 255, 0.1)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              borderRadius: "4px",
-              color: "white",
-              padding: "4px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="h-8 w-8"
           >
-            <RefreshCw size={14} />
-          </button>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
         )}
 
         {onSettings && (
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onSettings}
-            style={{
-              background: "rgba(255, 255, 255, 0.1)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              borderRadius: "4px",
-              color: "white",
-              padding: "4px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="h-8 w-8"
           >
-            <Settings size={14} />
-          </button>
+            <Settings className="h-4 w-4" />
+          </Button>
         )}
 
         {onClose && (
-          <button
+          <Button
+            variant="destructive"
+            size="icon"
             onClick={onClose}
-            style={{
-              background: "rgba(255, 0, 0, 0.2)",
-              border: "1px solid rgba(255, 0, 0, 0.3)",
-              borderRadius: "4px",
-              color: "white",
-              padding: "4px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="h-8 w-8"
           >
-            <X size={14} />
-          </button>
+            <X className="h-4 w-4" />
+          </Button>
         )}
       </div>
     </ComponentHeader>

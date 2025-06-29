@@ -6,7 +6,6 @@ import React, {
   useMemo,
 } from "react";
 import * as d3 from "d3";
-import { widgetLogger } from "../utils/componentLoggers";
 import { usePerformance } from "../hooks/usePerformance";
 import { Timer } from "./widgets/Timer";
 import { Weather } from "./widgets/Weather";
@@ -50,7 +49,6 @@ import {
   Maximize2,
 } from "lucide-react";
 import { Button } from "./ui/button";
-import { TextFormattingOptions } from "./shapes/TextFormattingHeader";
 
 interface DraggableComponentProps {
   x: number;
@@ -80,10 +78,6 @@ interface DraggableComponentProps {
   onResize?: (id: number, width: number, height: number) => void;
   onTextChange?: (id: number, text: string) => void;
   onImageChange?: (id: number, imageSrc: string) => void;
-  onFormattingChange?: (
-    id: number,
-    formattingOptions: Partial<TextFormattingOptions>
-  ) => void;
   // Text formatting options
   fontSize?: number;
   fontFamily?: string;
@@ -124,7 +118,6 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   onResize,
   onTextChange,
   onImageChange,
-  onFormattingChange,
   fontSize,
   fontFamily,
   textColor,

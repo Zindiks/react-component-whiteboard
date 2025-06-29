@@ -3,7 +3,7 @@ import { Component, InitialPosition } from "../types/whiteboard";
 import { INITIAL_POSITIONS, COMPONENT_SIZES } from "../constants/appConstants";
 import { stateLogger } from "../utils/componentLoggers";
 import { getDynamicGridSize, snapPointToGrid } from "../utils/gridUtils";
-import { TextFormattingOptions } from "../components/shapes/TextFormattingHeader";
+import { TextFormattingOptions } from "../types/formatting";
 
 const DEFAULT_COMPONENTS: Component[] = [
   {
