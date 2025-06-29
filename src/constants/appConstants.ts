@@ -89,6 +89,7 @@ export const Z_INDEX = {
   ZOOM_INDICATOR: 10000,
   DRAG_OVERLAY: 1000,
   OVERVIEW_MODAL: 10001,
+  COMPONENT_HEADER: 10002, // Very high z-index for component headers
 } as const;
 
 // Color and Theme Constants

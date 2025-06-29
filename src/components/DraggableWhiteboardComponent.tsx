@@ -31,7 +31,6 @@ import {
   ImageShape,
 } from "./shapes";
 import { FloatingHeader } from "./widgets/FloatingHeader";
-import { WidgetHeader, WidgetFormattingOptions } from "./widgets/WidgetHeader";
 import {
   Video,
   Timer as TimerIcon,
@@ -505,23 +504,6 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     "imageShape",
   ].includes(type);
 
-  // Check if this is a widget component that should show a header
-  const isWidgetComponent = [
-    "timer",
-    "weather",
-    "bitcoin",
-    "currency",
-    "note",
-    "confetti",
-    "watch",
-    "scrollingtext",
-    "youtubeVideo",
-    "soundcloud",
-    "spotify",
-    "stylishlink",
-    "linkpreview",
-  ].includes(type);
-
   // Function to get component metadata for floating header
   const getComponentMetadata = () => {
     const metadata = {
@@ -591,29 +573,6 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
 
   return (
     <>
-      {/* Widget headers for selected widget components - only show for single selection */}
-      {selected && isWidgetComponent && selectedCount === 1 && (
-        <WidgetHeader
-          options={{
-            title: getComponentMetadata().title,
-            refreshInterval: 0,
-            isVisible: true,
-          }}
-          onOptionsChange={(options: Partial<WidgetFormattingOptions>) => {
-            // Handle widget formatting changes here if needed
-            console.log(`${type} formatting changed:`, options);
-          }}
-          position={{ x, y }}
-          width={width || 200}
-          visible={true}
-          widgetType={getComponentMetadata().title}
-          onRefresh={() => {
-            // Handle refresh for specific widget types
-            console.log(`Refreshing ${type}`);
-          }}
-        />
-      )}
-
       {/* Floating header for linkpreview component only - only show for single selection */}
       {selected && type === "linkpreview" && selectedCount === 1 && (
         <FloatingHeader

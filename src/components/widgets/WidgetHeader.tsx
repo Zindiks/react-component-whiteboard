@@ -13,7 +13,6 @@ interface WidgetHeaderProps {
   options: WidgetFormattingOptions;
   onOptionsChange: (options: Partial<WidgetFormattingOptions>) => void;
   position: { x: number; y: number };
-  width: number;
   visible: boolean;
   widgetType: string;
   onRefresh?: () => void;
@@ -34,7 +33,6 @@ export const WidgetHeader: React.FC<WidgetHeaderProps> = ({
   options,
   onOptionsChange,
   position,
-  width,
   visible,
   widgetType,
   onRefresh,
@@ -54,7 +52,12 @@ export const WidgetHeader: React.FC<WidgetHeaderProps> = ({
   };
 
   return (
-    <ComponentHeader position={position} width={width} visible={visible}>
+    <ComponentHeader
+      position={position}
+      visible={visible}
+      headerWidth="auto"
+      offsetY={-40}
+    >
       {/* Widget Type Label */}
       <div
         style={{

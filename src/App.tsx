@@ -1,4 +1,10 @@
-import { useRef, useEffect, useState, useCallback, useMemo } from "react";
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import * as d3 from "d3";
 import { ComponentFooter } from "./components/ComponentFooter";
 import { CategorySidebar } from "./components/CategorySidebar";
@@ -6,6 +12,10 @@ import { DraggableComponent } from "./components/DraggableWhiteboardComponent";
 import { GridBackground } from "./components/GridBackground";
 import { FPSMonitor } from "./components/FPSMonitor";
 import { DragPreviewOverlay } from "./components/whiteboard/DragPreviewOverlay";
+import {
+  WidgetHeader,
+  WidgetFormattingOptions,
+} from "./components/widgets/WidgetHeader";
 import { usePerformance } from "./hooks/usePerformance";
 import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
 import { Component } from "./types/whiteboard";
@@ -36,6 +46,13 @@ import {
   ComponentState,
   ComponentStateSetters,
 } from "./utils/clipboardOperations";
+import { createPortal } from "react-dom";
+import { TextFormattingHeader } from "./components/shapes/TextFormattingHeader";
+import { ShapeHeader } from "./components/shapes/ShapeHeader";
+import { LineHeader } from "./components/shapes/LineHeader";
+import { ImageHeader } from "./components/shapes/ImageHeader";
+import { ThemeToggle } from "./components/ThemeToggle";
+import { ComponentHeader } from "./components/ui/ComponentHeader";
 
 const CustomGrid = () => {
   // Performance optimizations
@@ -511,6 +528,7 @@ const CustomGrid = () => {
           />
         ))}
       </div>
+
       <ControlPanel
         onZoom={handleZoom}
         selectedComponents={selectedComponents}
@@ -563,6 +581,344 @@ const CustomGrid = () => {
 
       {/* FPS Monitor for performance tracking */}
       <FPSMonitor enabled={true} position="top-right" />
+
+      {/* Widget headers for selected widget components - only show for single selection */}
+      {selectedComponents.length === 1 &&
+        (() => {
+          const selectedComponent = components.find(
+            (c) => c.id === selectedComponents[0]
+          );
+          if (!selectedComponent) return null;
+
+          const isWidgetComponent = [
+            "timer",
+            "weather",
+            "bitcoin",
+            "currency",
+            "note",
+            "confetti",
+            "watch",
+            "scrollingtext",
+            "youtubeVideo",
+            "soundcloud",
+            "spotify",
+            "stylishlink",
+            "linkpreview",
+          ].includes(selectedComponent.type);
+
+          if (!isWidgetComponent) return null;
+
+          const getWidgetTitle = (type: string) => {
+            const metadata = {
+              timer: "Timer",
+              weather: "Weather",
+              bitcoin: "Bitcoin Chart",
+              currency: "Currency Converter",
+              note: "Text Note",
+              confetti: "Confetti Button",
+              watch: "Watch",
+              scrollingtext: "Scrolling Text",
+              youtubeVideo: "YouTube Video",
+              soundcloud: "SoundCloud",
+              spotify: "Spotify",
+              stylishlink: "Stylish Link",
+              linkpreview: "Link Preview",
+            };
+            return metadata[type as keyof typeof metadata] || type;
+          };
+
+          // Calculate the actual position on screen (not transformed)
+          const screenX = selectedComponent.x * transform.k + transform.x;
+          const screenY = selectedComponent.y * transform.k + transform.y;
+          const screenWidth = (selectedComponent.width || 200) * transform.k;
+
+          return (
+            <WidgetHeader
+              options={{
+                title: getWidgetTitle(selectedComponent.type),
+                refreshInterval: 0,
+                isVisible: true,
+              }}
+              onOptionsChange={(options: Partial<WidgetFormattingOptions>) => {
+                // Handle widget formatting changes here if needed
+                console.log(
+                  `${selectedComponent.type} formatting changed:`,
+                  options
+                );
+              }}
+              position={{
+                x: screenX + screenWidth / 2,
+                y: screenY - 60,
+              }}
+              visible={true}
+              widgetType={getWidgetTitle(selectedComponent.type)}
+              onRefresh={() => {
+                // Handle refresh for specific widget types
+                console.log(`Refreshing ${selectedComponent.type}`);
+              }}
+              onClose={() => setSelectedComponents([])}
+            />
+          );
+        })()}
+
+      {/* Shape headers for selected shape components - only show for single selection */}
+      {selectedComponents.length === 1 &&
+        (() => {
+          const selectedComponent = components.find(
+            (c) => c.id === selectedComponents[0]
+          );
+          if (!selectedComponent) return null;
+
+          const isShapeComponent = [
+            "rectangle",
+            "circle",
+            "ellipse",
+            "line",
+            "arrow",
+            "text",
+            "image",
+          ].includes(selectedComponent.type);
+
+          if (!isShapeComponent) return null;
+
+          const getShapeTitle = (type: string) => {
+            const metadata = {
+              rectangle: "Rectangle",
+              circle: "Circle",
+              ellipse: "Ellipse",
+              line: "Line",
+              arrow: "Arrow",
+              text: "Text",
+              image: "Image",
+            };
+            return metadata[type as keyof typeof metadata] || type;
+          };
+
+          // Calculate the actual position on screen (not transformed)
+          const screenX = selectedComponent.x * transform.k + transform.x;
+          const screenY = selectedComponent.y * transform.k + transform.y;
+          const screenWidth = (selectedComponent.width || 200) * transform.k;
+
+          return (
+            <ComponentHeader
+              position={{
+                x: screenX + screenWidth / 2,
+                y: screenY - 60,
+              }}
+              visible={true}
+              headerWidth="auto"
+              offsetY={-40}
+            >
+              {/* Shape Type Label */}
+              <div
+                style={{
+                  color: "white",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  minWidth: "80px",
+                }}
+              >
+                {getShapeTitle(selectedComponent.type)}
+              </div>
+
+              {/* Shape-specific controls */}
+              {selectedComponent.type === "text" && (
+                <>
+                  {/* Font Size */}
+                  <select
+                    value={selectedComponent.fontSize || 16}
+                    onChange={(e) => {
+                      handleFormattingChange(selectedComponent.id, {
+                        fontSize: Number(e.target.value),
+                      });
+                    }}
+                    style={{
+                      background: "rgba(255, 255, 255, 0.1)",
+                      border: "1px solid rgba(255, 255, 255, 0.2)",
+                      borderRadius: "4px",
+                      color: "white",
+                      padding: "4px 8px",
+                      fontSize: "12px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <option value={12}>12px</option>
+                    <option value={14}>14px</option>
+                    <option value={16}>16px</option>
+                    <option value={18}>18px</option>
+                    <option value={20}>20px</option>
+                    <option value={24}>24px</option>
+                    <option value={32}>32px</option>
+                  </select>
+
+                  {/* Font Family */}
+                  <select
+                    value={selectedComponent.fontFamily || "Arial"}
+                    onChange={(e) => {
+                      handleFormattingChange(selectedComponent.id, {
+                        fontFamily: e.target.value,
+                      });
+                    }}
+                    style={{
+                      background: "rgba(255, 255, 255, 0.1)",
+                      border: "1px solid rgba(255, 255, 255, 0.2)",
+                      borderRadius: "4px",
+                      color: "white",
+                      padding: "4px 8px",
+                      fontSize: "12px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <option value="Arial">Arial</option>
+                    <option value="Helvetica">Helvetica</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Courier New">Courier New</option>
+                  </select>
+
+                  {/* Text Align */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        handleFormattingChange(selectedComponent.id, {
+                          textAlign: "left",
+                        });
+                      }}
+                      style={{
+                        background:
+                          selectedComponent.textAlign === "left"
+                            ? "rgba(255, 255, 255, 0.3)"
+                            : "rgba(255, 255, 255, 0.1)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        borderRadius: "4px",
+                        color: "white",
+                        padding: "4px 8px",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                      }}
+                    >
+                      Left
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleFormattingChange(selectedComponent.id, {
+                          textAlign: "center",
+                        });
+                      }}
+                      style={{
+                        background:
+                          selectedComponent.textAlign === "center"
+                            ? "rgba(255, 255, 255, 0.3)"
+                            : "rgba(255, 255, 255, 0.1)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        borderRadius: "4px",
+                        color: "white",
+                        padding: "4px 8px",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                      }}
+                    >
+                      Center
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleFormattingChange(selectedComponent.id, {
+                          textAlign: "right",
+                        });
+                      }}
+                      style={{
+                        background:
+                          selectedComponent.textAlign === "right"
+                            ? "rgba(255, 255, 255, 0.3)"
+                            : "rgba(255, 255, 255, 0.1)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        borderRadius: "4px",
+                        color: "white",
+                        padding: "4px 8px",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                      }}
+                    >
+                      Right
+                    </button>
+                  </div>
+
+                  {/* Bold/Italic */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        handleFormattingChange(selectedComponent.id, {
+                          fontWeight:
+                            selectedComponent.fontWeight === "bold"
+                              ? "normal"
+                              : "bold",
+                        });
+                      }}
+                      style={{
+                        background:
+                          selectedComponent.fontWeight === "bold"
+                            ? "rgba(255, 255, 255, 0.3)"
+                            : "rgba(255, 255, 255, 0.1)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        borderRadius: "4px",
+                        color: "white",
+                        padding: "4px 8px",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      B
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleFormattingChange(selectedComponent.id, {
+                          fontStyle:
+                            selectedComponent.fontStyle === "italic"
+                              ? "normal"
+                              : "italic",
+                        });
+                      }}
+                      style={{
+                        background:
+                          selectedComponent.fontStyle === "italic"
+                            ? "rgba(255, 255, 255, 0.3)"
+                            : "rgba(255, 255, 255, 0.1)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        borderRadius: "4px",
+                        color: "white",
+                        padding: "4px 8px",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      I
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Close button */}
+              <button
+                onClick={() => setSelectedComponents([])}
+                style={{
+                  background: "rgba(255, 0, 0, 0.2)",
+                  border: "1px solid rgba(255, 0, 0, 0.3)",
+                  borderRadius: "4px",
+                  color: "white",
+                  padding: "4px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                ✕
+              </button>
+            </ComponentHeader>
+          );
+        })()}
     </div>
   );
 };
