@@ -1,12 +1,14 @@
 import React from "react";
 import { BaseShape, BaseShapeProps } from "./BaseShape";
 
-export interface TextShapeProps extends Omit<BaseShapeProps, "children"> {
+interface TextShapeProps extends Omit<BaseShapeProps, "children"> {
   text?: string;
   fontSize?: number;
   fontFamily?: string;
   textColor?: string;
   textAlign?: "left" | "center" | "right";
+  fontWeight?: "normal" | "bold";
+  fontStyle?: "normal" | "italic";
   backgroundColor?: string;
   padding?: number;
   onTextChange?: (text: string) => void;
@@ -18,10 +20,12 @@ export const TextShape: React.FC<TextShapeProps> = ({
   fontFamily = "Arial, sans-serif",
   textColor = "#374151",
   textAlign = "center",
+  fontWeight = "normal",
+  fontStyle = "normal",
   backgroundColor = "transparent",
   padding = 8,
   onTextChange,
-  style,
+  selected = false,
   ...props
 }) => {
   const [isEditing, setIsEditing] = React.useState(false);
@@ -59,9 +63,7 @@ export const TextShape: React.FC<TextShapeProps> = ({
   return (
     <BaseShape
       {...props}
-      style={{
-        ...style,
-      }}
+      selected={selected}
       onSelect={() => {
         if (!isEditing) {
           props.onSelect?.();
@@ -89,6 +91,8 @@ export const TextShape: React.FC<TextShapeProps> = ({
               fontFamily,
               color: textColor,
               textAlign,
+              fontWeight,
+              fontStyle,
               padding: 0,
             }}
           />
@@ -100,6 +104,8 @@ export const TextShape: React.FC<TextShapeProps> = ({
               fontFamily,
               color: textColor,
               textAlign,
+              fontWeight,
+              fontStyle,
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",
               justifyContent:

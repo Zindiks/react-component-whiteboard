@@ -1,10 +1,19 @@
-import { useRef, useEffect, useState, useCallback, useMemo } from "react";
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import * as d3 from "d3";
 import { ComponentFooter } from "./components/ComponentFooter";
 import { CategorySidebar } from "./components/CategorySidebar";
 import { DraggableComponent } from "./components/DraggableWhiteboardComponent";
 import { GridBackground } from "./components/GridBackground";
 import { FPSMonitor } from "./components/FPSMonitor";
+import { DragPreviewOverlay } from "./components/whiteboard/DragPreviewOverlay";
+import { WidgetHeader } from "./components/widgets/WidgetHeader";
+import { WidgetFormattingOptions } from "./types/formatting";
 import { usePerformance } from "./hooks/usePerformance";
 import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
 import { Component } from "./types/whiteboard";
@@ -35,6 +44,23 @@ import {
   ComponentState,
   ComponentStateSetters,
 } from "./utils/clipboardOperations";
+import { ComponentHeader } from "./components/ui/ComponentHeader";
+import { Button } from "./components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./components/ui/select";
+import {
+  X,
+  Bold,
+  Italic,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+} from "lucide-react";
 
 const CustomGrid = () => {
   // Performance optimizations
@@ -58,6 +84,7 @@ const CustomGrid = () => {
     handleResizeComponent,
     handleTextChange,
     handleImageChange,
+    handleFormattingChange,
     handleDrag,
     handleSelect,
     handleDragStart,
@@ -88,12 +115,24 @@ const CustomGrid = () => {
   // Mouse position tracking for paste operations
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
+  // Drag preview state
+  const [dragPreviewData, setDragPreviewData] = useState({
+    isVisible: false,
+    componentType: null as string | null,
+    mousePosition: { x: 0, y: 0 },
+  });
+
   // Grid toggle state
   const [showGrid, setShowGrid] = useState(GRID_CONSTANTS.ENABLED);
 
   // Grid style state
   // Grid size state
   const [gridSize, setGridSize] = useState<number>(GRID_CONSTANTS.SIZE);
+
+  // Grid type state
+  const [gridType, setGridType] = useState<"lines" | "dots" | "both">(
+    GRID_CONSTANTS.DEFAULT_TYPE
+  );
 
   // Dynamic grid sizing state
   const [dynamicGridSizing, setDynamicGridSizing] = useState<boolean>(
@@ -111,8 +150,6 @@ const CustomGrid = () => {
   const {
     activeCategory,
     isSidebarOpen,
-    isDragOverBoard,
-    dragType,
     setIsDragOverBoard,
     setDragType,
     handleCategoryClick,
@@ -147,6 +184,7 @@ const CustomGrid = () => {
     setIsDragOverBoard,
     setDragType,
     addNewComponent,
+    setDragPreviewData,
   });
 
   // Use component creators hook
@@ -393,8 +431,19 @@ const CustomGrid = () => {
           enabled={showGrid}
           size={gridSize}
           dynamicSizing={dynamicGridSizing}
+          gridType={gridType}
         />
       </svg>
+
+      {/* Drag Preview Overlay */}
+      <DragPreviewOverlay
+        transform={transform}
+        mousePosition={dragPreviewData.mousePosition}
+        componentType={dragPreviewData.componentType}
+        gridSize={gridSize}
+        snapToGrid={snapToGrid}
+        isVisible={dragPreviewData.isVisible}
+      />
 
       {/* Main SVG for zoom/pan behavior */}
       <svg
@@ -483,9 +532,23 @@ const CustomGrid = () => {
             youtubeUrl={component.youtubeUrl}
             soundcloudUrl={component.soundcloudUrl}
             spotifyUrl={component.spotifyUrl}
+            fontSize={component.fontSize}
+            fontFamily={component.fontFamily}
+            textColor={component.textColor}
+            textAlign={component.textAlign}
+            fontWeight={component.fontWeight}
+            fontStyle={component.fontStyle}
+            fillColor={component.fillColor}
+            strokeColor={component.strokeColor}
+            strokeWidth={component.strokeWidth}
+            borderRadius={component.borderRadius}
+            strokeStyle={component.strokeStyle}
+            arrowStyle={component.arrowStyle}
+            arrowSize={component.arrowSize}
           />
         ))}
       </div>
+
       <ControlPanel
         onZoom={handleZoom}
         selectedComponents={selectedComponents}
@@ -499,6 +562,8 @@ const CustomGrid = () => {
         }
         snapToGrid={snapToGrid}
         onToggleSnap={() => setSnapToGrid(!snapToGrid)}
+        gridType={gridType}
+        onGridTypeChange={(type) => setGridType(type)}
       />
 
       {/* Component Footer and Sidebar */}
@@ -513,43 +578,6 @@ const CustomGrid = () => {
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebar}
       />
-
-      {/* Drag overlay indicator */}
-      {isDragOverBoard && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: COLORS.PRIMARY_BLUE_LIGHT,
-            border: `3px dashed ${COLORS.PRIMARY_BLUE}`,
-            borderRadius: TYPOGRAPHY.BORDER_RADIUS_LARGE,
-            pointerEvents: "none",
-            zIndex: Z_INDEX.DRAG_OVERLAY,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: COLORS.PRIMARY_BLUE_DARK,
-              color: "white",
-              padding: "16px 24px",
-              borderRadius: TYPOGRAPHY.BORDER_RADIUS_MEDIUM,
-              fontSize: "18px",
-              fontWeight: TYPOGRAPHY.FONT_WEIGHT_SEMIBOLD,
-              boxShadow: `0 8px 32px ${COLORS.BLACK_SHADOW_STRONG}`,
-            }}
-          >
-            {dragType === "image"
-              ? "📷 Drop image here"
-              : "🔧 Drop component here"}
-          </div>
-        </div>
-      )}
 
       {/* Overview/Minimap overlay */}
       {showOverview && (
@@ -575,6 +603,579 @@ const CustomGrid = () => {
 
       {/* FPS Monitor for performance tracking */}
       <FPSMonitor enabled={true} position="top-right" />
+
+      {/* Widget headers for selected widget components - only show for single selection */}
+      {selectedComponents.length === 1 &&
+        (() => {
+          const selectedComponent = components.find(
+            (c) => c.id === selectedComponents[0]
+          );
+          if (!selectedComponent) return null;
+
+          const isWidgetComponent = [
+            "timer",
+            "weather",
+            "bitcoin",
+            "currency",
+            "note",
+            "confetti",
+            "watch",
+            "scrollingtext",
+            "youtubeVideo",
+            "soundcloud",
+            "spotify",
+            "stylishlink",
+            "linkpreview",
+          ].includes(selectedComponent.type);
+
+          if (!isWidgetComponent) return null;
+
+          const getWidgetTitle = (type: string) => {
+            const metadata = {
+              timer: "Timer",
+              weather: "Weather",
+              bitcoin: "Bitcoin Chart",
+              currency: "Currency Converter",
+              note: "Text Note",
+              confetti: "Confetti Button",
+              watch: "Watch",
+              scrollingtext: "Scrolling Text",
+              youtubeVideo: "YouTube Video",
+              soundcloud: "SoundCloud",
+              spotify: "Spotify",
+              stylishlink: "Stylish Link",
+              linkpreview: "Link Preview",
+            };
+            return metadata[type as keyof typeof metadata] || type;
+          };
+
+          // Calculate the actual position on screen (not transformed)
+          const screenX = selectedComponent.x * transform.k + transform.x;
+          const screenY = selectedComponent.y * transform.k + transform.y;
+          const screenWidth = (selectedComponent.width || 200) * transform.k;
+
+          return (
+            <WidgetHeader
+              options={{
+                title: getWidgetTitle(selectedComponent.type),
+                refreshInterval: 0,
+                isVisible: true,
+              }}
+              onOptionsChange={(options: Partial<WidgetFormattingOptions>) => {
+                // Handle widget formatting changes here if needed
+                console.log(
+                  `${selectedComponent.type} formatting changed:`,
+                  options
+                );
+              }}
+              position={{
+                x: screenX + screenWidth / 2,
+                y: screenY - 60,
+              }}
+              visible={true}
+              onRefresh={() => {
+                // Handle refresh for specific widget types
+                console.log(`Refreshing ${selectedComponent.type}`);
+              }}
+              onClose={() => setSelectedComponents([])}
+            />
+          );
+        })()}
+
+      {/* Shape headers for selected shape components - only show for single selection */}
+      {selectedComponents.length === 1 &&
+        (() => {
+          const selectedComponent = components.find(
+            (c) => c.id === selectedComponents[0]
+          );
+          if (!selectedComponent) return null;
+
+          const isShapeComponent = [
+            "rectangle",
+            "circle",
+            "ellipse",
+            "line",
+            "arrow",
+            "text",
+            "image",
+          ].includes(selectedComponent.type);
+
+          if (!isShapeComponent) return null;
+
+          // Calculate the actual position on screen (not transformed)
+          const screenX = selectedComponent.x * transform.k + transform.x;
+          const screenY = selectedComponent.y * transform.k + transform.y;
+          const screenWidth = (selectedComponent.width || 200) * transform.k;
+
+          return (
+            <ComponentHeader
+              position={{
+                x: screenX + screenWidth / 2,
+                y: screenY - 60,
+              }}
+              visible={true}
+              headerWidth="auto"
+              offsetY={-40}
+            >
+              {/* Shape-specific controls */}
+              {selectedComponent.type === "text" && (
+                <>
+                  {/* Font Size */}
+                  <Select
+                    value={String(selectedComponent.fontSize || 16)}
+                    onValueChange={(value) => {
+                      handleFormattingChange(selectedComponent.id, {
+                        fontSize: Number(value),
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="w-20 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="12">12px</SelectItem>
+                      <SelectItem value="14">14px</SelectItem>
+                      <SelectItem value="16">16px</SelectItem>
+                      <SelectItem value="18">18px</SelectItem>
+                      <SelectItem value="20">20px</SelectItem>
+                      <SelectItem value="24">24px</SelectItem>
+                      <SelectItem value="32">32px</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Font Family */}
+                  <Select
+                    value={selectedComponent.fontFamily || "Arial"}
+                    onValueChange={(value) => {
+                      handleFormattingChange(selectedComponent.id, {
+                        fontFamily: value,
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="w-32 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Arial">Arial</SelectItem>
+                      <SelectItem value="Helvetica">Helvetica</SelectItem>
+                      <SelectItem value="Times New Roman">
+                        Times New Roman
+                      </SelectItem>
+                      <SelectItem value="Georgia">Georgia</SelectItem>
+                      <SelectItem value="Courier New">Courier New</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Text Color Picker */}
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="color"
+                      value={selectedComponent.textColor || "#374151"}
+                      onChange={(e) => {
+                        handleFormattingChange(selectedComponent.id, {
+                          textColor: e.target.value,
+                        });
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      className="w-8 h-8 rounded border border-border cursor-pointer"
+                      title="Text Color"
+                    />
+                  </div>
+
+                  {/* Text Align */}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant={
+                        selectedComponent.textAlign === "left"
+                          ? "default"
+                          : "ghost"
+                      }
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFormattingChange(selectedComponent.id, {
+                          textAlign: "left",
+                        });
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      className="h-8 w-8"
+                    >
+                      <AlignLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={
+                        selectedComponent.textAlign === "center"
+                          ? "default"
+                          : "ghost"
+                      }
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFormattingChange(selectedComponent.id, {
+                          textAlign: "center",
+                        });
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      className="h-8 w-8"
+                    >
+                      <AlignCenter className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={
+                        selectedComponent.textAlign === "right"
+                          ? "default"
+                          : "ghost"
+                      }
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFormattingChange(selectedComponent.id, {
+                          textAlign: "right",
+                        });
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      className="h-8 w-8"
+                    >
+                      <AlignRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Bold/Italic */}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant={
+                        selectedComponent.fontWeight === "bold"
+                          ? "default"
+                          : "ghost"
+                      }
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFormattingChange(selectedComponent.id, {
+                          fontWeight:
+                            selectedComponent.fontWeight === "bold"
+                              ? "normal"
+                              : "bold",
+                        });
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      className="h-8 w-8"
+                    >
+                      <Bold className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={
+                        selectedComponent.fontStyle === "italic"
+                          ? "default"
+                          : "ghost"
+                      }
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFormattingChange(selectedComponent.id, {
+                          fontStyle:
+                            selectedComponent.fontStyle === "italic"
+                              ? "normal"
+                              : "italic",
+                        });
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      className="h-8 w-8"
+                    >
+                      <Italic className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* Shape formatting controls */}
+              {(selectedComponent.type === "rectangle" ||
+                selectedComponent.type === "circle" ||
+                selectedComponent.type === "ellipse") && (
+                <>
+                  {/* Fill Color Picker */}
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-medium min-w-[40px] text-foreground">
+                      Fill:
+                    </span>
+                    <input
+                      type="color"
+                      value={selectedComponent.fillColor || "#f3f4f6"}
+                      onChange={(e) => {
+                        handleFormattingChange(selectedComponent.id, {
+                          fillColor: e.target.value,
+                        } as Record<string, unknown>);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      className="w-8 h-8 rounded border border-border cursor-pointer"
+                      title="Fill Color"
+                    />
+                  </div>
+
+                  {/* Border Color Picker */}
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-medium min-w-[40px] text-foreground">
+                      Border:
+                    </span>
+                    <input
+                      type="color"
+                      value={selectedComponent.strokeColor || "#9ca3af"}
+                      onChange={(e) => {
+                        handleFormattingChange(selectedComponent.id, {
+                          strokeColor: e.target.value,
+                        } as Record<string, unknown>);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      className="w-8 h-8 rounded border border-border cursor-pointer"
+                      title="Border Color"
+                    />
+                  </div>
+
+                  {/* Border Width */}
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-medium min-w-[40px] text-foreground">
+                      Width:
+                    </span>
+                    <Select
+                      value={String(selectedComponent.strokeWidth || 2)}
+                      onValueChange={(value) => {
+                        handleFormattingChange(selectedComponent.id, {
+                          strokeWidth: Number(value),
+                        } as Record<string, unknown>);
+                      }}
+                    >
+                      <SelectTrigger className="w-16 h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">0px</SelectItem>
+                        <SelectItem value="1">1px</SelectItem>
+                        <SelectItem value="2">2px</SelectItem>
+                        <SelectItem value="3">3px</SelectItem>
+                        <SelectItem value="4">4px</SelectItem>
+                        <SelectItem value="5">5px</SelectItem>
+                        <SelectItem value="8">8px</SelectItem>
+                        <SelectItem value="10">10px</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Border Radius (for rectangle only) */}
+                  {selectedComponent.type === "rectangle" && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm font-medium min-w-[40px] text-foreground">
+                        Radius:
+                      </span>
+                      <Select
+                        value={String(selectedComponent.borderRadius || 8)}
+                        onValueChange={(value) => {
+                          handleFormattingChange(selectedComponent.id, {
+                            borderRadius: Number(value),
+                          } as Record<string, unknown>);
+                        }}
+                      >
+                        <SelectTrigger className="w-16 h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">0px</SelectItem>
+                          <SelectItem value="4">4px</SelectItem>
+                          <SelectItem value="8">8px</SelectItem>
+                          <SelectItem value="12">12px</SelectItem>
+                          <SelectItem value="16">16px</SelectItem>
+                          <SelectItem value="20">20px</SelectItem>
+                          <SelectItem value="24">24px</SelectItem>
+                          <SelectItem value="32">32px</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Line and Arrow specific controls */}
+              {(selectedComponent.type === "line" ||
+                selectedComponent.type === "arrow") && (
+                <>
+                  {/* Stroke Color Picker */}
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-medium min-w-[40px] text-foreground">
+                      Color:
+                    </span>
+                    <input
+                      type="color"
+                      value={selectedComponent.strokeColor || "#9ca3af"}
+                      onChange={(e) => {
+                        handleFormattingChange(selectedComponent.id, {
+                          strokeColor: e.target.value,
+                        } as Record<string, unknown>);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      className="w-8 h-8 rounded border border-border cursor-pointer"
+                      title="Stroke Color"
+                    />
+                  </div>
+
+                  {/* Stroke Width */}
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-medium min-w-[40px] text-foreground">
+                      Width:
+                    </span>
+                    <Select
+                      value={String(selectedComponent.strokeWidth || 2)}
+                      onValueChange={(value) => {
+                        handleFormattingChange(selectedComponent.id, {
+                          strokeWidth: Number(value),
+                        } as Record<string, unknown>);
+                      }}
+                    >
+                      <SelectTrigger className="w-16 h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1px</SelectItem>
+                        <SelectItem value="2">2px</SelectItem>
+                        <SelectItem value="3">3px</SelectItem>
+                        <SelectItem value="4">4px</SelectItem>
+                        <SelectItem value="5">5px</SelectItem>
+                        <SelectItem value="8">8px</SelectItem>
+                        <SelectItem value="10">10px</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Stroke Style */}
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-medium min-w-[40px] text-foreground">
+                      Style:
+                    </span>
+                    <Select
+                      value={selectedComponent.strokeStyle || "solid"}
+                      onValueChange={(value) => {
+                        handleFormattingChange(selectedComponent.id, {
+                          strokeStyle: value as "solid" | "dashed" | "dotted",
+                        } as Record<string, unknown>);
+                      }}
+                    >
+                      <SelectTrigger className="w-20 h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="solid">Solid</SelectItem>
+                        <SelectItem value="dashed">Dashed</SelectItem>
+                        <SelectItem value="dotted">Dotted</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Arrow Style (for arrow only) */}
+                  {selectedComponent.type === "arrow" && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm font-medium min-w-[40px] text-foreground">
+                        Arrow:
+                      </span>
+                      <Select
+                        value={selectedComponent.arrowStyle || "arrow"}
+                        onValueChange={(value) => {
+                          handleFormattingChange(selectedComponent.id, {
+                            arrowStyle: value as
+                              | "none"
+                              | "arrow"
+                              | "double-arrow",
+                          } as Record<string, unknown>);
+                        }}
+                      >
+                        <SelectTrigger className="w-20 h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="arrow">Arrow</SelectItem>
+                          <SelectItem value="double-arrow">Double</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Arrow Size (for arrow only) */}
+                  {selectedComponent.type === "arrow" && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm font-medium min-w-[40px] text-foreground">
+                        Size:
+                      </span>
+                      <Select
+                        value={String(selectedComponent.arrowSize || 10)}
+                        onValueChange={(value) => {
+                          handleFormattingChange(selectedComponent.id, {
+                            arrowSize: Number(value),
+                          } as Record<string, unknown>);
+                        }}
+                      >
+                        <SelectTrigger className="w-16 h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="6">Small</SelectItem>
+                          <SelectItem value="10">Medium</SelectItem>
+                          <SelectItem value="14">Large</SelectItem>
+                          <SelectItem value="18">XL</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Image specific controls */}
+              {selectedComponent.type === "image" && (
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-medium min-w-[40px] text-foreground">
+                    Radius:
+                  </span>
+                  <Select
+                    value={String(selectedComponent.borderRadius || 8)}
+                    onValueChange={(value) => {
+                      handleFormattingChange(selectedComponent.id, {
+                        borderRadius: Number(value),
+                      } as Record<string, unknown>);
+                    }}
+                  >
+                    <SelectTrigger className="w-16 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">0px</SelectItem>
+                      <SelectItem value="4">4px</SelectItem>
+                      <SelectItem value="8">8px</SelectItem>
+                      <SelectItem value="12">12px</SelectItem>
+                      <SelectItem value="16">16px</SelectItem>
+                      <SelectItem value="20">20px</SelectItem>
+                      <SelectItem value="24">24px</SelectItem>
+                      <SelectItem value="32">32px</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Close button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedComponents([]);
+                }}
+                className="h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </ComponentHeader>
+          );
+        })()}
     </div>
   );
 };

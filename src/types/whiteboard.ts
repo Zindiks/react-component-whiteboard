@@ -11,6 +11,22 @@ export interface Component {
   youtubeUrl?: string; // For YouTube video components
   soundcloudUrl?: string; // For SoundCloud components
   spotifyUrl?: string; // For Spotify components
+  // Text formatting options
+  fontSize?: number;
+  fontFamily?: string;
+  textColor?: string;
+  textAlign?: "left" | "center" | "right";
+  fontWeight?: "normal" | "bold";
+  fontStyle?: "normal" | "italic";
+  // Shape formatting options
+  fillColor?: string;
+  strokeColor?: string;
+  strokeWidth?: number;
+  borderRadius?: number;
+  // Line formatting options
+  strokeStyle?: "solid" | "dashed" | "dotted";
+  arrowStyle?: "none" | "arrow" | "double-arrow";
+  arrowSize?: number;
 }
 
 export interface Point {

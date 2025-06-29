@@ -1,91 +1,45 @@
 import React from "react";
 import { BaseShape, BaseShapeProps } from "./BaseShape";
-import { shapeLogger } from "../../utils/componentLoggers";
 
-export interface ImageShapeProps extends Omit<BaseShapeProps, "children"> {
+interface ImageShapeProps extends Omit<BaseShapeProps, "children"> {
   imageSrc?: string;
-  onImageChange?: (imageSrc: string) => void;
+  altText?: string;
+  objectFit?: "cover" | "contain" | "fill";
+  strokeColor?: string;
+  strokeWidth?: number;
   borderRadius?: number;
-  objectFit?: "cover" | "contain" | "fill" | "scale-down" | "none";
 }
 
 export const ImageShape: React.FC<ImageShapeProps> = ({
   imageSrc,
-  onImageChange,
-  borderRadius = 8,
+  altText = "Image",
   objectFit = "cover",
-  style,
+  strokeColor = "#9ca3af",
+  strokeWidth = 0,
+  borderRadius = 8,
+  selected = false,
   ...props
 }) => {
-  const handleDrop = React.useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const files = Array.from(e.dataTransfer.files);
-      const imageFile = files.find((file) => file.type.startsWith("image/"));
-
-      if (imageFile) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const result = event.target?.result as string;
-          onImageChange?.(result);
-        };
-        reader.readAsDataURL(imageFile);
-      }
-    },
-    [onImageChange]
-  );
-
-  const handleDragOver = React.useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-  }, []);
-
   return (
-    <BaseShape
-      {...props}
-      lockAspectRatio={true} // Lock aspect ratio for images
-      style={{
-        ...style,
-      }}
-    >
+    <BaseShape {...props} selected={selected}>
       <div
-        className="w-full h-full overflow-hidden"
+        className="w-full h-full"
         style={{
-          borderRadius,
+          border: `${strokeWidth}px solid ${strokeColor}`,
+          borderRadius: `${borderRadius}px`,
+          overflow: "hidden",
         }}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
       >
         {imageSrc ? (
           <img
             src={imageSrc}
-            alt="Image"
+            alt={altText}
             className="w-full h-full"
-            style={{
-              objectFit,
-            }}
-            draggable={false}
-            crossOrigin="anonymous"
-            onError={(e) => {
-              shapeLogger.warn("Image load error, trying without crossOrigin", {
-                imageSrc,
-              });
-              // Fallback: try without crossOrigin
-              (e.target as HTMLImageElement).crossOrigin = "";
-            }}
+            style={{ objectFit }}
           />
         ) : (
-          <div
-            className="w-full h-full flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300 text-gray-500"
-            style={{
-              borderRadius,
-            }}
-          >
-            <div className="text-center">
-              <div className="text-4xl mb-2">📷</div>
-              <div className="text-sm">Drop image here</div>
-            </div>
+          <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500">
+            <span>No Image</span>
           </div>
         )}
       </div>

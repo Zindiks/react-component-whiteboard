@@ -6,7 +6,6 @@ import React, {
   useMemo,
 } from "react";
 import * as d3 from "d3";
-import { widgetLogger } from "../utils/componentLoggers";
 import { usePerformance } from "../hooks/usePerformance";
 import { Timer } from "./widgets/Timer";
 import { Weather } from "./widgets/Weather";
@@ -79,6 +78,21 @@ interface DraggableComponentProps {
   onResize?: (id: number, width: number, height: number) => void;
   onTextChange?: (id: number, text: string) => void;
   onImageChange?: (id: number, imageSrc: string) => void;
+  // Text formatting options
+  fontSize?: number;
+  fontFamily?: string;
+  textColor?: string;
+  textAlign?: "left" | "center" | "right";
+  fontWeight?: "normal" | "bold";
+  fontStyle?: "normal" | "italic";
+  // Shape formatting options
+  fillColor?: string;
+  strokeColor?: string;
+  strokeWidth?: number;
+  borderRadius?: number;
+  strokeStyle?: "solid" | "dashed" | "dotted";
+  arrowStyle?: "none" | "arrow" | "double-arrow";
+  arrowSize?: number;
 }
 
 export const DraggableComponent: React.FC<DraggableComponentProps> = ({
@@ -104,6 +118,19 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   onResize,
   onTextChange,
   onImageChange,
+  fontSize,
+  fontFamily,
+  textColor,
+  textAlign,
+  fontWeight,
+  fontStyle,
+  fillColor,
+  strokeColor,
+  strokeWidth,
+  borderRadius,
+  strokeStyle,
+  arrowStyle,
+  arrowSize,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
@@ -352,22 +379,29 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       <RectangleShape
         x={0}
         y={0}
-        width={width || 120}
-        height={height || 80}
+        width={width || 150}
+        height={height || 100}
         selected={selected}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+        fillColor={fillColor}
+        strokeColor={strokeColor}
+        strokeWidth={strokeWidth}
+        borderRadius={borderRadius}
       />
     ),
     ellipse: () => (
       <EllipseShape
         x={0}
         y={0}
-        width={width || 120}
-        height={height || 80}
+        width={width || 150}
+        height={height || 100}
         selected={selected}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+        fillColor={fillColor}
+        strokeColor={strokeColor}
+        strokeWidth={strokeWidth}
       />
     ),
     arrow: () => (
@@ -379,6 +413,11 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         selected={selected}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+        strokeColor={strokeColor}
+        strokeWidth={strokeWidth}
+        strokeStyle={strokeStyle}
+        arrowStyle={arrowStyle}
+        arrowSize={arrowSize}
       />
     ),
     line: () => (
@@ -390,6 +429,9 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         selected={selected}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+        strokeColor={strokeColor}
+        strokeWidth={strokeWidth}
+        strokeStyle={strokeStyle}
       />
     ),
     text: () => (
@@ -403,6 +445,12 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
         text={text || "Double-click to edit"}
         onTextChange={(newText) => onTextChange?.(id, newText)}
+        fontSize={fontSize}
+        fontFamily={fontFamily}
+        textColor={textColor}
+        textAlign={textAlign}
+        fontWeight={fontWeight}
+        fontStyle={fontStyle}
       />
     ),
     imageShape: () => (
@@ -415,15 +463,9 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
         imageSrc={imageSrc}
-        onImageChange={(newImageSrc) => {
-          widgetLogger.debug("Image changed", {
-            componentId: id,
-            imageUrl:
-              newImageSrc.substring(0, 100) +
-              (newImageSrc.length > 100 ? "..." : ""),
-          });
-          onImageChange?.(id, newImageSrc);
-        }}
+        strokeColor={strokeColor}
+        strokeWidth={strokeWidth}
+        borderRadius={borderRadius}
       />
     ),
   };
@@ -521,13 +563,11 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
 
   return (
     <>
-      {/* Floating header for selected widget components - only show for single selection */}
-      {selected && !isShapeComponent && selectedCount === 1 && (
+      {/* Floating header for linkpreview component only - only show for single selection */}
+      {selected && type === "linkpreview" && selectedCount === 1 && (
         <FloatingHeader
           {...getComponentMetadata()}
-          actions={
-            type === "linkpreview" ? renderLinkPreviewActions() : undefined
-          }
+          actions={renderLinkPreviewActions()}
           onDelete={handleDeleteClick}
           x={x}
           y={y}

@@ -1,34 +1,29 @@
 import React from "react";
 import { BaseShape, BaseShapeProps } from "./BaseShape";
 
-export interface RectangleShapeProps extends Omit<BaseShapeProps, "children"> {
+interface RectangleShapeProps extends Omit<BaseShapeProps, "children"> {
   fillColor?: string;
-  borderColor?: string;
-  borderWidth?: number;
+  strokeColor?: string;
+  strokeWidth?: number;
   borderRadius?: number;
 }
 
 export const RectangleShape: React.FC<RectangleShapeProps> = ({
   fillColor = "#f3f4f6",
-  borderColor = "#9ca3af",
-  borderWidth = 2,
+  strokeColor = "#9ca3af",
+  strokeWidth = 2,
   borderRadius = 8,
-  style,
+  selected = false,
   ...props
 }) => {
   return (
-    <BaseShape
-      {...props}
-      style={{
-        ...style,
-      }}
-    >
+    <BaseShape {...props} selected={selected}>
       <div
         className="w-full h-full"
         style={{
           backgroundColor: fillColor,
-          border: `${borderWidth}px solid ${borderColor}`,
-          borderRadius: borderRadius,
+          border: `${strokeWidth}px solid ${strokeColor}`,
+          borderRadius: `${borderRadius}px`,
         }}
       />
     </BaseShape>

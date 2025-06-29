@@ -1,7 +1,7 @@
 import React from "react";
 import { BaseShape, BaseShapeProps } from "./BaseShape";
 
-export interface LineShapeProps extends Omit<BaseShapeProps, "children"> {
+interface LineShapeProps extends Omit<BaseShapeProps, "children"> {
   strokeColor?: string;
   strokeWidth?: number;
   strokeStyle?: "solid" | "dashed" | "dotted";
@@ -11,9 +11,7 @@ export const LineShape: React.FC<LineShapeProps> = ({
   strokeColor = "#374151",
   strokeWidth = 2,
   strokeStyle = "solid",
-  width,
-  height,
-  style,
+  selected = false,
   ...props
 }) => {
   const getStrokeDashArray = () => {
@@ -28,25 +26,13 @@ export const LineShape: React.FC<LineShapeProps> = ({
   };
 
   return (
-    <BaseShape
-      {...props}
-      width={width}
-      height={height}
-      style={{
-        ...style,
-      }}
-    >
-      <svg
-        width="100%"
-        height="100%"
-        viewBox={`0 0 ${width} ${height}`}
-        style={{ overflow: "visible" }}
-      >
+    <BaseShape {...props} selected={selected}>
+      <svg className="w-full h-full" style={{ overflow: "visible" }}>
         <line
-          x1={0}
-          y1={height / 2}
-          x2={width}
-          y2={height / 2}
+          x1="0"
+          y1="50%"
+          x2="100%"
+          y2="50%"
           stroke={strokeColor}
           strokeWidth={strokeWidth}
           strokeDasharray={getStrokeDashArray()}
