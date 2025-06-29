@@ -29,6 +29,8 @@ export interface ControlPanelProps {
   onToggleDynamicGridSizing: () => void;
   snapToGrid: boolean;
   onToggleSnap: () => void;
+  gridType: "lines" | "dots" | "both";
+  onGridTypeChange: (type: "lines" | "dots" | "both") => void;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -42,6 +44,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   onToggleDynamicGridSizing,
   snapToGrid,
   onToggleSnap,
+  gridType,
+  onGridTypeChange,
 }) => {
   return (
     <div
@@ -109,6 +113,22 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                   {size}px
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={gridType}
+            onValueChange={(value) =>
+              onGridTypeChange(value as "lines" | "dots" | "both")
+            }
+          >
+            <SelectTrigger className="w-20 h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="lines">Lines</SelectItem>
+              <SelectItem value="dots">Dots</SelectItem>
+              <SelectItem value="both">Both</SelectItem>
             </SelectContent>
           </Select>
         </div>

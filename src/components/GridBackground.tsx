@@ -11,6 +11,7 @@ interface GridBackgroundProps {
   color?: string;
   opacity?: number;
   dynamicSizing?: boolean;
+  gridType?: "lines" | "dots" | "both";
 }
 
 export const GridBackground: React.FC<GridBackgroundProps> = ({
@@ -20,6 +21,7 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
   color,
   opacity = GRID_CONSTANTS.OPACITY,
   dynamicSizing = true,
+  gridType = GRID_CONSTANTS.DEFAULT_TYPE,
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const { throttleRAF } = usePerformance({ targetFPS: 120 });
@@ -95,13 +97,42 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
     const dynamicStrokeWidth =
       (GRID_CONSTANTS.STROKE_WIDTH / transform.k) * (gridSize / baseGridSize);
 
-    pattern
-      .append("path")
-      .attr("d", `M ${gridSize} 0 L 0 0 0 ${gridSize}`)
-      .attr("fill", "none")
-      .attr("stroke", getGridColor())
-      .attr("stroke-width", dynamicStrokeWidth)
-      .attr("opacity", dynamicOpacity);
+    // Add L-shaped lines (for "lines" and "both" types)
+    if (gridType === "lines" || gridType === "both") {
+      pattern
+        .append("path")
+        .attr("d", `M ${gridSize} 0 L 0 0 0 ${gridSize}`)
+        .attr("fill", "none")
+        .attr("stroke", getGridColor())
+        .attr("stroke-width", dynamicStrokeWidth)
+        .attr("opacity", dynamicOpacity);
+    }
+
+    // Add dots at grid intersections (for "dots" and "both" types)
+    if (gridType === "dots" || gridType === "both") {
+      const dotRadius = Math.max(
+        1,
+        (2 / transform.k) * (gridSize / baseGridSize)
+      );
+
+      // Add dots at all four corners of the grid cell
+      const corners = [
+        { x: 0, y: 0 }, // Top-left
+        { x: gridSize, y: 0 }, // Top-right
+        { x: 0, y: gridSize }, // Bottom-left
+        { x: gridSize, y: gridSize }, // Bottom-right
+      ];
+
+      corners.forEach((corner) => {
+        pattern
+          .append("circle")
+          .attr("cx", corner.x)
+          .attr("cy", corner.y)
+          .attr("r", dotRadius)
+          .attr("fill", getGridColor())
+          .attr("opacity", dynamicOpacity);
+      });
+    }
 
     // Apply pattern to cover entire viewport
     svg
@@ -110,7 +141,15 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
       .attr("height", "100%")
       .attr("fill", "url(#grid-pattern)")
       .attr("pointer-events", "none");
-  }, [transform, enabled, size, opacity, dynamicSizing, getGridColor]);
+  }, [
+    transform,
+    enabled,
+    size,
+    opacity,
+    dynamicSizing,
+    getGridColor,
+    gridType,
+  ]);
 
   // Create throttled version of updateGrid
   const throttledUpdateGrid = useRef<(() => void) | null>(null);
@@ -123,7 +162,7 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
     if (throttledUpdateGrid.current) {
       throttledUpdateGrid.current();
     }
-  }, [transform, enabled]);
+  }, [transform, enabled, gridType]);
 
   // Cleanup function
   useEffect(() => {

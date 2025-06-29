@@ -229,6 +229,8 @@ export const GRID_CONSTANTS = {
   ENABLED: true as boolean, // Grid enabled by default
   DYNAMIC_SIZING: true, // Enable dynamic grid sizing based on zoom
   SIZES: [10, 20, 40, 80] as const, // Available grid sizes
+  TYPES: ["lines", "dots", "both"] as const, // Available grid types
+  DEFAULT_TYPE: "lines" as const, // Default grid type
 } as const;
 
 // Drag Preview Constants
