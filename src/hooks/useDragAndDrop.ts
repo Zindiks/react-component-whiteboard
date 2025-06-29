@@ -51,12 +51,6 @@ export const useDragAndDrop = ({
         event.dataTransfer.dropEffect = "copy";
       }
 
-      console.log("DragOver event:", {
-        types: Array.from(event.dataTransfer?.types || []),
-        clientX: event.clientX,
-        clientY: event.clientY,
-      });
-
       // Set drag over state
       setIsDragOverBoard(true);
 
@@ -69,7 +63,6 @@ export const useDragAndDrop = ({
 
         try {
           const componentType = event.dataTransfer.getData("text/plain");
-          console.log("Component type:", componentType);
 
           if (componentType) {
             setDragPreviewData({
@@ -109,15 +102,10 @@ export const useDragAndDrop = ({
     };
 
     const handleDragLeave = (event: DragEvent) => {
-      console.log("DragLeave event:", {
-        relatedTarget: event.relatedTarget,
-      });
-
       if (
         !event.relatedTarget ||
         !(event.relatedTarget as Element).closest("[data-drop-zone]")
       ) {
-        console.log("Clearing drag preview - leaving drop zone");
         setIsDragOverBoard(false);
         setDragType(null);
         setDragPreviewData({
