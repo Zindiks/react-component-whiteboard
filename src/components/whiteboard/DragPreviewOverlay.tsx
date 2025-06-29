@@ -81,6 +81,16 @@ export const DragPreviewOverlay: React.FC<DragPreviewOverlayProps> = ({
     isVisible,
   ]);
 
+  // Helper: is this a shape?
+  const isShape = [
+    "rectangle",
+    "ellipse",
+    "arrow",
+    "line",
+    "text",
+    "imageShape",
+  ].includes(componentType || "");
+
   if (!isVisible || !previewData || !componentType) {
     return null;
   }
@@ -97,23 +107,123 @@ export const DragPreviewOverlay: React.FC<DragPreviewOverlayProps> = ({
         zIndex: DRAG_PREVIEW_CONSTANTS.Z_INDEX,
       }}
     >
-      {/* Main preview overlay */}
-      <div
-        style={{
-          position: "absolute",
-          left: previewData.x * transform.k + transform.x,
-          top: previewData.y * transform.k + transform.y,
-          width: previewData.width * transform.k,
-          height: previewData.height * transform.k,
-          backgroundColor: DRAG_PREVIEW_CONSTANTS.OVERLAY_COLOR,
-          border: `${DRAG_PREVIEW_CONSTANTS.OVERLAY_BORDER_WIDTH}px ${DRAG_PREVIEW_CONSTANTS.OVERLAY_BORDER_STYLE} ${DRAG_PREVIEW_CONSTANTS.OVERLAY_BORDER_COLOR}`,
-          borderRadius: "4px",
-          boxShadow: "0 2px 8px rgba(255, 165, 0, 0.3)",
-          // GPU acceleration
-          willChange: "transform",
-          transform: "translateZ(0)",
-        }}
-      />
+      {/* Main preview overlay or shape */}
+      {isShape ? (
+        <svg
+          style={{
+            position: "absolute",
+            left: previewData.x * transform.k + transform.x,
+            top: previewData.y * transform.k + transform.y,
+            width: previewData.width * transform.k,
+            height: previewData.height * transform.k,
+            pointerEvents: "none",
+            zIndex: DRAG_PREVIEW_CONSTANTS.Z_INDEX,
+          }}
+        >
+          {componentType === "rectangle" && (
+            <rect
+              x={0}
+              y={0}
+              width={previewData.width * transform.k}
+              height={previewData.height * transform.k}
+              fill="rgba(255, 165, 0, 0.2)"
+              stroke={DRAG_PREVIEW_CONSTANTS.OVERLAY_BORDER_COLOR}
+              strokeWidth={2}
+              rx={6}
+            />
+          )}
+          {componentType === "ellipse" && (
+            <ellipse
+              cx={(previewData.width * transform.k) / 2}
+              cy={(previewData.height * transform.k) / 2}
+              rx={(previewData.width * transform.k) / 2}
+              ry={(previewData.height * transform.k) / 2}
+              fill="rgba(255, 165, 0, 0.2)"
+              stroke={DRAG_PREVIEW_CONSTANTS.OVERLAY_BORDER_COLOR}
+              strokeWidth={2}
+            />
+          )}
+          {componentType === "arrow" && (
+            <g>
+              <line
+                x1={10}
+                y1={(previewData.height * transform.k) / 2}
+                x2={previewData.width * transform.k - 20}
+                y2={(previewData.height * transform.k) / 2}
+                stroke={DRAG_PREVIEW_CONSTANTS.OVERLAY_BORDER_COLOR}
+                strokeWidth={4}
+                markerEnd="url(#arrowhead)"
+              />
+              <defs>
+                <marker
+                  id="arrowhead"
+                  markerWidth="10"
+                  markerHeight="7"
+                  refX="10"
+                  refY="3.5"
+                  orient="auto"
+                >
+                  <polygon
+                    points="0 0, 10 3.5, 0 7"
+                    fill={DRAG_PREVIEW_CONSTANTS.OVERLAY_BORDER_COLOR}
+                  />
+                </marker>
+              </defs>
+            </g>
+          )}
+          {componentType === "line" && (
+            <line
+              x1={10}
+              y1={(previewData.height * transform.k) / 2}
+              x2={previewData.width * transform.k - 10}
+              y2={(previewData.height * transform.k) / 2}
+              stroke={DRAG_PREVIEW_CONSTANTS.OVERLAY_BORDER_COLOR}
+              strokeWidth={3}
+            />
+          )}
+          {componentType === "text" && (
+            <text
+              x={(previewData.width * transform.k) / 2}
+              y={(previewData.height * transform.k) / 2}
+              textAnchor="middle"
+              alignmentBaseline="middle"
+              fontSize={Math.max(16, (previewData.height * transform.k) / 3)}
+              fill={DRAG_PREVIEW_CONSTANTS.OVERLAY_BORDER_COLOR}
+              opacity={0.7}
+            >
+              Text
+            </text>
+          )}
+          {componentType === "imageShape" && (
+            <rect
+              x={0}
+              y={0}
+              width={previewData.width * transform.k}
+              height={previewData.height * transform.k}
+              fill="rgba(255, 165, 0, 0.1)"
+              stroke={DRAG_PREVIEW_CONSTANTS.OVERLAY_BORDER_COLOR}
+              strokeWidth={2}
+              rx={4}
+            />
+          )}
+        </svg>
+      ) : (
+        <div
+          style={{
+            position: "absolute",
+            left: previewData.x * transform.k + transform.x,
+            top: previewData.y * transform.k + transform.y,
+            width: previewData.width * transform.k,
+            height: previewData.height * transform.k,
+            backgroundColor: DRAG_PREVIEW_CONSTANTS.OVERLAY_COLOR,
+            border: `${DRAG_PREVIEW_CONSTANTS.OVERLAY_BORDER_WIDTH}px ${DRAG_PREVIEW_CONSTANTS.OVERLAY_BORDER_STYLE} ${DRAG_PREVIEW_CONSTANTS.OVERLAY_BORDER_COLOR}`,
+            borderRadius: "4px",
+            boxShadow: "0 2px 8px rgba(255, 165, 0, 0.3)",
+            willChange: "transform",
+            transform: "translateZ(0)",
+          }}
+        />
+      )}
 
       {/* Grid cell indicators */}
       {snapToGrid && (
@@ -174,33 +284,6 @@ export const DragPreviewOverlay: React.FC<DragPreviewOverlayProps> = ({
           ))}
         </svg>
       )}
-
-      {/* Component info tooltip */}
-      <div
-        style={{
-          position: "absolute",
-          left:
-            (previewData.x + previewData.width) * transform.k +
-            transform.x +
-            10,
-          top: previewData.y * transform.k + transform.y - 40,
-          backgroundColor: "rgba(0, 0, 0, 0.8)",
-          color: "white",
-          padding: "4px 8px",
-          borderRadius: "4px",
-          fontSize: "12px",
-          whiteSpace: "nowrap",
-          pointerEvents: "none",
-          zIndex: DRAG_PREVIEW_CONSTANTS.Z_INDEX + 1,
-        }}
-      >
-        {componentType} ({previewData.width}×{previewData.height})
-        {snapToGrid && (
-          <div style={{ fontSize: "10px", opacity: 0.8 }}>
-            Grid: {previewData.gridCellsX}×{previewData.gridCellsY} cells
-          </div>
-        )}
-      </div>
     </div>
   );
 };

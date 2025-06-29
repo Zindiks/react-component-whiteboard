@@ -119,8 +119,6 @@ const CustomGrid = () => {
   const {
     activeCategory,
     isSidebarOpen,
-    isDragOverBoard,
-    dragType,
     setIsDragOverBoard,
     setDragType,
     handleCategoryClick,
@@ -532,43 +530,6 @@ const CustomGrid = () => {
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebar}
       />
-
-      {/* Drag overlay indicator */}
-      {isDragOverBoard && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: COLORS.PRIMARY_BLUE_LIGHT,
-            border: `3px dashed ${COLORS.PRIMARY_BLUE}`,
-            borderRadius: TYPOGRAPHY.BORDER_RADIUS_LARGE,
-            pointerEvents: "none",
-            zIndex: Z_INDEX.DRAG_OVERLAY,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: COLORS.PRIMARY_BLUE_DARK,
-              color: "white",
-              padding: "16px 24px",
-              borderRadius: TYPOGRAPHY.BORDER_RADIUS_MEDIUM,
-              fontSize: "18px",
-              fontWeight: TYPOGRAPHY.FONT_WEIGHT_SEMIBOLD,
-              boxShadow: `0 8px 32px ${COLORS.BLACK_SHADOW_STRONG}`,
-            }}
-          >
-            {dragType === "image"
-              ? "📷 Drop image here"
-              : "🔧 Drop component here"}
-          </div>
-        </div>
-      )}
 
       {/* Overview/Minimap overlay */}
       {showOverview && (
