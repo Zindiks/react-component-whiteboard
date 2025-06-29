@@ -59,6 +59,7 @@ const CustomGrid = () => {
     handleResizeComponent,
     handleTextChange,
     handleImageChange,
+    handleFormattingChange,
     handleDrag,
     handleSelect,
     handleDragStart,
@@ -489,6 +490,7 @@ const CustomGrid = () => {
             onResize={handleResizeComponent}
             onTextChange={handleTextChange}
             onImageChange={handleImageChange}
+            onFormattingChange={handleFormattingChange}
             selected={selectedComponents.includes(component.id)}
             selectedCount={selectedComponents.length}
             transform={transform}
@@ -500,6 +502,12 @@ const CustomGrid = () => {
             youtubeUrl={component.youtubeUrl}
             soundcloudUrl={component.soundcloudUrl}
             spotifyUrl={component.spotifyUrl}
+            fontSize={component.fontSize}
+            fontFamily={component.fontFamily}
+            textColor={component.textColor}
+            textAlign={component.textAlign}
+            fontWeight={component.fontWeight}
+            fontStyle={component.fontStyle}
           />
         ))}
       </div>

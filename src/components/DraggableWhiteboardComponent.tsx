@@ -50,6 +50,7 @@ import {
   Maximize2,
 } from "lucide-react";
 import { Button } from "./ui/button";
+import { TextFormattingOptions } from "./shapes/TextFormattingHeader";
 
 interface DraggableComponentProps {
   x: number;
@@ -79,6 +80,17 @@ interface DraggableComponentProps {
   onResize?: (id: number, width: number, height: number) => void;
   onTextChange?: (id: number, text: string) => void;
   onImageChange?: (id: number, imageSrc: string) => void;
+  onFormattingChange?: (
+    id: number,
+    formattingOptions: Partial<TextFormattingOptions>
+  ) => void;
+  // Text formatting options
+  fontSize?: number;
+  fontFamily?: string;
+  textColor?: string;
+  textAlign?: "left" | "center" | "right";
+  fontWeight?: "normal" | "bold";
+  fontStyle?: "normal" | "italic";
 }
 
 export const DraggableComponent: React.FC<DraggableComponentProps> = ({
@@ -104,6 +116,13 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   onResize,
   onTextChange,
   onImageChange,
+  onFormattingChange,
+  fontSize,
+  fontFamily,
+  textColor,
+  textAlign,
+  fontWeight,
+  fontStyle,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
@@ -403,6 +422,13 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
         text={text || "Double-click to edit"}
         onTextChange={(newText) => onTextChange?.(id, newText)}
+        onFormattingChange={(options) => onFormattingChange?.(id, options)}
+        fontSize={fontSize}
+        fontFamily={fontFamily}
+        textColor={textColor}
+        textAlign={textAlign}
+        fontWeight={fontWeight}
+        fontStyle={fontStyle}
       />
     ),
     imageShape: () => (

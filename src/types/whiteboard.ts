@@ -11,6 +11,13 @@ export interface Component {
   youtubeUrl?: string; // For YouTube video components
   soundcloudUrl?: string; // For SoundCloud components
   spotifyUrl?: string; // For Spotify components
+  // Text formatting options
+  fontSize?: number;
+  fontFamily?: string;
+  textColor?: string;
+  textAlign?: "left" | "center" | "right";
+  fontWeight?: "normal" | "bold";
+  fontStyle?: "normal" | "italic";
 }
 
 export interface Point {

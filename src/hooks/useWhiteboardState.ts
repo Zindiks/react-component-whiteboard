@@ -3,6 +3,7 @@ import { Component, InitialPosition } from "../types/whiteboard";
 import { INITIAL_POSITIONS, COMPONENT_SIZES } from "../constants/appConstants";
 import { stateLogger } from "../utils/componentLoggers";
 import { getDynamicGridSize, snapPointToGrid } from "../utils/gridUtils";
+import { TextFormattingOptions } from "../components/shapes/TextFormattingHeader";
 
 const DEFAULT_COMPONENTS: Component[] = [
   {
@@ -223,6 +224,23 @@ export const useWhiteboardState = () => {
     );
   }, []);
 
+  const handleFormattingChange = useCallback(
+    (id: number, formattingOptions: Partial<TextFormattingOptions>) => {
+      stateLogger.debug("Changing component formatting", {
+        componentId: id,
+        formattingOptions,
+      });
+      setComponents((prev) =>
+        prev.map((component) =>
+          component.id === id
+            ? { ...component, ...formattingOptions }
+            : component
+        )
+      );
+    },
+    []
+  );
+
   const handleDrag = useCallback(
     (
       id: number,
@@ -343,6 +361,7 @@ export const useWhiteboardState = () => {
     handleResizeComponent,
     handleTextChange,
     handleImageChange,
+    handleFormattingChange,
     handleDrag,
     handleSelect,
     handleDragStart,
