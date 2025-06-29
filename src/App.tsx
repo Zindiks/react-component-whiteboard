@@ -5,6 +5,7 @@ import { CategorySidebar } from "./components/CategorySidebar";
 import { DraggableComponent } from "./components/DraggableWhiteboardComponent";
 import { GridBackground } from "./components/GridBackground";
 import { FPSMonitor } from "./components/FPSMonitor";
+import { DragPreviewOverlay } from "./components/whiteboard/DragPreviewOverlay";
 import { usePerformance } from "./hooks/usePerformance";
 import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
 import { Component } from "./types/whiteboard";
@@ -88,6 +89,13 @@ const CustomGrid = () => {
   // Mouse position tracking for paste operations
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
+  // Drag preview state
+  const [dragPreviewData, setDragPreviewData] = useState({
+    isVisible: false,
+    componentType: null as string | null,
+    mousePosition: { x: 0, y: 0 },
+  });
+
   // Grid toggle state
   const [showGrid, setShowGrid] = useState(GRID_CONSTANTS.ENABLED);
 
@@ -147,6 +155,7 @@ const CustomGrid = () => {
     setIsDragOverBoard,
     setDragType,
     addNewComponent,
+    setDragPreviewData,
   });
 
   // Use component creators hook
@@ -395,6 +404,16 @@ const CustomGrid = () => {
           dynamicSizing={dynamicGridSizing}
         />
       </svg>
+
+      {/* Drag Preview Overlay */}
+      <DragPreviewOverlay
+        transform={transform}
+        mousePosition={dragPreviewData.mousePosition}
+        componentType={dragPreviewData.componentType}
+        gridSize={gridSize}
+        snapToGrid={snapToGrid}
+        isVisible={dragPreviewData.isVisible}
+      />
 
       {/* Main SVG for zoom/pan behavior */}
       <svg

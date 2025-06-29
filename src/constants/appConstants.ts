@@ -230,6 +230,44 @@ export const GRID_CONSTANTS = {
   SIZES: [10, 20, 40, 80] as const, // Available grid sizes
 } as const;
 
+// Drag Preview Constants
+export const DRAG_PREVIEW_CONSTANTS = {
+  // Orange overlay color for drag preview
+  OVERLAY_COLOR: "rgba(255, 165, 0, 0.6)", // Semi-transparent orange
+  OVERLAY_BORDER_COLOR: "rgba(255, 165, 0, 0.8)", // More opaque orange for border
+  OVERLAY_BORDER_WIDTH: 2,
+  OVERLAY_BORDER_STYLE: "dashed",
+
+  // Preview dimensions for different component types
+  PREVIEW_SIZES: {
+    // Widget components
+    timer: { width: 200, height: 150 },
+    watch: { width: 200, height: 150 },
+    weather: { width: 300, height: 200 },
+    bitcoin: { width: 400, height: 300 },
+    currency: { width: 350, height: 250 },
+    note: { width: 300, height: 250 },
+    confetti: { width: 200, height: 150 },
+    scrollingtext: { width: 400, height: 100 },
+    youtubeVideo: { width: 400, height: 300 },
+    soundcloud: { width: 400, height: 200 },
+    spotify: { width: 400, height: 200 },
+    linkpreview: { width: 400, height: 280 },
+    stylishlink: { width: 300, height: 150 },
+
+    // Shape components
+    rectangle: { width: 120, height: 80 },
+    ellipse: { width: 120, height: 80 },
+    arrow: { width: 150, height: 20 },
+    line: { width: 150, height: 20 },
+    text: { width: 150, height: 50 },
+    imageShape: { width: 200, height: 150 },
+  } as const,
+
+  // Z-index for drag preview overlay
+  Z_INDEX: 9998, // Just below marquee selection
+} as const;
+
 // Marquee Selection Constants
 export const MARQUEE_CONSTANTS = {
   /** Minimum width/height in pixels for meaningful marquee selection.

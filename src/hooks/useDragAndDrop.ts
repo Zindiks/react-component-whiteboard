@@ -14,7 +14,10 @@ import {
   isSoundCloudUrl,
   isSpotifyUrl,
 } from "../utils/urlDetection";
-import { COMPONENT_SIZES } from "../constants/appConstants";
+import {
+  COMPONENT_SIZES,
+  DRAG_PREVIEW_CONSTANTS,
+} from "../constants/appConstants";
 import { dragDropLogger } from "../utils/componentLoggers";
 
 export interface UseDragAndDropProps {
@@ -24,6 +27,11 @@ export interface UseDragAndDropProps {
   setIsDragOverBoard: (isDragOver: boolean) => void;
   setDragType: (type: "component" | "image" | null) => void;
   addNewComponent: (type: string, x: number, y: number) => void;
+  setDragPreviewData: (data: {
+    isVisible: boolean;
+    componentType: string | null;
+    mousePosition: { x: number; y: number };
+  }) => void;
 }
 
 export const useDragAndDrop = ({
@@ -33,155 +41,104 @@ export const useDragAndDrop = ({
   setIsDragOverBoard,
   setDragType,
   addNewComponent,
+  setDragPreviewData,
 }: UseDragAndDropProps) => {
   useEffect(() => {
     const handleDragOver = (event: DragEvent) => {
-      // Allow image file drops from outside browser (check files first)
-      if (event.dataTransfer?.types.includes("Files")) {
-        event.preventDefault();
+      // Always prevent default to allow drops
+      event.preventDefault();
+      if (event.dataTransfer) {
         event.dataTransfer.dropEffect = "copy";
-        setIsDragOverBoard(true);
-        setDragType("image");
-        return;
       }
 
-      // Allow image URL drops from browser (check URLs second)
-      if (
-        event.dataTransfer?.types.includes("text/uri-list") ||
-        event.dataTransfer?.types.includes("text/html")
-      ) {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "copy";
-        setIsDragOverBoard(true);
-        setDragType("image");
-        return;
-      }
+      console.log("DragOver event:", {
+        types: Array.from(event.dataTransfer?.types || []),
+        clientX: event.clientX,
+        clientY: event.clientY,
+      });
 
-      // Check for component drops from sidebar (only text/plain without other types)
+      // Set drag over state
+      setIsDragOverBoard(true);
+
+      // Check for component drag from sidebar
       if (
-        event.dataTransfer?.types.includes("text/plain") &&
-        !event.dataTransfer?.types.includes("text/html") &&
-        !event.dataTransfer?.types.includes("text/uri-list") &&
-        !event.dataTransfer?.types.includes("Files")
+        event.dataTransfer &&
+        event.dataTransfer.types.includes("text/plain")
       ) {
-        // This is likely a component drag from our sidebar
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "copy";
-        setIsDragOverBoard(true);
         setDragType("component");
-        return;
-      }
 
-      // Check for plain text URLs (like dragging from address bar)
-      if (
-        event.dataTransfer?.types.includes("text/plain") &&
-        event.dataTransfer?.types.length === 1
-      ) {
-        // Try to get the plain text to see if it's a URL
         try {
-          const plainText = event.dataTransfer.getData("text/plain");
-          if (plainText && /^https?:\/\//.test(plainText.trim())) {
-            event.preventDefault();
-            event.dataTransfer.dropEffect = "copy";
-            setIsDragOverBoard(true);
-            setDragType("image");
+          const componentType = event.dataTransfer.getData("text/plain");
+          console.log("Component type:", componentType);
+
+          if (componentType) {
+            setDragPreviewData({
+              isVisible: true,
+              componentType,
+              mousePosition: { x: event.clientX, y: event.clientY },
+            });
             return;
           }
         } catch {
-          // Can't access data during dragover in some browsers
+          // Fallback for browsers that don't allow data access during dragover
+          setDragPreviewData({
+            isVisible: true,
+            componentType: "timer",
+            mousePosition: { x: event.clientX, y: event.clientY },
+          });
+          return;
         }
       }
 
-      // Log if we don't handle this drag type (optional debug)
-      // const types = Array.from(event.dataTransfer?.types || []);
-      // if (types.length > 0) {
-      //   console.log("❌ Unhandled drag type:", types);
-      // }
+      // Handle other drag types
+      if (event.dataTransfer && event.dataTransfer.types.includes("Files")) {
+        setDragType("image");
+        setDragPreviewData({
+          isVisible: true,
+          componentType: "imageShape",
+          mousePosition: { x: event.clientX, y: event.clientY },
+        });
+      } else {
+        setDragType("image");
+        setDragPreviewData({
+          isVisible: true,
+          componentType: "imageShape",
+          mousePosition: { x: event.clientX, y: event.clientY },
+        });
+      }
     };
 
     const handleDragLeave = (event: DragEvent) => {
+      console.log("DragLeave event:", {
+        relatedTarget: event.relatedTarget,
+      });
+
       if (
         !event.relatedTarget ||
         !(event.relatedTarget as Element).closest("[data-drop-zone]")
       ) {
+        console.log("Clearing drag preview - leaving drop zone");
         setIsDragOverBoard(false);
         setDragType(null);
+        setDragPreviewData({
+          isVisible: false,
+          componentType: null,
+          mousePosition: { x: 0, y: 0 },
+        });
       }
-    };
-
-    const createImageComponent = (
-      x: number,
-      y: number,
-      imageSrc: string,
-      width: number,
-      height: number
-    ) => {
-      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
-      const highestZIndex = Math.max(
-        ...components.map((c) => c.zIndex || 0),
-        0
-      );
-
-      const newComponent: Component = {
-        id: newId,
-        x,
-        y,
-        type: "imageShape",
-        width,
-        height,
-        zIndex: highestZIndex + 1,
-        imageSrc,
-      };
-
-      setComponents((prev) => [...prev, newComponent]);
-    };
-
-    const createMediaComponent = (
-      x: number,
-      y: number,
-      url: string,
-      type: "youtubeVideo" | "soundcloud" | "spotify"
-    ) => {
-      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
-      const highestZIndex = Math.max(
-        ...components.map((c) => c.zIndex || 0),
-        0
-      );
-
-      // Default dimensions for different media types
-      let width: number, height: number;
-      switch (type) {
-        case "youtubeVideo":
-          width = 400;
-          height = 300;
-          break;
-        case "soundcloud":
-        case "spotify":
-          width = 400;
-          height = 200;
-          break;
-      }
-
-      const newComponent: Component = {
-        id: newId,
-        x: x - width / 2, // Center the component
-        y: y - height / 2,
-        type,
-        width,
-        height,
-        zIndex: highestZIndex + 1,
-        ...(type === "youtubeVideo" && { youtubeUrl: url }),
-        ...(type === "soundcloud" && { soundcloudUrl: url }),
-        ...(type === "spotify" && { spotifyUrl: url }),
-      };
-
-      setComponents((prev) => [...prev, newComponent]);
     };
 
     const handleDrop = (event: DragEvent) => {
       event.preventDefault();
       setIsDragOverBoard(false);
       setDragType(null);
+
+      // Clear drag preview
+      setDragPreviewData({
+        isVisible: false,
+        componentType: null,
+        mousePosition: { x: 0, y: 0 },
+      });
 
       // Handle image file drops from outside browser (files) - check first
       const files = Array.from(event.dataTransfer?.files || []);
@@ -378,9 +335,89 @@ export const useDragAndDrop = ({
         // Convert screen coordinates to whiteboard coordinates
         const x = (event.clientX - transform.x) / transform.k;
         const y = (event.clientY - transform.y) / transform.k;
-        addNewComponent(componentType, x, y);
+
+        // Get component dimensions for centering
+        const previewSizes = DRAG_PREVIEW_CONSTANTS.PREVIEW_SIZES;
+        const componentDimensions =
+          previewSizes[componentType as keyof typeof previewSizes] ||
+          previewSizes.timer;
+
+        // Center the component on the mouse cursor (matching preview behavior)
+        const centeredX = x - componentDimensions.width / 2;
+        const centeredY = y - componentDimensions.height / 2;
+
+        addNewComponent(componentType, centeredX, centeredY);
         return;
       }
+    };
+
+    const createImageComponent = (
+      x: number,
+      y: number,
+      imageSrc: string,
+      width: number,
+      height: number
+    ) => {
+      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const highestZIndex = Math.max(
+        ...components.map((c) => c.zIndex || 0),
+        0
+      );
+
+      const newComponent: Component = {
+        id: newId,
+        x: x - width / 2, // Center the component on mouse cursor
+        y: y - height / 2,
+        type: "imageShape",
+        width,
+        height,
+        zIndex: highestZIndex + 1,
+        imageSrc,
+      };
+
+      setComponents((prev) => [...prev, newComponent]);
+    };
+
+    const createMediaComponent = (
+      x: number,
+      y: number,
+      url: string,
+      type: "youtubeVideo" | "soundcloud" | "spotify"
+    ) => {
+      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const highestZIndex = Math.max(
+        ...components.map((c) => c.zIndex || 0),
+        0
+      );
+
+      // Default dimensions for different media types
+      let width: number, height: number;
+      switch (type) {
+        case "youtubeVideo":
+          width = 400;
+          height = 300;
+          break;
+        case "soundcloud":
+        case "spotify":
+          width = 400;
+          height = 200;
+          break;
+      }
+
+      const newComponent: Component = {
+        id: newId,
+        x: x - width / 2, // Center the component
+        y: y - height / 2,
+        type,
+        width,
+        height,
+        zIndex: highestZIndex + 1,
+        ...(type === "youtubeVideo" && { youtubeUrl: url }),
+        ...(type === "soundcloud" && { soundcloudUrl: url }),
+        ...(type === "spotify" && { spotifyUrl: url }),
+      };
+
+      setComponents((prev) => [...prev, newComponent]);
     };
 
     document.addEventListener("dragover", handleDragOver);
@@ -399,5 +436,6 @@ export const useDragAndDrop = ({
     setIsDragOverBoard,
     setDragType,
     addNewComponent,
+    setDragPreviewData,
   ]);
 };
