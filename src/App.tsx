@@ -46,12 +46,6 @@ import {
   ComponentState,
   ComponentStateSetters,
 } from "./utils/clipboardOperations";
-import { createPortal } from "react-dom";
-import { TextFormattingHeader } from "./components/shapes/TextFormattingHeader";
-import { ShapeHeader } from "./components/shapes/ShapeHeader";
-import { LineHeader } from "./components/shapes/LineHeader";
-import { ImageHeader } from "./components/shapes/ImageHeader";
-import { ThemeToggle } from "./components/ThemeToggle";
 import { ComponentHeader } from "./components/ui/ComponentHeader";
 
 const CustomGrid = () => {
@@ -525,6 +519,13 @@ const CustomGrid = () => {
             textAlign={component.textAlign}
             fontWeight={component.fontWeight}
             fontStyle={component.fontStyle}
+            fillColor={component.fillColor}
+            strokeColor={component.strokeColor}
+            strokeWidth={component.strokeWidth}
+            borderRadius={component.borderRadius}
+            strokeStyle={component.strokeStyle}
+            arrowStyle={component.arrowStyle}
+            arrowSize={component.arrowSize}
           />
         ))}
       </div>
@@ -732,6 +733,8 @@ const CustomGrid = () => {
                         fontSize: Number(e.target.value),
                       });
                     }}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
                     style={{
                       background: "rgba(255, 255, 255, 0.1)",
                       border: "1px solid rgba(255, 255, 255, 0.2)",
@@ -759,6 +762,8 @@ const CustomGrid = () => {
                         fontFamily: e.target.value,
                       });
                     }}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
                     style={{
                       background: "rgba(255, 255, 255, 0.1)",
                       border: "1px solid rgba(255, 255, 255, 0.2)",
@@ -776,14 +781,40 @@ const CustomGrid = () => {
                     <option value="Courier New">Courier New</option>
                   </select>
 
+                  {/* Text Color Picker */}
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="color"
+                      value={selectedComponent.textColor || "#374151"}
+                      onChange={(e) => {
+                        handleFormattingChange(selectedComponent.id, {
+                          textColor: e.target.value,
+                        });
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        background: "transparent",
+                      }}
+                      title="Text Color"
+                    />
+                  </div>
+
                   {/* Text Align */}
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleFormattingChange(selectedComponent.id, {
                           textAlign: "left",
                         });
                       }}
+                      onMouseDown={(e) => e.stopPropagation()}
                       style={{
                         background:
                           selectedComponent.textAlign === "left"
@@ -800,11 +831,13 @@ const CustomGrid = () => {
                       Left
                     </button>
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleFormattingChange(selectedComponent.id, {
                           textAlign: "center",
                         });
                       }}
+                      onMouseDown={(e) => e.stopPropagation()}
                       style={{
                         background:
                           selectedComponent.textAlign === "center"
@@ -821,11 +854,13 @@ const CustomGrid = () => {
                       Center
                     </button>
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleFormattingChange(selectedComponent.id, {
                           textAlign: "right",
                         });
                       }}
+                      onMouseDown={(e) => e.stopPropagation()}
                       style={{
                         background:
                           selectedComponent.textAlign === "right"
@@ -846,7 +881,8 @@ const CustomGrid = () => {
                   {/* Bold/Italic */}
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleFormattingChange(selectedComponent.id, {
                           fontWeight:
                             selectedComponent.fontWeight === "bold"
@@ -854,6 +890,7 @@ const CustomGrid = () => {
                               : "bold",
                         });
                       }}
+                      onMouseDown={(e) => e.stopPropagation()}
                       style={{
                         background:
                           selectedComponent.fontWeight === "bold"
@@ -871,7 +908,8 @@ const CustomGrid = () => {
                       B
                     </button>
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleFormattingChange(selectedComponent.id, {
                           fontStyle:
                             selectedComponent.fontStyle === "italic"
@@ -879,6 +917,7 @@ const CustomGrid = () => {
                               : "italic",
                         });
                       }}
+                      onMouseDown={(e) => e.stopPropagation()}
                       style={{
                         background:
                           selectedComponent.fontStyle === "italic"
@@ -899,9 +938,296 @@ const CustomGrid = () => {
                 </>
               )}
 
+              {/* Shape formatting controls for all shapes except text */}
+              {selectedComponent.type !== "text" && (
+                <>
+                  {/* Fill Color Picker */}
+                  <div className="flex items-center gap-1">
+                    <span
+                      style={{
+                        color: "white",
+                        fontSize: "12px",
+                        minWidth: "40px",
+                      }}
+                    >
+                      Fill:
+                    </span>
+                    <input
+                      type="color"
+                      value={selectedComponent.fillColor || "#f3f4f6"}
+                      onChange={(e) => {
+                        handleFormattingChange(selectedComponent.id, {
+                          fillColor: e.target.value,
+                        } as Record<string, unknown>);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        background: "transparent",
+                      }}
+                      title="Fill Color"
+                    />
+                  </div>
+
+                  {/* Border Color Picker */}
+                  <div className="flex items-center gap-1">
+                    <span
+                      style={{
+                        color: "white",
+                        fontSize: "12px",
+                        minWidth: "40px",
+                      }}
+                    >
+                      Border:
+                    </span>
+                    <input
+                      type="color"
+                      value={selectedComponent.strokeColor || "#9ca3af"}
+                      onChange={(e) => {
+                        handleFormattingChange(selectedComponent.id, {
+                          strokeColor: e.target.value,
+                        });
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        background: "transparent",
+                      }}
+                      title="Border Color"
+                    />
+                  </div>
+
+                  {/* Border Width */}
+                  <div className="flex items-center gap-1">
+                    <span
+                      style={{
+                        color: "white",
+                        fontSize: "12px",
+                        minWidth: "40px",
+                      }}
+                    >
+                      Width:
+                    </span>
+                    <select
+                      value={selectedComponent.strokeWidth || 2}
+                      onChange={(e) => {
+                        handleFormattingChange(selectedComponent.id, {
+                          strokeWidth: Number(e.target.value),
+                        });
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{
+                        background: "rgba(255, 255, 255, 0.1)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        borderRadius: "4px",
+                        color: "white",
+                        padding: "4px 8px",
+                        fontSize: "12px",
+                        cursor: "pointer",
+                        width: "60px",
+                      }}
+                    >
+                      <option value={0}>0px</option>
+                      <option value={1}>1px</option>
+                      <option value={2}>2px</option>
+                      <option value={3}>3px</option>
+                      <option value={4}>4px</option>
+                      <option value={5}>5px</option>
+                      <option value={8}>8px</option>
+                      <option value={10}>10px</option>
+                    </select>
+                  </div>
+
+                  {/* Border Radius (for rectangle and image) */}
+                  {(selectedComponent.type === "rectangle" ||
+                    selectedComponent.type === "image") && (
+                    <div className="flex items-center gap-1">
+                      <span
+                        style={{
+                          color: "white",
+                          fontSize: "12px",
+                          minWidth: "40px",
+                        }}
+                      >
+                        Radius:
+                      </span>
+                      <select
+                        value={selectedComponent.borderRadius || 8}
+                        onChange={(e) => {
+                          handleFormattingChange(selectedComponent.id, {
+                            borderRadius: Number(e.target.value),
+                          });
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        style={{
+                          background: "rgba(255, 255, 255, 0.1)",
+                          border: "1px solid rgba(255, 255, 255, 0.2)",
+                          borderRadius: "4px",
+                          color: "white",
+                          padding: "4px 8px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          width: "60px",
+                        }}
+                      >
+                        <option value={0}>0px</option>
+                        <option value={4}>4px</option>
+                        <option value={8}>8px</option>
+                        <option value={12}>12px</option>
+                        <option value={16}>16px</option>
+                        <option value={20}>20px</option>
+                        <option value={24}>24px</option>
+                        <option value={32}>32px</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Stroke Style (for line and arrow) */}
+                  {(selectedComponent.type === "line" ||
+                    selectedComponent.type === "arrow") && (
+                    <div className="flex items-center gap-1">
+                      <span
+                        style={{
+                          color: "white",
+                          fontSize: "12px",
+                          minWidth: "40px",
+                        }}
+                      >
+                        Style:
+                      </span>
+                      <select
+                        value={selectedComponent.strokeStyle || "solid"}
+                        onChange={(e) => {
+                          handleFormattingChange(selectedComponent.id, {
+                            strokeStyle: e.target.value as
+                              | "solid"
+                              | "dashed"
+                              | "dotted",
+                          });
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        style={{
+                          background: "rgba(255, 255, 255, 0.1)",
+                          border: "1px solid rgba(255, 255, 255, 0.2)",
+                          borderRadius: "4px",
+                          color: "white",
+                          padding: "4px 8px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          width: "70px",
+                        }}
+                      >
+                        <option value="solid">Solid</option>
+                        <option value="dashed">Dashed</option>
+                        <option value="dotted">Dotted</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Arrow Style (for arrow only) */}
+                  {selectedComponent.type === "arrow" && (
+                    <div className="flex items-center gap-1">
+                      <span
+                        style={{
+                          color: "white",
+                          fontSize: "12px",
+                          minWidth: "40px",
+                        }}
+                      >
+                        Arrow:
+                      </span>
+                      <select
+                        value={selectedComponent.arrowStyle || "arrow"}
+                        onChange={(e) => {
+                          handleFormattingChange(selectedComponent.id, {
+                            arrowStyle: e.target.value as
+                              | "none"
+                              | "arrow"
+                              | "double-arrow",
+                          });
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        style={{
+                          background: "rgba(255, 255, 255, 0.1)",
+                          border: "1px solid rgba(255, 255, 255, 0.2)",
+                          borderRadius: "4px",
+                          color: "white",
+                          padding: "4px 8px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          width: "80px",
+                        }}
+                      >
+                        <option value="none">None</option>
+                        <option value="arrow">Arrow</option>
+                        <option value="double-arrow">Double</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Arrow Size (for arrow only) */}
+                  {selectedComponent.type === "arrow" && (
+                    <div className="flex items-center gap-1">
+                      <span
+                        style={{
+                          color: "white",
+                          fontSize: "12px",
+                          minWidth: "40px",
+                        }}
+                      >
+                        Size:
+                      </span>
+                      <select
+                        value={selectedComponent.arrowSize || 10}
+                        onChange={(e) => {
+                          handleFormattingChange(selectedComponent.id, {
+                            arrowSize: Number(e.target.value),
+                          });
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        style={{
+                          background: "rgba(255, 255, 255, 0.1)",
+                          border: "1px solid rgba(255, 255, 255, 0.2)",
+                          borderRadius: "4px",
+                          color: "white",
+                          padding: "4px 8px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          width: "60px",
+                        }}
+                      >
+                        <option value={6}>Small</option>
+                        <option value={10}>Medium</option>
+                        <option value={14}>Large</option>
+                        <option value={18}>XL</option>
+                      </select>
+                    </div>
+                  )}
+                </>
+              )}
+
               {/* Close button */}
               <button
-                onClick={() => setSelectedComponents([])}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedComponents([]);
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
                 style={{
                   background: "rgba(255, 0, 0, 0.2)",
                   border: "1px solid rgba(255, 0, 0, 0.3)",

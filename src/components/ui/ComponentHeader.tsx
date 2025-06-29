@@ -37,5 +37,14 @@ export const ComponentHeader: React.FC<ComponentHeaderProps> = ({
     width: headerWidth === "auto" ? "auto" : `${headerWidth}px`,
   };
 
-  return <div style={headerStyle}>{children}</div>;
+  return (
+    <div
+      style={headerStyle}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
+    >
+      {children}
+    </div>
+  );
 };

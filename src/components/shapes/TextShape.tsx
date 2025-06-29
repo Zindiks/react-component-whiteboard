@@ -1,11 +1,7 @@
 import React from "react";
 import { BaseShape, BaseShapeProps } from "./BaseShape";
-import {
-  TextFormattingHeader,
-  TextFormattingOptions,
-} from "./TextFormattingHeader";
 
-export interface TextShapeProps extends Omit<BaseShapeProps, "children"> {
+interface TextShapeProps extends Omit<BaseShapeProps, "children"> {
   text?: string;
   fontSize?: number;
   fontFamily?: string;
@@ -16,8 +12,6 @@ export interface TextShapeProps extends Omit<BaseShapeProps, "children"> {
   backgroundColor?: string;
   padding?: number;
   onTextChange?: (text: string) => void;
-  onFormattingChange?: (options: Partial<TextFormattingOptions>) => void;
-  selectedCount?: number;
 }
 
 export const TextShape: React.FC<TextShapeProps> = ({
@@ -31,14 +25,7 @@ export const TextShape: React.FC<TextShapeProps> = ({
   backgroundColor = "transparent",
   padding = 8,
   onTextChange,
-  onFormattingChange,
   selected = false,
-  selectedCount = 1,
-  x,
-  y,
-  width,
-  height,
-  style,
   ...props
 }) => {
   const [isEditing, setIsEditing] = React.useState(false);
@@ -66,10 +53,6 @@ export const TextShape: React.FC<TextShapeProps> = ({
     }
   };
 
-  const handleFormattingChange = (options: Partial<TextFormattingOptions>) => {
-    onFormattingChange?.(options);
-  };
-
   React.useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus();
@@ -77,93 +60,66 @@ export const TextShape: React.FC<TextShapeProps> = ({
     }
   }, [isEditing]);
 
-  const formattingOptions: TextFormattingOptions = {
-    fontFamily,
-    fontSize,
-    textAlign,
-    fontWeight,
-    fontStyle,
-    textColor,
-  };
-
   return (
-    <>
-      <BaseShape
-        {...props}
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        selected={selected}
+    <BaseShape
+      {...props}
+      selected={selected}
+      onSelect={() => {
+        if (!isEditing) {
+          props.onSelect?.();
+        }
+      }}
+    >
+      <div
+        className="w-full h-full flex items-center justify-center"
         style={{
-          ...style,
+          backgroundColor,
+          padding,
         }}
-        onSelect={() => {
-          if (!isEditing) {
-            props.onSelect?.();
-          }
-        }}
+        onDoubleClick={handleDoubleClick}
       >
-        <div
-          className="w-full h-full flex items-center justify-center"
-          style={{
-            backgroundColor,
-            padding,
-          }}
-          onDoubleClick={handleDoubleClick}
-        >
-          {isEditing ? (
-            <textarea
-              ref={textareaRef}
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              onBlur={handleTextSubmit}
-              onKeyDown={handleKeyDown}
-              className="w-full h-full resize-none border-none outline-none bg-transparent"
-              style={{
-                fontSize,
-                fontFamily,
-                color: textColor,
-                textAlign,
-                fontWeight,
-                fontStyle,
-                padding: 0,
-              }}
-            />
-          ) : (
-            <div
-              className="w-full h-full flex items-center"
-              style={{
-                fontSize,
-                fontFamily,
-                color: textColor,
-                textAlign,
-                fontWeight,
-                fontStyle,
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                justifyContent:
-                  textAlign === "center"
-                    ? "center"
-                    : textAlign === "right"
-                    ? "flex-end"
-                    : "flex-start",
-              }}
-            >
-              {text}
-            </div>
-          )}
-        </div>
-      </BaseShape>
-
-      {/* Text Formatting Header - only show for single selection */}
-      <TextFormattingHeader
-        options={formattingOptions}
-        onOptionsChange={handleFormattingChange}
-        position={{ x, y }}
-        width={width}
-        visible={selected && selectedCount === 1 && !isEditing}
-      />
-    </>
+        {isEditing ? (
+          <textarea
+            ref={textareaRef}
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            onBlur={handleTextSubmit}
+            onKeyDown={handleKeyDown}
+            className="w-full h-full resize-none border-none outline-none bg-transparent"
+            style={{
+              fontSize,
+              fontFamily,
+              color: textColor,
+              textAlign,
+              fontWeight,
+              fontStyle,
+              padding: 0,
+            }}
+          />
+        ) : (
+          <div
+            className="w-full h-full flex items-center"
+            style={{
+              fontSize,
+              fontFamily,
+              color: textColor,
+              textAlign,
+              fontWeight,
+              fontStyle,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              justifyContent:
+                textAlign === "center"
+                  ? "center"
+                  : textAlign === "right"
+                  ? "flex-end"
+                  : "flex-start",
+            }}
+          >
+            {text}
+          </div>
+        )}
+      </div>
+    </BaseShape>
   );
 };

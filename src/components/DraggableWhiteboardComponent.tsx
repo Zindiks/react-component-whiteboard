@@ -91,6 +91,14 @@ interface DraggableComponentProps {
   textAlign?: "left" | "center" | "right";
   fontWeight?: "normal" | "bold";
   fontStyle?: "normal" | "italic";
+  // Shape formatting options
+  fillColor?: string;
+  strokeColor?: string;
+  strokeWidth?: number;
+  borderRadius?: number;
+  strokeStyle?: "solid" | "dashed" | "dotted";
+  arrowStyle?: "none" | "arrow" | "double-arrow";
+  arrowSize?: number;
 }
 
 export const DraggableComponent: React.FC<DraggableComponentProps> = ({
@@ -123,6 +131,13 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   textAlign,
   fontWeight,
   fontStyle,
+  fillColor,
+  strokeColor,
+  strokeWidth,
+  borderRadius,
+  strokeStyle,
+  arrowStyle,
+  arrowSize,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
@@ -371,32 +386,29 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       <RectangleShape
         x={0}
         y={0}
-        width={width || 120}
-        height={height || 80}
+        width={width || 150}
+        height={height || 100}
         selected={selected}
-        selectedCount={selectedCount}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        onFormattingChange={(options) => {
-          // Handle shape formatting changes here if needed
-          console.log("Rectangle formatting changed:", options);
-        }}
+        fillColor={fillColor}
+        strokeColor={strokeColor}
+        strokeWidth={strokeWidth}
+        borderRadius={borderRadius}
       />
     ),
     ellipse: () => (
       <EllipseShape
         x={0}
         y={0}
-        width={width || 120}
-        height={height || 80}
+        width={width || 150}
+        height={height || 100}
         selected={selected}
-        selectedCount={selectedCount}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        onFormattingChange={(options) => {
-          // Handle shape formatting changes here if needed
-          console.log("Ellipse formatting changed:", options);
-        }}
+        fillColor={fillColor}
+        strokeColor={strokeColor}
+        strokeWidth={strokeWidth}
       />
     ),
     arrow: () => (
@@ -406,13 +418,13 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         width={width || 150}
         height={height || 20}
         selected={selected}
-        selectedCount={selectedCount}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        onFormattingChange={(options) => {
-          // Handle shape formatting changes here if needed
-          console.log("Arrow formatting changed:", options);
-        }}
+        strokeColor={strokeColor}
+        strokeWidth={strokeWidth}
+        strokeStyle={strokeStyle}
+        arrowStyle={arrowStyle}
+        arrowSize={arrowSize}
       />
     ),
     line: () => (
@@ -422,13 +434,11 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         width={width || 150}
         height={height || 20}
         selected={selected}
-        selectedCount={selectedCount}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        onFormattingChange={(options) => {
-          // Handle shape formatting changes here if needed
-          console.log("Line formatting changed:", options);
-        }}
+        strokeColor={strokeColor}
+        strokeWidth={strokeWidth}
+        strokeStyle={strokeStyle}
       />
     ),
     text: () => (
@@ -438,12 +448,10 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         width={width || 150}
         height={height || 50}
         selected={selected}
-        selectedCount={selectedCount}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
         text={text || "Double-click to edit"}
         onTextChange={(newText) => onTextChange?.(id, newText)}
-        onFormattingChange={(options) => onFormattingChange?.(id, options)}
         fontSize={fontSize}
         fontFamily={fontFamily}
         textColor={textColor}
@@ -459,23 +467,12 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         width={width || 200}
         height={height || 150}
         selected={selected}
-        selectedCount={selectedCount}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
         imageSrc={imageSrc}
-        onImageChange={(newImageSrc) => {
-          widgetLogger.debug("Image changed", {
-            componentId: id,
-            imageUrl:
-              newImageSrc.substring(0, 100) +
-              (newImageSrc.length > 100 ? "..." : ""),
-          });
-          onImageChange?.(id, newImageSrc);
-        }}
-        onFormattingChange={(options) => {
-          // Handle image formatting changes here if needed
-          console.log("Image formatting changed:", options);
-        }}
+        strokeColor={strokeColor}
+        strokeWidth={strokeWidth}
+        borderRadius={borderRadius}
       />
     ),
   };

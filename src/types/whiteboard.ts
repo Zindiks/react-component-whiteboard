@@ -18,6 +18,15 @@ export interface Component {
   textAlign?: "left" | "center" | "right";
   fontWeight?: "normal" | "bold";
   fontStyle?: "normal" | "italic";
+  // Shape formatting options
+  fillColor?: string;
+  strokeColor?: string;
+  strokeWidth?: number;
+  borderRadius?: number;
+  // Line formatting options
+  strokeStyle?: "solid" | "dashed" | "dotted";
+  arrowStyle?: "none" | "arrow" | "double-arrow";
+  arrowSize?: number;
 }
 
 export interface Point {
