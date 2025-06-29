@@ -8,6 +8,7 @@ import {
   Minus,
   Plus,
 } from "lucide-react";
+import { ComponentHeader } from "../ui/ComponentHeader";
 
 export interface TextFormattingOptions {
   fontFamily: string;
@@ -46,8 +47,6 @@ export const TextFormattingHeader: React.FC<TextFormattingHeaderProps> = ({
   width,
   visible,
 }) => {
-  if (!visible) return null;
-
   const handleFontFamilyChange = (fontFamily: string) => {
     onOptionsChange({ fontFamily });
   };
@@ -90,27 +89,8 @@ export const TextFormattingHeader: React.FC<TextFormattingHeaderProps> = ({
     }
   };
 
-  const HEADER_WIDTH = 400; // Fixed header width
-
   return (
-    <div
-      style={{
-        position: "absolute",
-        left: position.x + width / 2 - HEADER_WIDTH / 2, // Center the header on the component
-        top: position.y - 60, // Position above the text shape
-        width: `${HEADER_WIDTH}px`,
-        height: "50px",
-        backgroundColor: "rgba(0, 0, 0, 0.9)",
-        borderRadius: "8px",
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        padding: "0 12px",
-        zIndex: 10000,
-        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
-      }}
-    >
+    <ComponentHeader position={position} width={width} visible={visible}>
       {/* Font Family Dropdown */}
       <div className="relative">
         <select
@@ -306,6 +286,6 @@ export const TextFormattingHeader: React.FC<TextFormattingHeaderProps> = ({
           }}
         />
       </div>
-    </div>
+    </ComponentHeader>
   );
 };

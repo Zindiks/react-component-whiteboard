@@ -17,6 +17,7 @@ export interface TextShapeProps extends Omit<BaseShapeProps, "children"> {
   padding?: number;
   onTextChange?: (text: string) => void;
   onFormattingChange?: (options: Partial<TextFormattingOptions>) => void;
+  selectedCount?: number;
 }
 
 export const TextShape: React.FC<TextShapeProps> = ({
@@ -32,6 +33,7 @@ export const TextShape: React.FC<TextShapeProps> = ({
   onTextChange,
   onFormattingChange,
   selected = false,
+  selectedCount = 1,
   x,
   y,
   width,
@@ -154,13 +156,13 @@ export const TextShape: React.FC<TextShapeProps> = ({
         </div>
       </BaseShape>
 
-      {/* Text Formatting Header */}
+      {/* Text Formatting Header - only show for single selection */}
       <TextFormattingHeader
         options={formattingOptions}
         onOptionsChange={handleFormattingChange}
         position={{ x, y }}
         width={width}
-        visible={selected && !isEditing}
+        visible={selected && selectedCount === 1 && !isEditing}
       />
     </>
   );

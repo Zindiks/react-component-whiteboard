@@ -31,6 +31,7 @@ import {
   ImageShape,
 } from "./shapes";
 import { FloatingHeader } from "./widgets/FloatingHeader";
+import { WidgetHeader, WidgetFormattingOptions } from "./widgets/WidgetHeader";
 import {
   Video,
   Timer as TimerIcon,
@@ -374,8 +375,13 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         width={width || 120}
         height={height || 80}
         selected={selected}
+        selectedCount={selectedCount}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+        onFormattingChange={(options) => {
+          // Handle shape formatting changes here if needed
+          console.log("Rectangle formatting changed:", options);
+        }}
       />
     ),
     ellipse: () => (
@@ -385,8 +391,13 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         width={width || 120}
         height={height || 80}
         selected={selected}
+        selectedCount={selectedCount}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+        onFormattingChange={(options) => {
+          // Handle shape formatting changes here if needed
+          console.log("Ellipse formatting changed:", options);
+        }}
       />
     ),
     arrow: () => (
@@ -396,8 +407,13 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         width={width || 150}
         height={height || 20}
         selected={selected}
+        selectedCount={selectedCount}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+        onFormattingChange={(options) => {
+          // Handle shape formatting changes here if needed
+          console.log("Arrow formatting changed:", options);
+        }}
       />
     ),
     line: () => (
@@ -407,8 +423,13 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         width={width || 150}
         height={height || 20}
         selected={selected}
+        selectedCount={selectedCount}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+        onFormattingChange={(options) => {
+          // Handle shape formatting changes here if needed
+          console.log("Line formatting changed:", options);
+        }}
       />
     ),
     text: () => (
@@ -418,6 +439,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         width={width || 150}
         height={height || 50}
         selected={selected}
+        selectedCount={selectedCount}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
         text={text || "Double-click to edit"}
@@ -438,6 +460,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         width={width || 200}
         height={height || 150}
         selected={selected}
+        selectedCount={selectedCount}
         onSelect={() => onSelect(id)}
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
         imageSrc={imageSrc}
@@ -449,6 +472,10 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
               (newImageSrc.length > 100 ? "..." : ""),
           });
           onImageChange?.(id, newImageSrc);
+        }}
+        onFormattingChange={(options) => {
+          // Handle image formatting changes here if needed
+          console.log("Image formatting changed:", options);
         }}
       />
     ),
@@ -476,6 +503,23 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     "line",
     "text",
     "imageShape",
+  ].includes(type);
+
+  // Check if this is a widget component that should show a header
+  const isWidgetComponent = [
+    "timer",
+    "weather",
+    "bitcoin",
+    "currency",
+    "note",
+    "confetti",
+    "watch",
+    "scrollingtext",
+    "youtubeVideo",
+    "soundcloud",
+    "spotify",
+    "stylishlink",
+    "linkpreview",
   ].includes(type);
 
   // Function to get component metadata for floating header
@@ -547,13 +591,34 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
 
   return (
     <>
-      {/* Floating header for selected widget components - only show for single selection */}
-      {selected && !isShapeComponent && selectedCount === 1 && (
+      {/* Widget headers for selected widget components - only show for single selection */}
+      {selected && isWidgetComponent && selectedCount === 1 && (
+        <WidgetHeader
+          options={{
+            title: getComponentMetadata().title,
+            refreshInterval: 0,
+            isVisible: true,
+          }}
+          onOptionsChange={(options: Partial<WidgetFormattingOptions>) => {
+            // Handle widget formatting changes here if needed
+            console.log(`${type} formatting changed:`, options);
+          }}
+          position={{ x, y }}
+          width={width || 200}
+          visible={true}
+          widgetType={getComponentMetadata().title}
+          onRefresh={() => {
+            // Handle refresh for specific widget types
+            console.log(`Refreshing ${type}`);
+          }}
+        />
+      )}
+
+      {/* Floating header for linkpreview component only - only show for single selection */}
+      {selected && type === "linkpreview" && selectedCount === 1 && (
         <FloatingHeader
           {...getComponentMetadata()}
-          actions={
-            type === "linkpreview" ? renderLinkPreviewActions() : undefined
-          }
+          actions={renderLinkPreviewActions()}
           onDelete={handleDeleteClick}
           x={x}
           y={y}
