@@ -217,10 +217,16 @@ export const useWhiteboardState = () => {
       imageUrl:
         imageSrc.substring(0, 100) + (imageSrc.length > 100 ? "..." : ""),
     });
+
     setComponents((prev) =>
-      prev.map((component) =>
-        component.id === id ? { ...component, imageSrc } : component
-      )
+      prev.map((component) => {
+        if (component.id === id) {
+          // For new images, we'll let the ImageShape component handle the aspect ratio
+          // adjustment when the image loads, so we just update the imageSrc here
+          return { ...component, imageSrc };
+        }
+        return component;
+      })
     );
   }, []);
 
