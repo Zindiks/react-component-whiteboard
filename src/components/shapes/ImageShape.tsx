@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { BaseShape, BaseShapeProps } from "./BaseShape";
 
+export interface ImageFormattingOptions {
+  borderColor: string;
+  borderWidth: number;
+  borderRadius: number;
+  rotation: number;
+  opacity: number;
+  objectFit: "cover" | "contain" | "fill";
+}
+
 export interface ImageShapeProps extends Omit<BaseShapeProps, "children"> {
   imageSrc?: string;
   altText?: string;
@@ -8,6 +17,10 @@ export interface ImageShapeProps extends Omit<BaseShapeProps, "children"> {
   strokeColor?: string;
   strokeWidth?: number;
   borderRadius?: number;
+  rotation?: number;
+  opacity?: number;
+  onImageChange?: (imageSrc: string) => void;
+  onFormattingChange?: (options: Partial<ImageFormattingOptions>) => void;
 }
 
 export const ImageShape: React.FC<ImageShapeProps> = ({
@@ -17,6 +30,8 @@ export const ImageShape: React.FC<ImageShapeProps> = ({
   strokeColor = "#9ca3af",
   strokeWidth = 0,
   borderRadius = 8,
+  rotation = 0,
+  opacity = 1,
   selected = false,
   width,
   height,
@@ -82,6 +97,8 @@ export const ImageShape: React.FC<ImageShapeProps> = ({
           border: `${strokeWidth}px solid ${strokeColor}`,
           borderRadius: `${borderRadius}px`,
           overflow: "hidden",
+          transform: `rotate(${rotation}deg)`,
+          opacity,
         }}
       >
         {imageSrc ? (

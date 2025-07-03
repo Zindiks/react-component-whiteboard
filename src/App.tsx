@@ -12,7 +12,6 @@ import { DraggableComponent } from "./components/DraggableWhiteboardComponent";
 import { GridBackground } from "./components/GridBackground";
 import { FPSMonitor } from "./components/FPSMonitor";
 import { DragPreviewOverlay } from "./components/whiteboard/DragPreviewOverlay";
-import { WidgetHeader } from "./components/widgets/WidgetHeader";
 import { WidgetFormattingOptions } from "./types/formatting";
 import { usePerformance } from "./hooks/usePerformance";
 import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
@@ -545,6 +544,9 @@ const CustomGrid = () => {
             strokeStyle={component.strokeStyle}
             arrowStyle={component.arrowStyle}
             arrowSize={component.arrowSize}
+            rotation={component.rotation}
+            opacity={component.opacity}
+            onFormattingChange={handleFormattingChange}
           />
         ))}
       </div>
@@ -603,84 +605,6 @@ const CustomGrid = () => {
 
       {/* FPS Monitor for performance tracking */}
       <FPSMonitor enabled={true} position="top-right" />
-
-      {/* Widget headers for selected widget components - only show for single selection */}
-      {selectedComponents.length === 1 &&
-        (() => {
-          const selectedComponent = components.find(
-            (c) => c.id === selectedComponents[0]
-          );
-          if (!selectedComponent) return null;
-
-          const isWidgetComponent = [
-            "timer",
-            "weather",
-            "bitcoin",
-            "currency",
-            "note",
-            "confetti",
-            "watch",
-            "scrollingtext",
-            "youtubeVideo",
-            "soundcloud",
-            "spotify",
-            "stylishlink",
-            "linkpreview",
-          ].includes(selectedComponent.type);
-
-          if (!isWidgetComponent) return null;
-
-          const getWidgetTitle = (type: string) => {
-            const metadata = {
-              timer: "Timer",
-              weather: "Weather",
-              bitcoin: "Bitcoin Chart",
-              currency: "Currency Converter",
-              note: "Text Note",
-              confetti: "Confetti Button",
-              watch: "Watch",
-              scrollingtext: "Scrolling Text",
-              youtubeVideo: "YouTube Video",
-              soundcloud: "SoundCloud",
-              spotify: "Spotify",
-              stylishlink: "Stylish Link",
-              linkpreview: "Link Preview",
-            };
-            return metadata[type as keyof typeof metadata] || type;
-          };
-
-          // Calculate the actual position on screen (not transformed)
-          const screenX = selectedComponent.x * transform.k + transform.x;
-          const screenY = selectedComponent.y * transform.k + transform.y;
-          const screenWidth = (selectedComponent.width || 200) * transform.k;
-
-          return (
-            <WidgetHeader
-              options={{
-                title: getWidgetTitle(selectedComponent.type),
-                refreshInterval: 0,
-                isVisible: true,
-              }}
-              onOptionsChange={(options: Partial<WidgetFormattingOptions>) => {
-                // Handle widget formatting changes here if needed
-                console.log(
-                  `${selectedComponent.type} formatting changed:`,
-                  options
-                );
-              }}
-              position={{
-                x: screenX + screenWidth / 2,
-                y: screenY - 60,
-              }}
-              visible={true}
-              onRefresh={() => {
-                // Handle refresh for specific widget types
-                console.log(`Refreshing ${selectedComponent.type}`);
-              }}
-              onClose={() => setSelectedComponents([])}
-            />
-          );
-        })()}
 
       {/* Shape headers for selected shape components - only show for single selection */}
       {selectedComponents.length === 1 &&

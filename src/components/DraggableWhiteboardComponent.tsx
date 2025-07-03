@@ -29,6 +29,7 @@ import {
   TextShape,
   ImageShape,
 } from "./shapes";
+import type { ImageFormattingOptions } from "./shapes";
 import { FloatingHeader } from "./widgets/FloatingHeader";
 import {
   Video,
@@ -93,6 +94,13 @@ interface DraggableComponentProps {
   strokeStyle?: "solid" | "dashed" | "dotted";
   arrowStyle?: "none" | "arrow" | "double-arrow";
   arrowSize?: number;
+  // Image formatting options
+  rotation?: number;
+  opacity?: number;
+  onFormattingChange?: (
+    id: number,
+    options: Partial<ImageFormattingOptions>
+  ) => void;
 }
 
 export const DraggableComponent: React.FC<DraggableComponentProps> = ({
@@ -131,6 +139,9 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   strokeStyle,
   arrowStyle,
   arrowSize,
+  rotation,
+  opacity,
+  onFormattingChange,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
@@ -466,6 +477,10 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         strokeColor={strokeColor}
         strokeWidth={strokeWidth}
         borderRadius={borderRadius}
+        rotation={rotation || 0}
+        opacity={opacity || 1}
+        onImageChange={(newImageSrc) => onImageChange?.(id, newImageSrc)}
+        onFormattingChange={(options) => onFormattingChange?.(id, options)}
       />
     ),
   };
