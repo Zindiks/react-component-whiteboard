@@ -194,15 +194,16 @@ const CustomGrid = () => {
       selectedComponents,
       setCopiedComponents
     );
-    
+
     // Show copy status indicator
     if (copiedCount > 0) {
-      const message = copiedCount === 1 
-        ? "Copied 1 component"
-        : `Copied ${copiedCount} components`;
-      
+      const message =
+        copiedCount === 1
+          ? "Copied 1 component"
+          : `Copied ${copiedCount} components`;
+
       setCopyStatus({ visible: true, message, count: copiedCount });
-      
+
       // Hide status after 2 seconds
       setTimeout(() => {
         setCopyStatus({ visible: false, message: "", count: 0 });

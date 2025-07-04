@@ -124,9 +124,11 @@ export const copySelectedComponents = async (
     else {
       try {
         // Create rich component data that preserves all styling and properties
-        const richComponentData = createRichComponentData(selectedShapeComponents);
+        const richComponentData = createRichComponentData(
+          selectedShapeComponents
+        );
         await navigator.clipboard.writeText(richComponentData);
-        
+
         clipboardLogger.debug("Copied multiple components with rich data", {
           count: selectedShapeComponents.length,
           componentIds: selectedShapeComponents.map((c) => c.id),
@@ -135,8 +137,11 @@ export const copySelectedComponents = async (
           dataLength: richComponentData.length,
         });
       } catch (error) {
-        clipboardLogger.warn("Failed to copy rich component data to system clipboard", { error });
-        
+        clipboardLogger.warn(
+          "Failed to copy rich component data to system clipboard",
+          { error }
+        );
+
         // Fallback to summary format
         try {
           const summary = selectedShapeComponents
@@ -157,7 +162,9 @@ export const copySelectedComponents = async (
             );
           }
         } catch (fallbackError) {
-          clipboardLogger.warn("Failed to copy fallback summary", { fallbackError });
+          clipboardLogger.warn("Failed to copy fallback summary", {
+            fallbackError,
+          });
         }
       }
     }
@@ -387,7 +394,7 @@ export const handleComponentPaste = async (
     try {
       // First check for text content that might be rich component data
       const clipboardText = await navigator.clipboard.readText();
-      
+
       // Check if it's our rich component data format (multiple components)
       const richComponentData = parseRichComponentData(clipboardText);
       if (richComponentData) {
@@ -474,7 +481,7 @@ export const handleComponentPaste = async (
   try {
     // First check for text content that might be rich component data
     const clipboardText = await navigator.clipboard.readText();
-    
+
     // Check if it's our rich component data format (multiple components)
     const richComponentData = parseRichComponentData(clipboardText);
     if (richComponentData) {
@@ -491,11 +498,14 @@ export const handleComponentPaste = async (
       const newIds = newComponents.map((c) => c.id);
       setSelectedComponents(newIds);
 
-      clipboardLogger.info("Pasted rich component data from clipboard (fallback)", {
-        count: newComponents.length,
-        componentTypes: newComponents.map((c) => c.type),
-        mousePosition,
-      });
+      clipboardLogger.info(
+        "Pasted rich component data from clipboard (fallback)",
+        {
+          count: newComponents.length,
+          componentTypes: newComponents.map((c) => c.type),
+          mousePosition,
+        }
+      );
       return;
     }
 

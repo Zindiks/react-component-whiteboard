@@ -397,13 +397,7 @@ export const useComponentCreators = ({
         hasCustomStyling: !!styling,
       });
     },
-    [
-      components,
-      mousePosition,
-      transform,
-      setComponents,
-      setSelectedComponents,
-    ]
+    [components, mousePosition, transform, setComponents, setSelectedComponents]
   );
 
   return {
