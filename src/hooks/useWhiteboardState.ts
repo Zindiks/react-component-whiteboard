@@ -3,7 +3,7 @@ import { Component, InitialPosition } from "../types/whiteboard";
 import { INITIAL_POSITIONS, COMPONENT_SIZES } from "../constants/appConstants";
 import { stateLogger } from "../utils/componentLoggers";
 import { getDynamicGridSize, snapPointToGrid } from "../utils/gridUtils";
-import { TextFormattingOptions } from "../types/formatting";
+import { clearCopiedComponentsIfInvalid } from "../utils/clipboardOperations";
 
 const DEFAULT_COMPONENTS: Component[] = [
   {
@@ -100,22 +100,43 @@ export const useWhiteboardState = () => {
   );
   const [copiedComponents, setCopiedComponents] = useState<Component[]>([]);
 
-  const handleDeleteComponent = useCallback((id: number) => {
-    stateLogger.debug("Deleting component", { componentId: id });
-    setComponents((prev) => prev.filter((component) => component.id !== id));
-    setSelectedComponents((prev) =>
-      prev.filter((selectedId) => selectedId !== id)
-    );
-  }, []);
+  const handleDeleteComponent = useCallback(
+    (id: number) => {
+      stateLogger.debug("Deleting component", { componentId: id });
+      setComponents((prev) => {
+        const newComponents = prev.filter((component) => component.id !== id);
+        // Clear copied components if any become invalid
+        clearCopiedComponentsIfInvalid(
+          copiedComponents,
+          newComponents,
+          setCopiedComponents
+        );
+        return newComponents;
+      });
+      setSelectedComponents((prev) =>
+        prev.filter((selectedId) => selectedId !== id)
+      );
+    },
+    [copiedComponents]
+  );
 
   const handleDeleteSelected = useCallback(() => {
     if (selectedComponents.length > 0) {
-      setComponents((prev) =>
-        prev.filter((component) => !selectedComponents.includes(component.id))
-      );
+      setComponents((prev) => {
+        const newComponents = prev.filter(
+          (component) => !selectedComponents.includes(component.id)
+        );
+        // Clear copied components if any become invalid
+        clearCopiedComponentsIfInvalid(
+          copiedComponents,
+          newComponents,
+          setCopiedComponents
+        );
+        return newComponents;
+      });
       setSelectedComponents([]);
     }
-  }, [selectedComponents]);
+  }, [selectedComponents, copiedComponents]);
 
   const addNewComponent = useCallback(
     (type: string, x?: number, y?: number) => {
@@ -231,7 +252,7 @@ export const useWhiteboardState = () => {
   }, []);
 
   const handleFormattingChange = useCallback(
-    (id: number, formattingOptions: Partial<TextFormattingOptions>) => {
+    (id: number, formattingOptions: Record<string, unknown>) => {
       stateLogger.debug("Changing component formatting", {
         componentId: id,
         formattingOptions,
