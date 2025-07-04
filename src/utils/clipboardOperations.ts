@@ -19,8 +19,10 @@ import {
 
 // Shape types that can be copied
 export const COPYABLE_SHAPE_TYPES = [
+  // Basic shape types
   "rectangle",
-  "ellipse",
+  "ellipse", 
+  "circle", // alias for ellipse
   "arrow",
   "line",
   "text",
@@ -31,6 +33,8 @@ export const COPYABLE_SHAPE_TYPES = [
   "spotify",
   "scrollingtext",
   "linkPreview",
+  "linkpreview", // handle both cases
+  "stylishlink",
   "timer",
   "watch",
   "note",
@@ -114,6 +118,22 @@ export const copySelectedComponents = async (
       const contentCopied = await copyComponentContentToClipboard(
         selectedShapeComponents[0]
       );
+      
+      // If the component doesn't have text content (like basic shapes),
+      // also create rich component data so it can be pasted properly
+      if (!contentCopied) {
+        try {
+          const richComponentData = createRichComponentData(selectedShapeComponents);
+          await navigator.clipboard.writeText(richComponentData);
+          clipboardLogger.debug("Copied single shape component as rich data", {
+            componentType: selectedShapeComponents[0].type,
+            componentId: selectedShapeComponents[0].id,
+          });
+        } catch (error) {
+          clipboardLogger.warn("Failed to copy single shape as rich data", { error });
+        }
+      }
+      
       clipboardLogger.debug("Copied single component", {
         count: selectedShapeComponents.length,
         componentIds: selectedShapeComponents.map((c) => c.id),
@@ -698,6 +718,7 @@ export const copyComponentContentToClipboard = async (
         textToCopy = component.spotifyUrl || "";
         break;
       case "linkPreview":
+      case "linkpreview":
         textToCopy = component.text || ""; // URL is stored in text field for link previews
         break;
       case "imageShape":
@@ -706,6 +727,26 @@ export const copyComponentContentToClipboard = async (
       case "scrollingtext":
         textToCopy = component.text || "";
         break;
+      case "note":
+        textToCopy = component.text || "";
+        break;
+      // For shape components without text content, we still want to mark them as copyable
+      // but we won't copy their content to system clipboard (they're handled by rich component data)
+      case "rectangle":
+      case "ellipse":
+      case "circle":
+      case "arrow":
+      case "line":
+      case "timer":
+      case "watch":
+      case "confetti":
+      case "weather":
+      case "bitcoin":
+      case "currency":
+      case "stylishlink":
+        // These components don't have meaningful text content to copy individually
+        // but they're fully copyable as rich component data for multi-component selection
+        return false;
       default:
         // For other components, we don't copy content to clipboard
         return false;
@@ -773,6 +814,7 @@ export const copySelectedComponentsContentOnly = async (
           content = component.spotifyUrl || "";
           break;
         case "linkPreview":
+        case "linkpreview":
           content = component.text || "";
           break;
         case "imageShape":
@@ -780,6 +822,25 @@ export const copySelectedComponentsContentOnly = async (
           break;
         case "scrollingtext":
           content = component.text || "";
+          break;
+        case "note":
+          content = component.text || "";
+          break;
+        // Shape components without meaningful text content are skipped
+        // but are still copyable as rich component data
+        case "rectangle":
+        case "ellipse":
+        case "circle":
+        case "arrow":
+        case "line":
+        case "timer":
+        case "watch":
+        case "confetti":
+        case "weather":
+        case "bitcoin":
+        case "currency":
+        case "stylishlink":
+          // These don't have text content to extract
           break;
       }
 
