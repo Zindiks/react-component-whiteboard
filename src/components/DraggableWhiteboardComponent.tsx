@@ -399,6 +399,14 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         strokeColor={strokeColor}
         strokeWidth={strokeWidth}
         borderRadius={borderRadius}
+        text={text}
+        onTextChange={(newText) => onTextChange?.(id, newText)}
+        fontSize={fontSize}
+        fontFamily={fontFamily}
+        textColor={textColor}
+        textAlign={textAlign}
+        fontWeight={fontWeight}
+        fontStyle={fontStyle}
       />
     ),
     ellipse: () => (
@@ -413,6 +421,14 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         fillColor={fillColor}
         strokeColor={strokeColor}
         strokeWidth={strokeWidth}
+        text={text}
+        onTextChange={(newText) => onTextChange?.(id, newText)}
+        fontSize={fontSize}
+        fontFamily={fontFamily}
+        textColor={textColor}
+        textAlign={textAlign}
+        fontWeight={fontWeight}
+        fontStyle={fontStyle}
       />
     ),
     arrow: () => (
@@ -429,6 +445,13 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         strokeStyle={strokeStyle}
         arrowStyle={arrowStyle}
         arrowSize={arrowSize}
+        text={text}
+        onTextChange={(newText) => onTextChange?.(id, newText)}
+        fontSize={fontSize}
+        fontFamily={fontFamily}
+        textColor={textColor}
+        fontWeight={fontWeight}
+        fontStyle={fontStyle}
       />
     ),
     line: () => (
@@ -443,6 +466,13 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         strokeColor={strokeColor}
         strokeWidth={strokeWidth}
         strokeStyle={strokeStyle}
+        text={text}
+        onTextChange={(newText) => onTextChange?.(id, newText)}
+        fontSize={fontSize}
+        fontFamily={fontFamily}
+        textColor={textColor}
+        fontWeight={fontWeight}
+        fontStyle={fontStyle}
       />
     ),
     text: () => (
