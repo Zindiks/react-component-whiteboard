@@ -98,7 +98,9 @@ export const ArrowShape: React.FC<ArrowShapeProps> = ({
                 orient="auto"
               >
                 <polygon
-                  points={`${arrowSize} 0, 0 ${arrowSize / 2}, ${arrowSize} ${arrowSize}`}
+                  points={`${arrowSize} 0, 0 ${
+                    arrowSize / 2
+                  }, ${arrowSize} ${arrowSize}`}
                   fill={strokeColor}
                 />
               </marker>
@@ -113,10 +115,14 @@ export const ArrowShape: React.FC<ArrowShapeProps> = ({
             strokeWidth={strokeWidth}
             strokeDasharray={getStrokeDashArray()}
             markerEnd={arrowStyle !== "none" ? "url(#arrowhead)" : undefined}
-            markerStart={arrowStyle === "double-arrow" ? "url(#arrowhead-start)" : undefined}
+            markerStart={
+              arrowStyle === "double-arrow"
+                ? "url(#arrowhead-start)"
+                : undefined
+            }
           />
         </svg>
-        
+
         {/* Text label positioned in the center */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           {isEditing ? (

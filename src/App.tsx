@@ -51,6 +51,7 @@ const CustomGrid = () => {
     components,
     selectedComponents,
     copiedComponents,
+    connectionMode,
     setComponents,
     setSelectedComponents,
     setCopiedComponents,
@@ -64,6 +65,11 @@ const CustomGrid = () => {
     handleDrag,
     handleSelect,
     handleDragStart,
+    handleConnectionPointClick,
+    handleShapeClickForConnection,
+    startArrowConnection,
+    cancelArrowConnection,
+    disconnectArrow,
   } = useWhiteboardState();
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -579,6 +585,20 @@ const CustomGrid = () => {
             arrowStyle={component.arrowStyle}
             arrowSize={component.arrowSize}
             onFormattingChange={handleFormattingChange}
+            startShapeId={component.startShapeId}
+            endShapeId={component.endShapeId}
+            startConnectionPoint={component.startConnectionPoint}
+            endConnectionPoint={component.endConnectionPoint}
+            onConnectionPointClick={handleConnectionPointClick}
+            connectionMode={connectionMode}
+            allComponents={components.map((c) => ({
+              id: c.id,
+              x: c.x,
+              y: c.y,
+              width: c.width,
+              height: c.height,
+              type: c.type,
+            }))}
           />
         ))}
       </div>
@@ -654,6 +674,10 @@ const CustomGrid = () => {
             "arrow",
             "text",
             "imageShape",
+            "smartRectangle",
+            "smartEllipse",
+            "smartArrow",
+            "groupFrame",
           ].includes(selectedComponent.type);
 
           if (!isShapeComponent) return null;
@@ -672,6 +696,10 @@ const CustomGrid = () => {
               }}
               onFormattingChange={handleFormattingChange}
               onClose={() => setSelectedComponents([])}
+              onStartArrowConnection={startArrowConnection}
+              onCancelArrowConnection={cancelArrowConnection}
+              onDisconnectArrow={disconnectArrow}
+              connectionMode={connectionMode}
             />
           );
         })()}

@@ -23,6 +23,14 @@ interface ShapeControlHeaderProps {
   position: { x: number; y: number };
   onFormattingChange: (id: number, options: Record<string, unknown>) => void;
   onClose: () => void;
+  onStartArrowConnection?: (arrowId: number) => void;
+  onCancelArrowConnection?: () => void;
+  onDisconnectArrow?: (arrowId: number) => void;
+  connectionMode?: {
+    active: boolean;
+    selectedArrowId?: number | null;
+    connectionStep?: "start" | "end" | null;
+  };
 }
 
 // Font size options with more variety
@@ -103,11 +111,43 @@ const ARROW_SIZES = [
   { value: "18", label: "Huge (18px)" },
 ];
 
+// Bend style options
+const BEND_STYLES = [
+  { value: "straight", label: "Straight" },
+  { value: "elbowed", label: "Elbowed (L-shaped)" },
+  { value: "curved", label: "Curved" },
+];
+
+// Bend radius options for curved arrows
+const BEND_RADIUS_OPTIONS = [
+  { value: "10", label: "Small (10px)" },
+  { value: "15", label: "Medium (15px)" },
+  { value: "20", label: "Normal (20px)" },
+  { value: "25", label: "Large (25px)" },
+  { value: "30", label: "XL (30px)" },
+  { value: "40", label: "XXL (40px)" },
+];
+
+// Elbow offset options for elbowed arrows
+const ELBOW_OFFSET_OPTIONS = [
+  { value: "20", label: "Close (20%)" },
+  { value: "30", label: "Near (30%)" },
+  { value: "40", label: "Medium (40%)" },
+  { value: "50", label: "Center (50%)" },
+  { value: "60", label: "Far (60%)" },
+  { value: "70", label: "Distant (70%)" },
+  { value: "80", label: "Very Far (80%)" },
+];
+
 export const ShapeControlHeader: React.FC<ShapeControlHeaderProps> = ({
   selectedComponent,
   position,
   onFormattingChange,
   onClose,
+  onStartArrowConnection,
+  onCancelArrowConnection,
+  onDisconnectArrow,
+  connectionMode,
 }) => {
   const handleFormattingChange = (options: Record<string, unknown>) => {
     onFormattingChange(selectedComponent.id, options);
@@ -465,6 +505,88 @@ export const ShapeControlHeader: React.FC<ShapeControlHeaderProps> = ({
           </Select>
         </div>
       )}
+
+      {/* Bend Style (for smart arrow only) */}
+      {selectedComponent.type === "smartArrow" && (
+        <div className="flex items-center gap-1">
+          <span className="text-sm font-medium min-w-[40px] text-foreground">
+            Bend:
+          </span>
+          <Select
+            value={selectedComponent.bendStyle || "straight"}
+            onValueChange={(value) => {
+              handleFormattingChange({
+                bendStyle: value as "straight" | "elbowed" | "curved",
+              });
+            }}
+          >
+            <SelectTrigger className="w-32 h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {BEND_STYLES.map((style) => (
+                <SelectItem key={style.value} value={style.value}>
+                  {style.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Bend Radius (for curved smart arrows only) */}
+      {selectedComponent.type === "smartArrow" &&
+        selectedComponent.bendStyle === "curved" && (
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-medium min-w-[50px] text-foreground">
+              Radius:
+            </span>
+            <Select
+              value={String(selectedComponent.bendRadius || 20)}
+              onValueChange={(value) => {
+                handleFormattingChange({ bendRadius: Number(value) });
+              }}
+            >
+              <SelectTrigger className="w-28 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {BEND_RADIUS_OPTIONS.map((radius) => (
+                  <SelectItem key={radius.value} value={radius.value}>
+                    {radius.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+      {/* Elbow Offset (for elbowed smart arrows only) */}
+      {selectedComponent.type === "smartArrow" &&
+        selectedComponent.bendStyle === "elbowed" && (
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-medium min-w-[50px] text-foreground">
+              Offset:
+            </span>
+            <Select
+              value={String(selectedComponent.elbowOffset || 50)}
+              onValueChange={(value) => {
+                handleFormattingChange({ elbowOffset: Number(value) });
+              }}
+            >
+              <SelectTrigger className="w-28 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ELBOW_OFFSET_OPTIONS.map((offset) => (
+                  <SelectItem key={offset.value} value={offset.value}>
+                    {offset.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
     </>
   );
 
@@ -516,6 +638,61 @@ export const ShapeControlHeader: React.FC<ShapeControlHeaderProps> = ({
 
       {/* Image specific controls */}
       {selectedComponent.type === "image" && renderImageControls()}
+
+      {/* Smart Arrow Connection Controls */}
+      {selectedComponent.type === "smartArrow" && (
+        <>
+          {connectionMode?.active &&
+          connectionMode.selectedArrowId === selectedComponent.id ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-blue-600">
+                {connectionMode.connectionStep === "start"
+                  ? "1. Click first shape to connect"
+                  : "2. Click second shape to connect"}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCancelArrowConnection?.();
+                }}
+                className="h-6 text-xs"
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onStartArrowConnection?.(selectedComponent.id);
+                }}
+                className="h-6 text-xs bg-blue-50 hover:bg-blue-100"
+              >
+                🔗 Connect Shapes
+              </Button>
+              {(selectedComponent.startShapeId ||
+                selectedComponent.endShapeId) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDisconnectArrow?.(selectedComponent.id);
+                  }}
+                  className="h-6 text-xs text-red-600 hover:bg-red-50"
+                >
+                  🔌 Disconnect
+                </Button>
+              )}
+            </div>
+          )}
+        </>
+      )}
 
       {/* Close button */}
       <Button

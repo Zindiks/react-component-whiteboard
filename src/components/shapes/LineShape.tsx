@@ -80,7 +80,7 @@ export const LineShape: React.FC<LineShapeProps> = ({
             strokeDasharray={getStrokeDashArray()}
           />
         </svg>
-        
+
         {/* Text label positioned in the center */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           {isEditing ? (

@@ -21,12 +21,18 @@ import {
 export const COPYABLE_SHAPE_TYPES = [
   // Basic shape types
   "rectangle",
-  "ellipse", 
+  "ellipse",
   "circle", // alias for ellipse
   "arrow",
   "line",
   "text",
   "imageShape",
+  // Smart shape types
+  "smartRectangle",
+  "smartEllipse",
+  "smartArrow",
+  "groupFrame",
+  "groupContainer",
   // Widget types
   "youtubeVideo",
   "soundcloud",
@@ -118,22 +124,26 @@ export const copySelectedComponents = async (
       const contentCopied = await copyComponentContentToClipboard(
         selectedShapeComponents[0]
       );
-      
+
       // If the component doesn't have text content (like basic shapes),
       // also create rich component data so it can be pasted properly
       if (!contentCopied) {
         try {
-          const richComponentData = createRichComponentData(selectedShapeComponents);
+          const richComponentData = createRichComponentData(
+            selectedShapeComponents
+          );
           await navigator.clipboard.writeText(richComponentData);
           clipboardLogger.debug("Copied single shape component as rich data", {
             componentType: selectedShapeComponents[0].type,
             componentId: selectedShapeComponents[0].id,
           });
         } catch (error) {
-          clipboardLogger.warn("Failed to copy single shape as rich data", { error });
+          clipboardLogger.warn("Failed to copy single shape as rich data", {
+            error,
+          });
         }
       }
-      
+
       clipboardLogger.debug("Copied single component", {
         count: selectedShapeComponents.length,
         componentIds: selectedShapeComponents.map((c) => c.id),
