@@ -302,6 +302,103 @@ export const useComponentCreators = ({
       setSelectedComponents,
     ]
   );
+  const createTextComponentAtMouse = useCallback(
+    (text: string, styling?: Partial<Component>): void => {
+      // Convert screen coordinates to whiteboard coordinates and center on mouse position
+      const defaultWidth = COMPONENT_SIZES.DEFAULT_WIDTH;
+      const defaultHeight = 100; // A reasonable height for text components
+
+      const whiteboardX =
+        (mousePosition.x - transform.x) / transform.k - defaultWidth / 2;
+      const whiteboardY =
+        (mousePosition.y - transform.y) / transform.k - defaultHeight / 2;
+
+      // Create a new text component at mouse position
+      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const highestZIndex = Math.max(
+        ...components.map((c) => c.zIndex || 0),
+        0
+      );
+
+      const newComponent: Component = {
+        id: newId,
+        x: whiteboardX,
+        y: whiteboardY,
+        type: "text",
+        width: styling?.width || defaultWidth,
+        height: styling?.height || defaultHeight,
+        zIndex: highestZIndex + 1,
+        text: text.trim(),
+        // Use provided styling or defaults
+        fontSize: styling?.fontSize || 14,
+        fontFamily: styling?.fontFamily || "Arial, sans-serif",
+        textColor: styling?.textColor || "#374151",
+        textAlign: styling?.textAlign || "left",
+        fontWeight: styling?.fontWeight || "normal",
+        fontStyle: styling?.fontStyle || "normal",
+        // Include any other styling properties
+        fillColor: styling?.fillColor,
+        strokeColor: styling?.strokeColor,
+        strokeWidth: styling?.strokeWidth,
+        borderRadius: styling?.borderRadius,
+      };
+
+      setComponents((prev) => [...prev, newComponent]);
+      setSelectedComponents([newId]); // Select the new component
+
+      widgetLogger.info("Created text component from clipboard", {
+        componentId: newId,
+        textLength: text.length,
+        position: { x: whiteboardX, y: whiteboardY },
+        hasCustomStyling: !!styling,
+      });
+    },
+    [components, mousePosition, transform, setComponents, setSelectedComponents]
+  );
+
+  const createShapeComponentAtMouse = useCallback(
+    (shapeType: string, styling?: Partial<Component>): void => {
+      // Convert screen coordinates to whiteboard coordinates and center on mouse position
+      const defaultWidth = styling?.width || COMPONENT_SIZES.DEFAULT_WIDTH;
+      const defaultHeight = styling?.height || COMPONENT_SIZES.DEFAULT_HEIGHT;
+
+      const whiteboardX =
+        (mousePosition.x - transform.x) / transform.k - defaultWidth / 2;
+      const whiteboardY =
+        (mousePosition.y - transform.y) / transform.k - defaultHeight / 2;
+
+      // Create a new shape component at mouse position
+      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const highestZIndex = Math.max(
+        ...components.map((c) => c.zIndex || 0),
+        0
+      );
+
+      const newComponent: Component = {
+        // Start with provided styling
+        ...styling,
+        // Override with required properties
+        id: newId,
+        x: whiteboardX,
+        y: whiteboardY,
+        type: shapeType,
+        width: defaultWidth,
+        height: defaultHeight,
+        zIndex: highestZIndex + 1,
+      };
+
+      setComponents((prev) => [...prev, newComponent]);
+      setSelectedComponents([newId]); // Select the new component
+
+      widgetLogger.info("Created shape component from clipboard", {
+        componentId: newId,
+        shapeType: shapeType,
+        position: { x: whiteboardX, y: whiteboardY },
+        hasCustomStyling: !!styling,
+      });
+    },
+    [components, mousePosition, transform, setComponents, setSelectedComponents]
+  );
 
   return {
     createImageComponentAtMouse,
@@ -309,5 +406,7 @@ export const useComponentCreators = ({
     createSoundCloudComponentAtMouse,
     createSpotifyComponentAtMouse,
     createLinkPreviewComponentAtMouse,
+    createTextComponentAtMouse,
+    createShapeComponentAtMouse,
   };
 };

@@ -3,7 +3,7 @@ import { Component, InitialPosition } from "../types/whiteboard";
 import { INITIAL_POSITIONS, COMPONENT_SIZES } from "../constants/appConstants";
 import { stateLogger } from "../utils/componentLoggers";
 import { getDynamicGridSize, snapPointToGrid } from "../utils/gridUtils";
-import { TextFormattingOptions } from "../types/formatting";
+import { clearCopiedComponentsIfInvalid } from "../utils/clipboardOperations";
 
 const DEFAULT_COMPONENTS: Component[] = [
   {
@@ -99,23 +99,61 @@ export const useWhiteboardState = () => {
     []
   );
   const [copiedComponents, setCopiedComponents] = useState<Component[]>([]);
+  const [connectionMode, setConnectionMode] = useState<{
+    active: boolean;
+    selectedArrowId: number | null;
+    connectionStep: "start" | "end" | null;
+    startShapeId: number | null;
+    endShapeId: number | null;
+    startConnectionPoint: string | null;
+    endConnectionPoint: string | null;
+  }>({
+    active: false,
+    selectedArrowId: null,
+    connectionStep: null,
+    startShapeId: null,
+    endShapeId: null,
+    startConnectionPoint: null,
+    endConnectionPoint: null,
+  });
 
-  const handleDeleteComponent = useCallback((id: number) => {
-    stateLogger.debug("Deleting component", { componentId: id });
-    setComponents((prev) => prev.filter((component) => component.id !== id));
-    setSelectedComponents((prev) =>
-      prev.filter((selectedId) => selectedId !== id)
-    );
-  }, []);
+  const handleDeleteComponent = useCallback(
+    (id: number) => {
+      stateLogger.debug("Deleting component", { componentId: id });
+      setComponents((prev) => {
+        const newComponents = prev.filter((component) => component.id !== id);
+        // Clear copied components if any become invalid
+        clearCopiedComponentsIfInvalid(
+          copiedComponents,
+          newComponents,
+          setCopiedComponents
+        );
+        return newComponents;
+      });
+      setSelectedComponents((prev) =>
+        prev.filter((selectedId) => selectedId !== id)
+      );
+    },
+    [copiedComponents]
+  );
 
   const handleDeleteSelected = useCallback(() => {
     if (selectedComponents.length > 0) {
-      setComponents((prev) =>
-        prev.filter((component) => !selectedComponents.includes(component.id))
-      );
+      setComponents((prev) => {
+        const newComponents = prev.filter(
+          (component) => !selectedComponents.includes(component.id)
+        );
+        // Clear copied components if any become invalid
+        clearCopiedComponentsIfInvalid(
+          copiedComponents,
+          newComponents,
+          setCopiedComponents
+        );
+        return newComponents;
+      });
       setSelectedComponents([]);
     }
-  }, [selectedComponents]);
+  }, [selectedComponents, copiedComponents]);
 
   const addNewComponent = useCallback(
     (type: string, x?: number, y?: number) => {
@@ -217,15 +255,21 @@ export const useWhiteboardState = () => {
       imageUrl:
         imageSrc.substring(0, 100) + (imageSrc.length > 100 ? "..." : ""),
     });
+
     setComponents((prev) =>
-      prev.map((component) =>
-        component.id === id ? { ...component, imageSrc } : component
-      )
+      prev.map((component) => {
+        if (component.id === id) {
+          // For new images, we'll let the ImageShape component handle the aspect ratio
+          // adjustment when the image loads, so we just update the imageSrc here
+          return { ...component, imageSrc };
+        }
+        return component;
+      })
     );
   }, []);
 
   const handleFormattingChange = useCallback(
-    (id: number, formattingOptions: Partial<TextFormattingOptions>) => {
+    (id: number, formattingOptions: Record<string, unknown>) => {
       stateLogger.debug("Changing component formatting", {
         componentId: id,
         formattingOptions,
@@ -314,10 +358,88 @@ export const useWhiteboardState = () => {
     [selectedComponents, initialPositions]
   );
 
-  const handleSelect = useCallback((id: number) => {
-    // Single selection only - replace any existing selection
-    setSelectedComponents([id]);
-  }, []);
+  // Simplified shape click handler for connection mode
+  const handleShapeClickForConnection = useCallback(
+    (shapeId: number) => {
+      if (connectionMode.active && connectionMode.selectedArrowId) {
+        const arrow = components.find(
+          (c) => c.id === connectionMode.selectedArrowId
+        );
+        if (!arrow || shapeId === connectionMode.selectedArrowId) return;
+
+        if (connectionMode.connectionStep === "start") {
+          // Connect the start of the arrow
+          setComponents((prev) =>
+            prev.map((component) =>
+              component.id === connectionMode.selectedArrowId
+                ? {
+                    ...component,
+                    startShapeId: shapeId,
+                    startConnectionPoint: "auto",
+                  }
+                : component
+            )
+          );
+
+          setConnectionMode((prev) => ({
+            ...prev,
+            startShapeId: shapeId,
+            startConnectionPoint: "auto",
+            connectionStep: "end",
+          }));
+
+          stateLogger.info("Arrow start connected to shape", {
+            arrowId: connectionMode.selectedArrowId,
+            shapeId,
+          });
+        } else if (connectionMode.connectionStep === "end") {
+          // Connect the end of the arrow and finish connection
+          setComponents((prev) =>
+            prev.map((component) =>
+              component.id === connectionMode.selectedArrowId
+                ? {
+                    ...component,
+                    endShapeId: shapeId,
+                    endConnectionPoint: "auto",
+                  }
+                : component
+            )
+          );
+
+          // Reset connection mode
+          setConnectionMode({
+            active: false,
+            selectedArrowId: null,
+            connectionStep: null,
+            startShapeId: null,
+            endShapeId: null,
+            startConnectionPoint: null,
+            endConnectionPoint: null,
+          });
+
+          stateLogger.info("Arrow end connected to shape", {
+            arrowId: connectionMode.selectedArrowId,
+            shapeId,
+          });
+        }
+      }
+    },
+    [connectionMode, components]
+  );
+
+  const handleSelect = useCallback(
+    (id: number) => {
+      // Check if we're in connection mode
+      if (connectionMode.active) {
+        handleShapeClickForConnection(id);
+        return;
+      }
+
+      // Single selection only - replace any existing selection
+      setSelectedComponents([id]);
+    },
+    [connectionMode, handleShapeClickForConnection]
+  );
 
   const handleDragStart = (id: number) => {
     // Bring the component to the front when starting to drag
@@ -340,12 +462,138 @@ export const useWhiteboardState = () => {
     }
   };
 
+  // Connection handling functions
+  const handleConnectionPointClick = useCallback(
+    (pointId: string, shapeId: number) => {
+      if (connectionMode.active && connectionMode.selectedArrowId) {
+        const arrow = components.find(
+          (c) => c.id === connectionMode.selectedArrowId
+        );
+        if (!arrow) return;
+
+        if (connectionMode.connectionStep === "start") {
+          // Connect the start of the arrow
+          setComponents((prev) =>
+            prev.map((component) =>
+              component.id === connectionMode.selectedArrowId
+                ? {
+                    ...component,
+                    startShapeId: shapeId,
+                    startConnectionPoint: "auto", // Let the arrow calculate the best point
+                  }
+                : component
+            )
+          );
+
+          setConnectionMode((prev) => ({
+            ...prev,
+            startShapeId: shapeId,
+            startConnectionPoint: "auto",
+            connectionStep: "end",
+          }));
+
+          stateLogger.info("Arrow start connected", {
+            arrowId: connectionMode.selectedArrowId,
+            shapeId,
+            pointId: "auto",
+          });
+        } else if (connectionMode.connectionStep === "end") {
+          // Connect the end of the arrow and finish connection
+          setComponents((prev) =>
+            prev.map((component) =>
+              component.id === connectionMode.selectedArrowId
+                ? {
+                    ...component,
+                    endShapeId: shapeId,
+                    endConnectionPoint: "auto", // Let the arrow calculate the best point
+                  }
+                : component
+            )
+          );
+
+          // Reset connection mode
+          setConnectionMode({
+            active: false,
+            selectedArrowId: null,
+            connectionStep: null,
+            startShapeId: null,
+            endShapeId: null,
+            startConnectionPoint: null,
+            endConnectionPoint: null,
+          });
+
+          stateLogger.info("Arrow end connected", {
+            arrowId: connectionMode.selectedArrowId,
+            shapeId,
+            pointId: "auto",
+          });
+        }
+      }
+    },
+    [connectionMode, components]
+  );
+
+  const handleConnectionPointHover = useCallback(
+    (pointId: string | null, shapeId: number) => {
+      // Could add visual feedback here in the future
+      stateLogger.debug("Connection point hover", { pointId, shapeId });
+    },
+    []
+  );
+
+  const startArrowConnection = useCallback((arrowId: number) => {
+    setConnectionMode({
+      active: true,
+      selectedArrowId: arrowId,
+      connectionStep: "start",
+      startShapeId: null,
+      endShapeId: null,
+      startConnectionPoint: null,
+      endConnectionPoint: null,
+    });
+
+    stateLogger.info("Started arrow connection mode", { arrowId });
+  }, []);
+
+  const cancelArrowConnection = useCallback(() => {
+    setConnectionMode({
+      active: false,
+      selectedArrowId: null,
+      connectionStep: null,
+      startShapeId: null,
+      endShapeId: null,
+      startConnectionPoint: null,
+      endConnectionPoint: null,
+    });
+
+    stateLogger.info("Cancelled arrow connection mode");
+  }, []);
+
+  const disconnectArrow = useCallback((arrowId: number) => {
+    setComponents((prev) =>
+      prev.map((component) =>
+        component.id === arrowId
+          ? {
+              ...component,
+              startShapeId: undefined,
+              endShapeId: undefined,
+              startConnectionPoint: undefined,
+              endConnectionPoint: undefined,
+            }
+          : component
+      )
+    );
+
+    stateLogger.info("Disconnected arrow", { arrowId });
+  }, []);
+
   return {
     // State
     components,
     selectedComponents,
     initialPositions,
     copiedComponents,
+    connectionMode,
 
     // Setters for external use
     setComponents,
@@ -365,5 +613,12 @@ export const useWhiteboardState = () => {
     handleDrag,
     handleSelect,
     handleDragStart,
+
+    // Connection actions
+    handleConnectionPointClick,
+    handleShapeClickForConnection,
+    startArrowConnection,
+    cancelArrowConnection,
+    disconnectArrow,
   };
 };

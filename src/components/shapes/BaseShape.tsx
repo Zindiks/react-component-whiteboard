@@ -32,8 +32,15 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
   const [resizeHandle, setResizeHandle] = useState<string>("");
   const [startSize, setStartSize] = useState({ width: 0, height: 0 });
   const [startMouse, setStartMouse] = useState({ x: 0, y: 0 });
-  const [aspectRatio] = useState(width / height); // Calculate initial aspect ratio
+  const [aspectRatio, setAspectRatio] = useState(width / height);
   const shapeRef = useRef<HTMLDivElement>(null);
+
+  // Update aspect ratio when dimensions change
+  useEffect(() => {
+    if (width > 0 && height > 0) {
+      setAspectRatio(width / height);
+    }
+  }, [width, height]);
 
   const handleMouseDown = (e: React.MouseEvent, handle: string) => {
     e.preventDefault();
