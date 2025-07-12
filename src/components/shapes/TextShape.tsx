@@ -37,7 +37,6 @@ export const TextShape: React.FC<TextShapeProps> = ({
 }) => {
   const [internalIsEditing, setInternalIsEditing] = React.useState(false);
   const [editText, setEditText] = React.useState(text);
-  const [internalFontSize, setInternalFontSize] = React.useState(fontSize);
   const [textBounds, setTextBounds] = React.useState({ width: 0, height: 0 });
   const lastKnownSizeRef = React.useRef({
     width: width || 150,
@@ -65,41 +64,8 @@ export const TextShape: React.FC<TextShapeProps> = ({
     [externalIsEditing, onEditingChange]
   );
 
-  // Calculate dynamic font size based on container dimensions
-  const dynamicFontSize = React.useMemo(() => {
-    if (!width || !height || !text) return internalFontSize;
-
-    // Calculate font size based on container area and text length
-    const area = width * height;
-    const textLength = text.length;
-
-    // Base font size calculation: scale with square root of area
-    let scaledSize = Math.sqrt(area) / 12; // Adjust divisor to control scaling sensitivity
-
-    // Adjust for text length - longer text should be smaller to fit
-    if (textLength > 1) {
-      const lengthFactor = Math.max(0.3, 1 - (textLength - 5) * 0.02); // Gradual decrease
-      scaledSize = scaledSize * lengthFactor;
-    }
-
-    // Ensure text fits within container width (rough estimation)
-    const maxWidthBasedSize = (width - padding * 2) / (textLength * 0.6);
-    const maxHeightBasedSize = (height - padding * 2) * 0.8;
-
-    // Use the most restrictive constraint
-    scaledSize = Math.min(scaledSize, maxWidthBasedSize, maxHeightBasedSize);
-
-    // Clamp to reasonable bounds
-    return Math.max(Math.min(scaledSize, 200), 8);
-  }, [width, height, text, padding, internalFontSize]);
-
-  // Use dynamic font size for rendering, but keep manual font size changes from header
-  const currentFontSize = fontSize !== 14 ? internalFontSize : dynamicFontSize;
-
-  // Use fontSize prop when it changes (from header controls)
-  React.useEffect(() => {
-    setInternalFontSize(fontSize);
-  }, [fontSize]);
+  // Use simple font size - either from props or default
+  const currentFontSize = fontSize;
 
   // Update last known size for tracking
   React.useEffect(() => {
@@ -128,24 +94,15 @@ export const TextShape: React.FC<TextShapeProps> = ({
     measureElement.style.fontFamily = fontFamily;
     measureElement.style.fontWeight = fontWeight;
     measureElement.style.fontStyle = fontStyle;
-    measureElement.style.whiteSpace = "pre-wrap"; // Preserve newlines and wrapping
-    measureElement.style.wordBreak = "break-word"; // Handle long words
-    measureElement.style.maxWidth = `${(width || 150) - padding * 2}px`; // Constrain to container width
+    measureElement.style.whiteSpace = "nowrap"; // Prevent wrapping to get natural text width
+    measureElement.style.wordBreak = "normal"; // Allow natural text flow
 
     // Measure the actual text dimensions
     const textWidth = measureElement.offsetWidth;
     const textHeight = measureElement.offsetHeight;
 
     setTextBounds({ width: textWidth, height: textHeight });
-  }, [
-    text,
-    currentFontSize,
-    fontFamily,
-    fontWeight,
-    fontStyle,
-    width,
-    padding,
-  ]);
+  }, [text, currentFontSize, fontFamily, fontWeight, fontStyle]);
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -207,9 +164,9 @@ export const TextShape: React.FC<TextShapeProps> = ({
   return (
     <BaseShape
       {...props}
-      width={width || 150}
-      height={height || 50}
-      selected={false} // Hide default BaseShape selection border
+      width={textBounds.width > 0 ? textBounds.width + 16 : width || 150} // Auto-size to fit text
+      height={textBounds.height > 0 ? textBounds.height + 16 : height || 50} // Auto-size to fit text
+      selected={selected && !isEditing} // Show BaseShape selection when not editing
       onSelect={() => {
         if (!isEditing) {
           props.onSelect?.();
@@ -222,13 +179,11 @@ export const TextShape: React.FC<TextShapeProps> = ({
         style={{
           position: "absolute",
           visibility: "hidden",
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
+          whiteSpace: "nowrap", // Prevent wrapping for natural measurement
           fontSize: `${currentFontSize}px`,
           fontFamily,
           fontWeight,
           fontStyle,
-          maxWidth: `${(width || 150) - padding * 2}px`,
           padding: 0,
           margin: 0,
           border: "none",
@@ -250,21 +205,6 @@ export const TextShape: React.FC<TextShapeProps> = ({
         }}
         onDoubleClick={handleDoubleClick}
       >
-        {/* Text-aligned selection indicator */}
-        {selected && !isEditing && textBounds.width > 0 && (
-          <div
-            className="absolute border-2 border-blue-500 pointer-events-none"
-            style={{
-              width: `${textBounds.width + 8}px`, // Add small padding
-              height: `${textBounds.height + 4}px`,
-              left: "50%",
-              top: "50%",
-              transform: "translate(-50%, -50%)",
-              borderRadius: "2px",
-            }}
-          />
-        )}
-
         {isEditing ? (
           <div className="relative flex items-center justify-center">
             <textarea
@@ -296,7 +236,6 @@ export const TextShape: React.FC<TextShapeProps> = ({
           </div>
         ) : (
           <div
-            className="w-full h-full flex items-center"
             style={{
               fontSize: currentFontSize,
               fontFamily,
@@ -304,15 +243,9 @@ export const TextShape: React.FC<TextShapeProps> = ({
               textAlign,
               fontWeight,
               fontStyle,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
+              whiteSpace: "nowrap", // Single line like FigJam
               lineHeight: 1.2,
-              justifyContent:
-                textAlign === "center"
-                  ? "center"
-                  : textAlign === "right"
-                  ? "flex-end"
-                  : "flex-start",
+              padding: "8px",
             }}
           >
             {text}
