@@ -64,15 +64,6 @@ export const TextShape: React.FC<TextShapeProps> = ({
   // Use simple font size - either from props or default
   const currentFontSize = fontSize;
 
-  // Debug logging for width/height changes
-  React.useEffect(() => {
-    console.log("TextShape props changed:", {
-      width,
-      height,
-      fontSize: currentFontSize,
-    });
-  }, [width, height, currentFontSize]);
-
   // Predefined font sizes
   const FONT_SIZES = React.useMemo(
     () => [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72],
@@ -123,7 +114,7 @@ export const TextShape: React.FC<TextShapeProps> = ({
     measureElement.style.fontFamily = fontFamily;
     measureElement.style.fontWeight = fontWeight;
     measureElement.style.fontStyle = fontStyle;
-    measureElement.style.whiteSpace = "nowrap"; // Prevent wrapping to get natural text width
+    measureElement.style.whiteSpace = "pre"; // Allow line breaks in measurement
     measureElement.style.wordBreak = "normal"; // Allow natural text flow
 
     // Measure the actual text dimensions
@@ -196,28 +187,15 @@ export const TextShape: React.FC<TextShapeProps> = ({
       width={textBounds.width > 0 ? textBounds.width + 16 : width || 150} // Auto-size to fit text
       height={textBounds.height > 0 ? textBounds.height + 16 : height || 50} // Auto-size to fit text
       selected={selected && !isEditing} // Show BaseShape selection when not editing
-      onResize={(newWidth, newHeight) => {
-        console.log("TextShape BaseShape onResize called:", {
-          newWidth,
-          newHeight,
-        });
-
+      onResize={(newWidth) => {
         // Calculate new font size based on the resize
         if (onFontSizeChange) {
           const newFontSize = calculateFontSizeFromWidth(newWidth - 16);
           if (newFontSize !== currentFontSize) {
-            console.log(
-              "Updating font size from resize:",
-              currentFontSize,
-              "to",
-              newFontSize
-            );
             onFontSizeChange(newFontSize);
           }
         }
-
-        // Don't call the parent onResize - let the component auto-size to text
-        // onResize?.(newWidth, newHeight);
+        // Component auto-sizes to text bounds, no need to call parent onResize
       }}
       onSelect={() => {
         if (!isEditing) {
@@ -295,7 +273,7 @@ export const TextShape: React.FC<TextShapeProps> = ({
               textAlign,
               fontWeight,
               fontStyle,
-              whiteSpace: "nowrap", // Single line like FigJam
+              whiteSpace: "pre-wrap", // Allow line breaks and preserve formatting
               lineHeight: 1.2,
               padding: "8px",
             }}
