@@ -12,6 +12,7 @@ interface TextShapeProps extends Omit<BaseShapeProps, "children"> {
   backgroundColor?: string;
   padding?: number;
   onTextChange?: (text: string) => void;
+  onFontSizeChange?: (fontSize: number) => void; // New callback for font size changes
   isEditing?: boolean; // External control of editing state
   onEditingChange?: (isEditing: boolean) => void; // Callback when editing state changes
 }
@@ -27,9 +28,9 @@ export const TextShape: React.FC<TextShapeProps> = ({
   backgroundColor = "transparent",
   padding = 8,
   onTextChange,
+  onFontSizeChange,
   isEditing: externalIsEditing,
   onEditingChange,
-  onResize,
   width,
   height,
   selected = false,
@@ -38,10 +39,6 @@ export const TextShape: React.FC<TextShapeProps> = ({
   const [internalIsEditing, setInternalIsEditing] = React.useState(false);
   const [editText, setEditText] = React.useState(text);
   const [textBounds, setTextBounds] = React.useState({ width: 0, height: 0 });
-  const lastKnownSizeRef = React.useRef({
-    width: width || 150,
-    height: height || 50,
-  });
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const measureRef = React.useRef<HTMLDivElement>(null);
@@ -67,22 +64,54 @@ export const TextShape: React.FC<TextShapeProps> = ({
   // Use simple font size - either from props or default
   const currentFontSize = fontSize;
 
-  // Update last known size for tracking
+  // Debug logging for width/height changes
   React.useEffect(() => {
-    if (width && height) {
-      const lastSize = lastKnownSizeRef.current;
+    console.log("TextShape props changed:", {
+      width,
+      height,
+      fontSize: currentFontSize,
+    });
+  }, [width, height, currentFontSize]);
 
-      // Call onResize if dimensions changed
-      if (
-        onResize &&
-        (width !== lastSize.width || height !== lastSize.height)
-      ) {
-        onResize(width, height);
+  // Predefined font sizes
+  const FONT_SIZES = React.useMemo(
+    () => [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72],
+    []
+  );
+
+  // Calculate font size based on container width
+  const calculateFontSizeFromWidth = React.useCallback(
+    (containerWidth: number) => {
+      if (!text || text.length === 0) return currentFontSize;
+
+      // More accurate character width estimation (varies by font size)
+      const textLength = text.length;
+      const targetCharWidth = containerWidth / textLength;
+
+      // Find the largest font size that would fit
+      let bestFontSize = FONT_SIZES[0];
+      for (const size of FONT_SIZES) {
+        // More accurate character width estimation (roughly 0.6 * font size for most fonts)
+        const estimatedCharWidth = size * 0.55;
+        if (estimatedCharWidth <= targetCharWidth) {
+          bestFontSize = size;
+        } else {
+          break;
+        }
       }
 
-      lastKnownSizeRef.current = { width, height };
-    }
-  }, [width, height, onResize]);
+      // Don't allow font size changes that are too dramatic or too small/large
+      if (bestFontSize < 12) bestFontSize = 12; // Minimum readable size
+      if (bestFontSize > 48) bestFontSize = 48; // Maximum practical size
+
+      return bestFontSize;
+    },
+    [text, FONT_SIZES, currentFontSize]
+  );
+
+  // Removed complex font size effect - now handled directly in onResize
+
+  // Removed size tracking effect - component auto-sizes to text bounds
 
   // Measure text bounds for precise selection area
   React.useEffect(() => {
@@ -167,6 +196,29 @@ export const TextShape: React.FC<TextShapeProps> = ({
       width={textBounds.width > 0 ? textBounds.width + 16 : width || 150} // Auto-size to fit text
       height={textBounds.height > 0 ? textBounds.height + 16 : height || 50} // Auto-size to fit text
       selected={selected && !isEditing} // Show BaseShape selection when not editing
+      onResize={(newWidth, newHeight) => {
+        console.log("TextShape BaseShape onResize called:", {
+          newWidth,
+          newHeight,
+        });
+
+        // Calculate new font size based on the resize
+        if (onFontSizeChange) {
+          const newFontSize = calculateFontSizeFromWidth(newWidth - 16);
+          if (newFontSize !== currentFontSize) {
+            console.log(
+              "Updating font size from resize:",
+              currentFontSize,
+              "to",
+              newFontSize
+            );
+            onFontSizeChange(newFontSize);
+          }
+        }
+
+        // Don't call the parent onResize - let the component auto-size to text
+        // onResize?.(newWidth, newHeight);
+      }}
       onSelect={() => {
         if (!isEditing) {
           props.onSelect?.();

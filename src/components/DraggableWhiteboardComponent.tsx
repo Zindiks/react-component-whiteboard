@@ -30,7 +30,11 @@ import {
   ImageShape,
   GroupedShape,
 } from "./shapes";
-import type { ImageFormattingOptions } from "./shapes";
+import type {
+  TextFormattingOptions,
+  ShapeFormattingOptions,
+  ImageFormattingOptions,
+} from "../types/formatting";
 import { FloatingHeader } from "./widgets/FloatingHeader";
 import {
   Video,
@@ -103,7 +107,10 @@ interface DraggableComponentProps {
   onEditingChange?: (id: number, isEditing: boolean) => void;
   onFormattingChange?: (
     id: number,
-    options: Partial<ImageFormattingOptions>
+    options:
+      | Partial<TextFormattingOptions>
+      | Partial<ShapeFormattingOptions>
+      | Partial<ImageFormattingOptions>
   ) => void;
 }
 
@@ -492,6 +499,11 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
         text={text || "Double-click to edit"}
         onTextChange={(newText) => onTextChange?.(id, newText)}
+        onFontSizeChange={(newFontSize) =>
+          onFormattingChange?.(id, {
+            fontSize: newFontSize,
+          } as Partial<TextFormattingOptions>)
+        }
         fontSize={fontSize}
         fontFamily={fontFamily}
         textColor={textColor}
