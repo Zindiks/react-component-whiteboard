@@ -162,6 +162,15 @@ export const useWhiteboardState = () => {
         newComponent.width = 150;
         newComponent.height = 50;
         newComponent.text = "Double-click to edit";
+      } else if (type === "scrollingtext") {
+        newComponent.width = 300;
+        newComponent.height = 60;
+        newComponent.text = "Scrolling text - double-click to edit";
+        newComponent.scrollDirection = "horizontal";
+        newComponent.scrollSpeed = 50;
+        newComponent.pauseOnHover = true;
+        newComponent.bounceOnEnd = false;
+        newComponent.backgroundColor = "transparent";
       } else if (type === "imageShape") {
         newComponent.width = 200;
         newComponent.height = 150;

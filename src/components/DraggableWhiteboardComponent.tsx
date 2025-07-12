@@ -14,7 +14,6 @@ import { CurrencyConverter } from "./widgets/CurrencyConverter";
 import { TextNote } from "./widgets/TextNote";
 import { ConfettiButton } from "./widgets/ConfettiButton";
 import { Watch } from "./widgets/Watch";
-import { ScrollingText } from "./widgets/ScrollingText";
 import { YouTubeVideo } from "./widgets/YouTubeVideo";
 import { SoundCloudWidget } from "./widgets/SoundCloudWidget";
 import { SpotifyWidget } from "./widgets/SpotifyWidget";
@@ -27,6 +26,7 @@ import {
   ArrowShape,
   LineShape,
   TextShape,
+  ScrollingTextShape,
   ImageShape,
   GroupedShape,
 } from "./shapes";
@@ -102,6 +102,12 @@ interface DraggableComponentProps {
   // Image formatting options
   rotation?: number;
   opacity?: number;
+  // Scrolling text options
+  scrollDirection?: "horizontal" | "vertical";
+  scrollSpeed?: number;
+  pauseOnHover?: boolean;
+  bounceOnEnd?: boolean;
+  backgroundColor?: string;
   // Text editing state
   isEditing?: boolean;
   onEditingChange?: (id: number, isEditing: boolean) => void;
@@ -152,6 +158,11 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   arrowSize,
   rotation,
   opacity,
+  scrollDirection,
+  scrollSpeed,
+  pauseOnHover,
+  bounceOnEnd,
+  backgroundColor,
   isEditing,
   onEditingChange,
   onFormattingChange,
@@ -364,7 +375,37 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     note: () => <TextNote />,
     confetti: () => <ConfettiButton />,
     watch: () => <Watch />,
-    scrollingtext: () => <ScrollingText />,
+    scrollingtext: () => (
+      <ScrollingTextShape
+        x={0}
+        y={0}
+        width={width || 300}
+        height={height || 60}
+        selected={selected}
+        onSelect={() => onSelect(id)}
+        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+        text={text || "Scrolling text - double-click to edit"}
+        onTextChange={(newText) => onTextChange?.(id, newText)}
+        onFontSizeChange={(newFontSize) =>
+          onFormattingChange?.(id, {
+            fontSize: newFontSize,
+          } as Partial<TextFormattingOptions>)
+        }
+        fontSize={fontSize}
+        fontFamily={fontFamily}
+        textColor={textColor}
+        textAlign={textAlign}
+        fontWeight={fontWeight}
+        fontStyle={fontStyle}
+        backgroundColor={backgroundColor}
+        scrollDirection={scrollDirection || "horizontal"}
+        scrollSpeed={scrollSpeed || 50}
+        pauseOnHover={pauseOnHover ?? true}
+        bounceOnEnd={bounceOnEnd ?? false}
+        isEditing={isEditing}
+        onEditingChange={(editing) => onEditingChange?.(id, editing)}
+      />
+    ),
     youtubeVideo: () => (
       <YouTubeVideo initialUrl={youtubeUrl} width={width} height={height} />
     ),
@@ -589,6 +630,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     "arrow",
     "line",
     "text",
+    "scrollingtext",
     "imageShape",
   ].includes(type);
 

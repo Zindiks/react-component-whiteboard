@@ -27,6 +27,12 @@ export interface Component {
   strokeStyle?: "solid" | "dashed" | "dotted";
   arrowStyle?: "none" | "arrow" | "double-arrow";
   arrowSize?: number;
+  // Scrolling text options
+  scrollDirection?: "horizontal" | "vertical";
+  scrollSpeed?: number;
+  pauseOnHover?: boolean;
+  bounceOnEnd?: boolean;
+  backgroundColor?: string;
 }
 
 export interface Point {

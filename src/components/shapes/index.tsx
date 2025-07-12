@@ -11,6 +11,8 @@ export { LineShape } from "./LineShape";
 
 export { TextShape } from "./TextShape";
 
+export { ScrollingTextShape } from "./ScrollingTextShape";
+
 export { ImageShape } from "./ImageShape";
 export type { ImageShapeProps, ImageFormattingOptions } from "./ImageShape";
 

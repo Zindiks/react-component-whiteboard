@@ -7,6 +7,7 @@ import { GridBackground } from "./components/GridBackground";
 import { FPSMonitor } from "./components/FPSMonitor";
 import { DragPreviewOverlay } from "./components/whiteboard/DragPreviewOverlay";
 import { ShapeControlHeader } from "./components/headers/ShapeControlHeader";
+import { ScrollingTextControlHeader } from "./components/headers/ScrollingTextControlHeader";
 import { usePerformance } from "./hooks/usePerformance";
 import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
 import { Component } from "./types/whiteboard";
@@ -617,6 +618,11 @@ const CustomGrid = () => {
             strokeStyle={component.strokeStyle}
             arrowStyle={component.arrowStyle}
             arrowSize={component.arrowSize}
+            scrollDirection={component.scrollDirection}
+            scrollSpeed={component.scrollSpeed}
+            pauseOnHover={component.pauseOnHover}
+            bounceOnEnd={component.bounceOnEnd}
+            backgroundColor={component.backgroundColor}
             isEditing={editingTextId === component.id}
             onEditingChange={(id, isEditing) => {
               setEditingTextId(isEditing ? id : null);
@@ -702,13 +708,31 @@ const CustomGrid = () => {
             "groupFrame",
           ].includes(selectedComponent.type);
 
-          if (!isShapeComponent) return null;
+          const isScrollingTextComponent =
+            selectedComponent.type === "scrollingtext";
+
+          if (!isShapeComponent && !isScrollingTextComponent) return null;
 
           // Calculate the actual position on screen (not transformed)
           const screenX = selectedComponent.x * transform.k + transform.x;
           const screenY = selectedComponent.y * transform.k + transform.y;
           const screenWidth = (selectedComponent.width || 200) * transform.k;
 
+          // Use ScrollingTextControlHeader for scrolling text components
+          if (isScrollingTextComponent) {
+            return (
+              <ScrollingTextControlHeader
+                selectedComponent={selectedComponent}
+                position={{
+                  x: screenX + screenWidth / 2,
+                  y: screenY - 60,
+                }}
+                onFormattingChange={handleFormattingChange}
+              />
+            );
+          }
+
+          // Use regular ShapeControlHeader for other shape components
           return (
             <ShapeControlHeader
               selectedComponent={selectedComponent}
