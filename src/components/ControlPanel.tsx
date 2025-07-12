@@ -6,7 +6,7 @@
  */
 
 import React from "react";
-import { Plus, Minus, Grid3x3, Magnet, Zap } from "lucide-react";
+import { Plus, Minus, Grid3x3, Magnet, Zap, Type } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   Select,
@@ -31,6 +31,9 @@ export interface ControlPanelProps {
   onToggleSnap: () => void;
   gridType: "lines" | "dots" | "both";
   onGridTypeChange: (type: "lines" | "dots" | "both") => void;
+  // Text tool props
+  textToolActive: boolean;
+  onToggleTextTool: () => void;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -46,6 +49,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   onToggleSnap,
   gridType,
   onGridTypeChange,
+  textToolActive,
+  onToggleTextTool,
 }) => {
   return (
     <div
@@ -64,6 +69,14 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         </Button>
         <Button onClick={() => onZoom(0.7)} variant={"ghost"} size="sm">
           <Minus className="w-4 h-4" />
+        </Button>
+        <Button
+          onClick={onToggleTextTool}
+          variant={textToolActive ? "default" : "ghost"}
+          size="sm"
+          title={textToolActive ? "Exit Text Tool" : "Text Tool (T)"}
+        >
+          <Type className="w-4 h-4" />
         </Button>
         <Button
           onClick={onToggleGrid}
@@ -134,7 +147,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         </div>
       )}
       <p className="text-sm mt-2">
-        Mode: Selection{snapToGrid && " (Snap)"}
+        Mode: {textToolActive ? "Text Tool" : "Selection"}
+        {snapToGrid && " (Snap)"}
         {showGrid && (
           <span className="text-gray-600 ml-2">
             | Grid: {gridSize}px {dynamicGridSizing && "(Dynamic)"}

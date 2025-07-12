@@ -302,55 +302,7 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
           />
         ))}
 
-      {/* Connection points */}
-      {selected && (
-        <>
-          {/* Top connection point */}
-          <div
-            className="absolute w-3 h-3 bg-green-500 border-2 border-white rounded-full z-10"
-            style={{
-              top: -6,
-              left: "50%",
-              transform: "translateX(-50%)",
-              cursor: "crosshair",
-            }}
-            title="Connection point"
-          />
-          {/* Right connection point */}
-          <div
-            className="absolute w-3 h-3 bg-green-500 border-2 border-white rounded-full z-10"
-            style={{
-              top: "50%",
-              right: -6,
-              transform: "translateY(-50%)",
-              cursor: "crosshair",
-            }}
-            title="Connection point"
-          />
-          {/* Bottom connection point */}
-          <div
-            className="absolute w-3 h-3 bg-green-500 border-2 border-white rounded-full z-10"
-            style={{
-              bottom: -6,
-              left: "50%",
-              transform: "translateX(-50%)",
-              cursor: "crosshair",
-            }}
-            title="Connection point"
-          />
-          {/* Left connection point */}
-          <div
-            className="absolute w-3 h-3 bg-green-500 border-2 border-white rounded-full z-10"
-            style={{
-              top: "50%",
-              left: -6,
-              transform: "translateY(-50%)",
-              cursor: "crosshair",
-            }}
-            title="Connection point"
-          />
-        </>
-      )}
+      {/* Connection points disabled to prevent shapes from sticking together */}
     </div>
   );
 };

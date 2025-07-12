@@ -12,6 +12,8 @@ interface TextShapeProps extends Omit<BaseShapeProps, "children"> {
   backgroundColor?: string;
   padding?: number;
   onTextChange?: (text: string) => void;
+  isEditing?: boolean; // External control of editing state
+  onEditingChange?: (isEditing: boolean) => void; // Callback when editing state changes
 }
 
 export const TextShape: React.FC<TextShapeProps> = ({
@@ -25,13 +27,15 @@ export const TextShape: React.FC<TextShapeProps> = ({
   backgroundColor = "transparent",
   padding = 8,
   onTextChange,
+  isEditing: externalIsEditing,
+  onEditingChange,
   onResize,
   width,
   height,
   selected = false,
   ...props
 }) => {
-  const [isEditing, setIsEditing] = React.useState(false);
+  const [internalIsEditing, setInternalIsEditing] = React.useState(false);
   const [editText, setEditText] = React.useState(text);
   const [internalFontSize, setInternalFontSize] = React.useState(fontSize);
   const [textBounds, setTextBounds] = React.useState({ width: 0, height: 0 });
@@ -42,6 +46,24 @@ export const TextShape: React.FC<TextShapeProps> = ({
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const measureRef = React.useRef<HTMLDivElement>(null);
+
+  // Use external editing state if provided, otherwise use internal state
+  const isEditing =
+    externalIsEditing !== undefined ? externalIsEditing : internalIsEditing;
+
+  // Helper function to set editing state
+  const setIsEditing = React.useCallback(
+    (editing: boolean) => {
+      if (externalIsEditing !== undefined) {
+        // If externally controlled, notify parent
+        onEditingChange?.(editing);
+      } else {
+        // If internally controlled, update internal state
+        setInternalIsEditing(editing);
+      }
+    },
+    [externalIsEditing, onEditingChange]
+  );
 
   // Calculate dynamic font size based on container dimensions
   const dynamicFontSize = React.useMemo(() => {
@@ -136,7 +158,7 @@ export const TextShape: React.FC<TextShapeProps> = ({
       setIsEditing(false);
       onTextChange?.(editText);
     }
-  }, [isEditing, editText, onTextChange]);
+  }, [isEditing, editText, onTextChange, setIsEditing]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {

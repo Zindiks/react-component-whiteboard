@@ -28,9 +28,6 @@ import {
   LineShape,
   TextShape,
   ImageShape,
-  SmartRectangleShape,
-  SmartEllipseShape,
-  SmartArrowShape,
   GroupedShape,
 } from "./shapes";
 import type { ImageFormattingOptions } from "./shapes";
@@ -101,34 +98,13 @@ interface DraggableComponentProps {
   // Image formatting options
   rotation?: number;
   opacity?: number;
+  // Text editing state
+  isEditing?: boolean;
+  onEditingChange?: (id: number, isEditing: boolean) => void;
   onFormattingChange?: (
     id: number,
     options: Partial<ImageFormattingOptions>
   ) => void;
-  // Connection properties
-  startShapeId?: number;
-  endShapeId?: number;
-  startConnectionPoint?: string;
-  endConnectionPoint?: string;
-  onConnectionPointClick?: (pointId: string, shapeId: number) => void;
-  connectionMode?: {
-    active: boolean;
-    selectedArrowId?: number | null;
-    connectionStep?: "start" | "end" | null;
-  };
-  // Bend style properties
-  bendStyle?: "straight" | "elbowed" | "curved";
-  bendRadius?: number;
-  elbowOffset?: number;
-  // All components for connection calculations
-  allComponents?: Array<{
-    id: number;
-    x: number;
-    y: number;
-    width?: number;
-    height?: number;
-    type: string;
-  }>;
 }
 
 export const DraggableComponent: React.FC<DraggableComponentProps> = ({
@@ -169,17 +145,9 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   arrowSize,
   rotation,
   opacity,
+  isEditing,
+  onEditingChange,
   onFormattingChange,
-  startShapeId,
-  endShapeId,
-  startConnectionPoint,
-  endConnectionPoint,
-  onConnectionPointClick,
-  connectionMode,
-  bendStyle,
-  bendRadius,
-  elbowOffset,
-  allComponents,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
@@ -530,6 +498,8 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         textAlign={textAlign}
         fontWeight={fontWeight}
         fontStyle={fontStyle}
+        isEditing={isEditing}
+        onEditingChange={(editing) => onEditingChange?.(id, editing)}
       />
     ),
     imageShape: () => (
@@ -549,96 +519,6 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         opacity={opacity || 1}
         onImageChange={(newImageSrc) => onImageChange?.(id, newImageSrc)}
         onFormattingChange={(options) => onFormattingChange?.(id, options)}
-      />
-    ),
-    // Smart Shapes
-    smartRectangle: () => (
-      <SmartRectangleShape
-        x={0}
-        y={0}
-        width={width || 150}
-        height={height || 100}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        fillColor={fillColor}
-        strokeColor={strokeColor}
-        strokeWidth={strokeWidth}
-        borderRadius={borderRadius}
-        text={text}
-        onTextChange={(newText) => onTextChange?.(id, newText)}
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        textColor={textColor}
-        textAlign={textAlign}
-        fontWeight={fontWeight}
-        fontStyle={fontStyle}
-        shapeId={id}
-        canConnect={true}
-        showConnectionPoints={selected}
-      />
-    ),
-    smartEllipse: () => (
-      <SmartEllipseShape
-        x={0}
-        y={0}
-        width={width || 150}
-        height={height || 100}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        fillColor={fillColor}
-        strokeColor={strokeColor}
-        strokeWidth={strokeWidth}
-        text={text}
-        onTextChange={(newText) => onTextChange?.(id, newText)}
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        textColor={textColor}
-        textAlign={textAlign}
-        fontWeight={fontWeight}
-        fontStyle={fontStyle}
-        shapeId={id}
-        canConnect={true}
-        showConnectionPoints={selected || connectionMode?.active}
-        nodeType="default"
-        connectionMode={connectionMode}
-        onConnectionPointClick={(pointId: string, shapeId: number) =>
-          onConnectionPointClick?.(pointId, shapeId)
-        }
-      />
-    ),
-    smartArrow: () => (
-      <SmartArrowShape
-        x={0}
-        y={0}
-        width={width || 150}
-        height={height || 20}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        strokeColor={strokeColor}
-        strokeWidth={strokeWidth}
-        strokeStyle={strokeStyle}
-        arrowStyle={arrowStyle}
-        arrowSize={arrowSize}
-        text={text}
-        onTextChange={(newText) => onTextChange?.(id, newText)}
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        textColor={textColor}
-        fontWeight={fontWeight}
-        fontStyle={fontStyle}
-        shapeId={id}
-        autoConnect={true}
-        bendStyle={bendStyle || "straight"}
-        bendRadius={bendRadius || 20}
-        elbowOffset={elbowOffset || 50}
-        startShapeId={startShapeId}
-        endShapeId={endShapeId}
-        startConnectionPoint={startConnectionPoint}
-        endConnectionPoint={endConnectionPoint}
-        allComponents={allComponents}
       />
     ),
     groupFrame: () => (

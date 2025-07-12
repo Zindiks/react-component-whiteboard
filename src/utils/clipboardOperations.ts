@@ -27,10 +27,6 @@ export const COPYABLE_SHAPE_TYPES = [
   "line",
   "text",
   "imageShape",
-  // Smart shape types
-  "smartRectangle",
-  "smartEllipse",
-  "smartArrow",
   "groupFrame",
   "groupContainer",
   // Widget types

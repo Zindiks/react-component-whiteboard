@@ -157,27 +157,9 @@ export const COMPONENT_CATEGORIES: Category[] = [
     ],
   },
   {
-    name: "Smart Shapes",
-    icon: "🧠",
+    name: "Other",
+    icon: "�",
     components: [
-      {
-        type: "smartRectangle",
-        label: "Smart Rectangle",
-        icon: "🔲",
-        description: "Rectangle with connection points",
-      },
-      {
-        type: "smartEllipse",
-        label: "Smart Ellipse",
-        icon: "⭕",
-        description: "Ellipse with connection points and node types",
-      },
-      {
-        type: "smartArrow",
-        label: "Smart Arrow",
-        icon: "🔗",
-        description: "Auto-connecting arrow with curved options",
-      },
       {
         type: "groupFrame",
         label: "Group Frame",
