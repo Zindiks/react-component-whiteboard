@@ -53,19 +53,26 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
 
     if (!enabled) return;
 
-    // Calculate dynamic grid size based on zoom level
+    // Calculate dynamic grid size based on zoom level (ensure divisible by 8)
     const baseGridSize = size;
     let gridSize = baseGridSize;
 
     if (dynamicSizing) {
-      // Adjust grid size based on zoom level for better visibility
+      // Use the same logic as gridUtils.ts to ensure consistency
       if (transform.k < 0.25) {
-        gridSize = baseGridSize * 4; // Larger grid when zoomed out
+        gridSize = baseGridSize * 4; // 96px (when base is 24px)
       } else if (transform.k < 0.5) {
-        gridSize = baseGridSize * 2; // Medium grid
-      } else if (transform.k > 3) {
-        gridSize = baseGridSize / 2; // Smaller grid when zoomed in
+        gridSize = baseGridSize * 2; // 48px (when base is 24px)
+      } else if (transform.k > 2) {
+        gridSize = 16; // 16px (divisible by 8)
+      } else if (transform.k > 4) {
+        gridSize = 8; // 8px (divisible by 8)
+      } else {
+        gridSize = baseGridSize; // 24px (base size)
       }
+
+      // Ensure the result is divisible by 8
+      gridSize = Math.round(gridSize / 8) * 8;
     }
 
     // Calculate dynamic opacity with smooth transitions

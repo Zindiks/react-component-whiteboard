@@ -222,13 +222,13 @@ export const INITIAL_POSITIONS = {
 
 // Grid Background Constants
 export const GRID_CONSTANTS = {
-  SIZE: 20, // Base grid cell size in pixels
+  SIZE: 24, // Base grid cell size in pixels (divisible by 8)
   COLOR: "#b0b0b0", // Light gray grid lines
   STROKE_WIDTH: 0.5, // Base stroke width
   OPACITY: 0.65, // Reduced base opacity for subtler appearance
   ENABLED: true as boolean, // Grid enabled by default
   DYNAMIC_SIZING: true, // Enable dynamic grid sizing based on zoom
-  SIZES: [10, 20, 40, 80] as const, // Available grid sizes
+  SIZES: [8, 16, 24, 32, 48, 96] as const, // Available grid sizes (all divisible by 8)
   TYPES: ["lines", "dots", "both"] as const, // Available grid types
   DEFAULT_TYPE: "lines" as const, // Default grid type
 } as const;
