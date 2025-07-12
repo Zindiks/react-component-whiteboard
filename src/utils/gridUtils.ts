@@ -15,7 +15,7 @@ export function getDynamicGridSize(zoomLevel: number): number {
     // Very zoomed out - use large grid (4x base size)
     calculatedSize = baseGridSize * 4; // 96px
   } else if (zoomLevel < 0.5) {
-    // Zoomed out - use medium-large grid (2x base size)  
+    // Zoomed out - use medium-large grid (2x base size)
     calculatedSize = baseGridSize * 2; // 48px
   } else if (zoomLevel > 2) {
     // Zoomed in - use smaller grid (2/3 base size)
