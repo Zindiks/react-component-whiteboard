@@ -75,13 +75,7 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
 
   const currentFontSize = fontSize;
 
-  // Predefined font sizes
-  const FONT_SIZES = React.useMemo(
-    () => [8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96],
-    []
-  );
-
-  // Calculate font size based on container width
+  // Calculate font size based on container width with unlimited scaling
   const calculateFontSizeFromWidth = React.useCallback(
     (containerWidth: number) => {
       if (!text || text.length === 0) return currentFontSize;
@@ -95,22 +89,20 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
 
       if (longestLine.length === 0) return currentFontSize;
 
+      // Calculate font size based on target character width
+      // Using 0.6 as the character width ratio (adjustable for different fonts)
       const targetCharWidth = containerWidth / longestLine.length;
-      let bestFontSize = FONT_SIZES[0];
+      const calculatedFontSize = targetCharWidth / 0.6;
 
-      for (const size of FONT_SIZES) {
-        const estimatedCharWidth = size * 0.55;
-        if (estimatedCharWidth <= targetCharWidth) {
-          bestFontSize = size;
-        } else {
-          break;
-        }
-      }
+      // Round to nearest multiple of 8, with minimum of 8px
+      const roundedFontSize = Math.max(
+        8,
+        Math.round(calculatedFontSize / 8) * 8
+      );
 
-      if (bestFontSize < 8) bestFontSize = 8;
-      return bestFontSize;
+      return roundedFontSize;
     },
-    [text, FONT_SIZES, currentFontSize]
+    [text, currentFontSize]
   );
 
   // Measure text bounds for precise selection area
@@ -160,10 +152,10 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
 
       setScrollOffset((prevOffset) => {
         if (scrollDirection === "horizontal") {
-          const containerWidth = width || 150;
+          const currentContainerWidth = width || 150;
           const maxOffset = Math.max(
             0,
-            textBounds.width - containerWidth + padding * 2
+            textBounds.width - currentContainerWidth + padding * 2
           );
 
           if (bounceOnEnd) {
@@ -179,16 +171,16 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
           } else {
             // Loop animation
             const newOffset = prevOffset + frameDistance;
-            if (newOffset > maxOffset + containerWidth) {
-              return -containerWidth; // Reset to start from left edge
+            if (newOffset > maxOffset + currentContainerWidth) {
+              return -currentContainerWidth; // Reset to start from left edge
             }
             return newOffset;
           }
         } else {
-          const containerHeight = height || 50;
+          const currentContainerHeight = height || 50;
           const maxOffset = Math.max(
             0,
-            textBounds.height - containerHeight + padding * 2
+            textBounds.height - currentContainerHeight + padding * 2
           );
 
           if (bounceOnEnd) {
@@ -204,8 +196,8 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
           } else {
             // Loop animation
             const newOffset = prevOffset + frameDistance;
-            if (newOffset > maxOffset + containerHeight) {
-              return -containerHeight; // Reset to start from top edge
+            if (newOffset > maxOffset + currentContainerHeight) {
+              return -currentContainerHeight; // Reset to start from top edge
             }
             return newOffset;
           }
@@ -295,17 +287,45 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
   const containerWidth = width || 150;
   const containerHeight = height || 50;
 
+  // Calculate minimum dimensions needed to contain the text
+  const minWidth = Math.max(containerWidth, textBounds.width + padding * 2);
+  const minHeight = Math.max(containerHeight, textBounds.height + padding * 2);
+
   return (
     <BaseShape
       {...props}
-      width={containerWidth}
-      height={containerHeight}
+      width={minWidth}
+      height={minHeight}
       selected={selected && !isEditing}
-      onResize={(newWidth) => {
+      onResize={(newWidth, newHeight) => {
+        // Update the base dimensions (this will be used as minimum size)
+        if (props.onResize) {
+          props.onResize(newWidth, newHeight);
+        }
+
         if (onFontSizeChange) {
-          const contentWidth = newWidth - 16;
-          const newFontSize = calculateFontSizeFromWidth(contentWidth);
-          if (newFontSize !== currentFontSize) {
+          // Calculate new font size based on the resized dimensions
+          const contentWidth = newWidth - padding * 2;
+          const contentHeight = newHeight - padding * 2;
+
+          let newFontSize: number;
+
+          if (scrollDirection === "horizontal") {
+            // For horizontal scrolling, base font size on width
+            newFontSize = calculateFontSizeFromWidth(contentWidth);
+          } else {
+            // For vertical scrolling, consider both width and height
+            const fontSizeFromWidth = calculateFontSizeFromWidth(contentWidth);
+            // For height-based calculation, round to nearest multiple of 8
+            const heightBasedSize = Math.max(
+              8,
+              Math.round(contentHeight / 2 / 8) * 8
+            );
+            newFontSize = Math.min(fontSizeFromWidth, heightBasedSize);
+          }
+
+          // Only enforce minimum font size, no maximum limit
+          if (newFontSize !== currentFontSize && newFontSize >= 8) {
             onFontSizeChange(newFontSize);
           }
         }

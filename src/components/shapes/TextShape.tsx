@@ -64,18 +64,11 @@ export const TextShape: React.FC<TextShapeProps> = ({
   // Use simple font size - either from props or default
   const currentFontSize = fontSize;
 
-  // Predefined font sizes
-  const FONT_SIZES = React.useMemo(
-    () => [8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96],
-    []
-  );
-
-  // Calculate font size based on container width
+  // Calculate font size based on container width with unlimited scaling
   const calculateFontSizeFromWidth = React.useCallback(
     (containerWidth: number) => {
       if (!text || text.length === 0) return currentFontSize;
 
-      // Split text into lines and find the longest line
       const lines = text.split("\n");
       const longestLine = lines.reduce(
         (longest, current) =>
@@ -85,27 +78,20 @@ export const TextShape: React.FC<TextShapeProps> = ({
 
       if (longestLine.length === 0) return currentFontSize;
 
-      // Calculate based on the longest line length
+      // Calculate font size based on target character width
+      // Using 0.6 as the character width ratio (adjustable for different fonts)
       const targetCharWidth = containerWidth / longestLine.length;
+      const calculatedFontSize = targetCharWidth / 0.6;
 
-      // Find the largest font size that would fit
-      let bestFontSize = FONT_SIZES[0];
-      for (const size of FONT_SIZES) {
-        // More accurate character width estimation (roughly 0.6 * font size for most fonts)
-        const estimatedCharWidth = size * 0.55;
-        if (estimatedCharWidth <= targetCharWidth) {
-          bestFontSize = size;
-        } else {
-          break;
-        }
-      }
+      // Round to nearest multiple of 8, with minimum of 8px
+      const roundedFontSize = Math.max(
+        8,
+        Math.round(calculatedFontSize / 8) * 8
+      );
 
-      // Don't allow font size to go below minimum
-      if (bestFontSize < 8) bestFontSize = 8; // Minimum readable size
-
-      return bestFontSize;
+      return roundedFontSize;
     },
-    [text, FONT_SIZES, currentFontSize]
+    [text, currentFontSize]
   );
 
   // Removed complex font size effect - now handled directly in onResize
@@ -189,24 +175,44 @@ export const TextShape: React.FC<TextShapeProps> = ({
     }
   }, [isEditing]);
 
+  const containerWidth = width || 150;
+  const containerHeight = height || 50;
+
+  // Calculate minimum dimensions needed to contain the text
+  const minWidth = Math.max(containerWidth, textBounds.width + padding * 2);
+  const minHeight = Math.max(containerHeight, textBounds.height + padding * 2);
+
   return (
     <BaseShape
       {...props}
-      width={textBounds.width > 0 ? textBounds.width + 16 : width || 150} // Auto-size to fit text
-      height={textBounds.height > 0 ? textBounds.height + 16 : height || 50} // Auto-size to fit text
+      width={minWidth}
+      height={minHeight}
       selected={selected && !isEditing} // Show BaseShape selection when not editing
-      onResize={(newWidth) => {
-        if (onFontSizeChange) {
-          // For font size calculation, always use the resized width minus padding
-          // This ensures that when user drags to make box larger, we try to fit a larger font
-          const contentWidth = newWidth - 16; // Subtract padding from resized width
+      onResize={(newWidth, newHeight) => {
+        // Update the base dimensions (this will be used as minimum size)
+        if (props.onResize) {
+          props.onResize(newWidth, newHeight);
+        }
 
-          const newFontSize = calculateFontSizeFromWidth(contentWidth);
-          if (newFontSize !== currentFontSize) {
+        if (onFontSizeChange) {
+          // Calculate new font size based on the resized dimensions
+          const contentWidth = newWidth - padding * 2;
+          const contentHeight = newHeight - padding * 2;
+
+          // For text shape, primarily use width-based sizing
+          const fontSizeFromWidth = calculateFontSizeFromWidth(contentWidth);
+          // Also consider height to prevent oversized text, round to nearest multiple of 8
+          const fontSizeFromHeight = Math.max(
+            8,
+            Math.round(contentHeight / 2 / 8) * 8
+          );
+          const newFontSize = Math.min(fontSizeFromWidth, fontSizeFromHeight);
+
+          // Only enforce minimum font size of 8px
+          if (newFontSize !== currentFontSize && newFontSize >= 8) {
             onFontSizeChange(newFontSize);
           }
         }
-        // Component auto-sizes to text bounds, no need to call parent onResize
       }}
       onSelect={() => {
         if (!isEditing) {
