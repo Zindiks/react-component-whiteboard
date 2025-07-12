@@ -64,73 +64,63 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
       const dx = e.clientX - startMouse.x;
       const dy = e.clientY - startMouse.y;
 
+      // Check if mouse has moved significantly (at least 2px to avoid tiny movements)
+      const mouseMoved = Math.abs(dx) > 2 || Math.abs(dy) > 2;
+
+      // Only proceed with resize calculations if mouse has moved significantly
+      if (!mouseMoved) return;
+
       let newWidth = startSize.width;
       let newHeight = startSize.height;
 
       if (lockAspectRatio) {
         // For aspect ratio locked resizing, use corner handles for proportional scaling
         switch (resizeHandle) {
-          case "se": // bottom-right
+          case "se": {
+            // bottom-right
+            const scaleSE = Math.max(dx, dy); // Use the larger movement for more responsive feel
             newWidth = Math.max(
               SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
-              startSize.width + dx
+              startSize.width + scaleSE
             );
             newHeight = newWidth / aspectRatio;
             break;
-          case "sw": // bottom-left
+          }
+          case "sw": {
+            // bottom-left
+            const scaleSW = Math.max(-dx, dy); // Invert dx for left movement
             newWidth = Math.max(
               SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
-              startSize.width - dx
+              startSize.width + scaleSW
             );
             newHeight = newWidth / aspectRatio;
             break;
-          case "ne": // top-right
+          }
+          case "ne": {
+            // top-right
+            const scaleNE = Math.max(dx, -dy); // Invert dy for upward movement
             newWidth = Math.max(
               SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
-              startSize.width + dx
+              startSize.width + scaleNE
             );
             newHeight = newWidth / aspectRatio;
             break;
-          case "nw": // top-left
+          }
+          case "nw": {
+            // top-left
+            const scaleNW = Math.max(-dx, -dy); // Invert both for top-left
             newWidth = Math.max(
               SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
-              startSize.width - dx
+              startSize.width + scaleNW
             );
             newHeight = newWidth / aspectRatio;
             break;
-          case "n": // top - constrain by height
-            newHeight = Math.max(
-              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
-              startSize.height - dy
-            );
-            newWidth = newHeight * aspectRatio;
-            break;
-          case "s": // bottom - constrain by height
-            newHeight = Math.max(
-              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
-              startSize.height + dy
-            );
-            newWidth = newHeight * aspectRatio;
-            break;
-          case "e": // right - constrain by width
-            newWidth = Math.max(
-              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
-              startSize.width + dx
-            );
-            newHeight = newWidth / aspectRatio;
-            break;
-          case "w": // left - constrain by width
-            newWidth = Math.max(
-              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
-              startSize.width - dx
-            );
-            newHeight = newWidth / aspectRatio;
-            break;
+          }
         }
       } else {
-        // Original free-form resizing
+        // Improved free-form resizing with better mouse tracking
         switch (resizeHandle) {
-          case "se": // bottom-right
+          case "se": // bottom-right - both directions positive
             newWidth = Math.max(
               SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
               startSize.width + dx
@@ -140,7 +130,7 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
               startSize.height + dy
             );
             break;
-          case "sw": // bottom-left
+          case "sw": // bottom-left - width decreases, height increases
             newWidth = Math.max(
               SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
               startSize.width - dx
@@ -150,7 +140,7 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
               startSize.height + dy
             );
             break;
-          case "ne": // top-right
+          case "ne": // top-right - width increases, height decreases
             newWidth = Math.max(
               SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
               startSize.width + dx
@@ -160,7 +150,7 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
               startSize.height - dy
             );
             break;
-          case "nw": // top-left
+          case "nw": // top-left - both directions negative
             newWidth = Math.max(
               SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
               startSize.width - dx
@@ -168,30 +158,6 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
             newHeight = Math.max(
               SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
               startSize.height - dy
-            );
-            break;
-          case "n": // top
-            newHeight = Math.max(
-              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
-              startSize.height - dy
-            );
-            break;
-          case "s": // bottom
-            newHeight = Math.max(
-              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
-              startSize.height + dy
-            );
-            break;
-          case "e": // right
-            newWidth = Math.max(
-              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
-              startSize.width + dx
-            );
-            break;
-          case "w": // left
-            newWidth = Math.max(
-              SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
-              startSize.width - dx
             );
             break;
         }
@@ -223,46 +189,10 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
   ]);
 
   const resizeHandles = [
-    { handle: "nw", style: { top: -4, left: -4, cursor: "nw-resize" } },
-    {
-      handle: "n",
-      style: {
-        top: -4,
-        left: "50%",
-        transform: "translateX(-50%)",
-        cursor: "n-resize",
-      },
-    },
-    { handle: "ne", style: { top: -4, right: -4, cursor: "ne-resize" } },
-    {
-      handle: "e",
-      style: {
-        top: "50%",
-        right: -4,
-        transform: "translateY(-50%)",
-        cursor: "e-resize",
-      },
-    },
-    { handle: "se", style: { bottom: -4, right: -4, cursor: "se-resize" } },
-    {
-      handle: "s",
-      style: {
-        bottom: -4,
-        left: "50%",
-        transform: "translateX(-50%)",
-        cursor: "s-resize",
-      },
-    },
-    { handle: "sw", style: { bottom: -4, left: -4, cursor: "sw-resize" } },
-    {
-      handle: "w",
-      style: {
-        top: "50%",
-        left: -4,
-        transform: "translateY(-50%)",
-        cursor: "w-resize",
-      },
-    },
+    { handle: "nw", style: { top: -5, left: -5, cursor: "nw-resize" } },
+    { handle: "ne", style: { top: -5, right: -5, cursor: "ne-resize" } },
+    { handle: "se", style: { bottom: -5, right: -5, cursor: "se-resize" } },
+    { handle: "sw", style: { bottom: -5, left: -5, cursor: "sw-resize" } },
   ];
 
   return (
@@ -284,7 +214,7 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
       {/* Selection outline */}
       {selected && (
         <div
-          className="absolute inset-0 border-2 border-blue-500 pointer-events-none"
+          className="absolute inset-0 border-2 border-green-500 pointer-events-none"
           style={{
             borderRadius: "inherit",
           }}
@@ -296,7 +226,7 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
         resizeHandles.map(({ handle, style: handleStyle }) => (
           <div
             key={handle}
-            className="absolute w-2 h-2 bg-blue-500 border border-white rounded-sm z-10"
+            className="absolute w-3 h-3 bg-green-500 border border-white z-10 hover:bg-green-600 transition-colors"
             style={handleStyle}
             onMouseDown={(e) => handleMouseDown(e, handle)}
           />

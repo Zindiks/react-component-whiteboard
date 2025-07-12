@@ -196,9 +196,12 @@ export const TextShape: React.FC<TextShapeProps> = ({
       height={textBounds.height > 0 ? textBounds.height + 16 : height || 50} // Auto-size to fit text
       selected={selected && !isEditing} // Show BaseShape selection when not editing
       onResize={(newWidth) => {
-        // Calculate new font size based on the resize
         if (onFontSizeChange) {
-          const newFontSize = calculateFontSizeFromWidth(newWidth - 16);
+          // For font size calculation, always use the resized width minus padding
+          // This ensures that when user drags to make box larger, we try to fit a larger font
+          const contentWidth = newWidth - 16; // Subtract padding from resized width
+
+          const newFontSize = calculateFontSizeFromWidth(contentWidth);
           if (newFontSize !== currentFontSize) {
             onFontSizeChange(newFontSize);
           }
