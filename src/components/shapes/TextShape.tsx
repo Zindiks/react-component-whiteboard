@@ -66,7 +66,7 @@ export const TextShape: React.FC<TextShapeProps> = ({
 
   // Predefined font sizes
   const FONT_SIZES = React.useMemo(
-    () => [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72],
+    () => [8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96],
     []
   );
 
@@ -75,9 +75,18 @@ export const TextShape: React.FC<TextShapeProps> = ({
     (containerWidth: number) => {
       if (!text || text.length === 0) return currentFontSize;
 
-      // More accurate character width estimation (varies by font size)
-      const textLength = text.length;
-      const targetCharWidth = containerWidth / textLength;
+      // Split text into lines and find the longest line
+      const lines = text.split("\n");
+      const longestLine = lines.reduce(
+        (longest, current) =>
+          current.length > longest.length ? current : longest,
+        ""
+      );
+
+      if (longestLine.length === 0) return currentFontSize;
+
+      // Calculate based on the longest line length
+      const targetCharWidth = containerWidth / longestLine.length;
 
       // Find the largest font size that would fit
       let bestFontSize = FONT_SIZES[0];
@@ -91,9 +100,8 @@ export const TextShape: React.FC<TextShapeProps> = ({
         }
       }
 
-      // Don't allow font size changes that are too dramatic or too small/large
-      if (bestFontSize < 12) bestFontSize = 12; // Minimum readable size
-      if (bestFontSize > 48) bestFontSize = 48; // Maximum practical size
+      // Don't allow font size to go below minimum
+      if (bestFontSize < 8) bestFontSize = 8; // Minimum readable size
 
       return bestFontSize;
     },
@@ -209,7 +217,7 @@ export const TextShape: React.FC<TextShapeProps> = ({
         style={{
           position: "absolute",
           visibility: "hidden",
-          whiteSpace: "nowrap", // Prevent wrapping for natural measurement
+          whiteSpace: "pre", // Allow line breaks in measurement
           fontSize: `${currentFontSize}px`,
           fontFamily,
           fontWeight,
