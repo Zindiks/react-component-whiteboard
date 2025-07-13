@@ -366,6 +366,10 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
         style={{
           backgroundColor,
           padding: minPadding,
+          // Prevent text selection when not editing
+          userSelect: isEditing ? "text" : "none",
+          WebkitUserSelect: isEditing ? "text" : "none",
+          MozUserSelect: isEditing ? "text" : "none",
         }}
         onDoubleClick={handleDoubleClick}
         onMouseEnter={(e) => {
@@ -385,7 +389,6 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
               onChange={(e) => setEditText(e.target.value)}
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
-              className="resize-none border-2 border-blue-400 outline-none bg-transparent overflow-hidden"
               style={{
                 fontSize: currentFontSize,
                 fontFamily,
@@ -419,12 +422,17 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
                 scrollDirection === "horizontal" ? "nowrap" : "pre-wrap",
               lineHeight: 1.2,
               position: "absolute",
-              transform:
-                scrollDirection === "horizontal"
-                  ? `translateX(-${scrollOffset}px)`
-                  : `translateY(-${scrollOffset}px)`,
+              //   transform:
+              //     scrollDirection === "horizontal"
+              //       ? `translateX(-${scrollOffset}px)`
+              //       : `translateY(-${scrollOffset}px)`,
               transition:
                 isHovered && pauseOnHover ? "transform 0.3s ease" : "none",
+              // Prevent text selection when not editing
+              userSelect: "none",
+              WebkitUserSelect: "none",
+              MozUserSelect: "none",
+              pointerEvents: "none", // Also prevent pointer events on the text display
             }}
           >
             {text}

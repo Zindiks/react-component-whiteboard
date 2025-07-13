@@ -36,9 +36,8 @@ export const TextShape: React.FC<TextShapeProps> = ({
   ...props
 }) => {
   const [internalIsEditing, setInternalIsEditing] = React.useState(false);
-  const [editText, setEditText] = React.useState(text);
   const [textBounds, setTextBounds] = React.useState({ width: 0, height: 0 });
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const editableRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const measureRef = React.useRef<HTMLDivElement>(null);
 
@@ -107,8 +106,8 @@ export const TextShape: React.FC<TextShapeProps> = ({
     measureElement.style.fontFamily = fontFamily;
     measureElement.style.fontWeight = fontWeight;
     measureElement.style.fontStyle = fontStyle;
-    measureElement.style.whiteSpace = "pre"; // Allow line breaks in measurement
-    measureElement.style.wordBreak = "normal"; // Allow natural text flow
+    measureElement.style.whiteSpace = "pre"; // No automatic wrapping for measurement
+    measureElement.style.wordBreak = "normal"; // No automatic breaking for measurement
 
     // Measure the actual text dimensions
     const textWidth = measureElement.offsetWidth;
@@ -117,18 +116,54 @@ export const TextShape: React.FC<TextShapeProps> = ({
     setTextBounds({ width: textWidth, height: textHeight });
   }, [text, currentFontSize, fontFamily, fontWeight, fontStyle]);
 
+  // Real-time text measurement while editing
+  React.useEffect(() => {
+    if (!isEditing || !editableRef.current || !measureRef.current) return;
+
+    const handleInput = () => {
+      const currentText = editableRef.current?.textContent || "";
+      if (measureRef.current) {
+        const measureElement = measureRef.current;
+        measureElement.textContent = currentText || "Type here...";
+        measureElement.style.fontSize = `${currentFontSize}px`;
+        measureElement.style.fontFamily = fontFamily;
+        measureElement.style.fontWeight = fontWeight;
+        measureElement.style.fontStyle = fontStyle;
+        measureElement.style.whiteSpace = "pre"; // No automatic wrapping for measurement
+        measureElement.style.wordBreak = "normal"; // No automatic breaking for measurement
+
+        // Measure the actual text dimensions
+        const textWidth = measureElement.offsetWidth;
+        const textHeight = measureElement.offsetHeight;
+
+        setTextBounds({ width: textWidth, height: textHeight });
+      }
+    };
+
+    const editableElement = editableRef.current;
+    editableElement.addEventListener("input", handleInput);
+
+    // Also measure on keyup for better responsiveness
+    editableElement.addEventListener("keyup", handleInput);
+
+    return () => {
+      editableElement.removeEventListener("input", handleInput);
+      editableElement.removeEventListener("keyup", handleInput);
+    };
+  }, [isEditing, currentFontSize, fontFamily, fontWeight, fontStyle]);
+
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsEditing(true);
-    setEditText(text);
   };
 
   const handleTextSubmit = React.useCallback(() => {
-    if (isEditing) {
+    if (isEditing && editableRef.current) {
       setIsEditing(false);
-      onTextChange?.(editText);
+      const newText = editableRef.current.textContent || "";
+      onTextChange?.(newText);
     }
-  }, [isEditing, editText, onTextChange, setIsEditing]);
+  }, [isEditing, onTextChange, setIsEditing]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -136,7 +171,9 @@ export const TextShape: React.FC<TextShapeProps> = ({
       handleTextSubmit();
     } else if (e.key === "Escape") {
       setIsEditing(false);
-      setEditText(text);
+      if (editableRef.current) {
+        editableRef.current.textContent = text;
+      }
     }
   };
 
@@ -168,35 +205,59 @@ export const TextShape: React.FC<TextShapeProps> = ({
   }, [isEditing, handleTextSubmit]);
 
   React.useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.focus();
-      textareaRef.current.select();
+    if (isEditing && editableRef.current) {
+      editableRef.current.focus();
+      // Select all text
+      const range = document.createRange();
+      range.selectNodeContents(editableRef.current);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
     }
   }, [isEditing]);
 
   const containerWidth = width || 150;
   const containerHeight = height || 50;
 
-  // Calculate minimum dimensions needed to contain the text with minimal padding
-  const minPadding = 4; // Minimal padding for tight border
-  const calculatedWidth = Math.max(
-    containerWidth,
-    textBounds.width + minPadding * 2
-  );
-  const calculatedHeight = Math.max(
-    containerHeight,
-    textBounds.height + minPadding * 2
-  );
+  // Calculate minimum dimensions needed to contain the text with no padding
+  const calculatedWidth = Math.max(containerWidth, textBounds.width);
+  const calculatedHeight = Math.max(containerHeight, textBounds.height);
 
   // Snap dimensions to grid (8, 16, or 24)
   const minWidth = snapSizeToGrid(calculatedWidth);
   const minHeight = snapSizeToGrid(calculatedHeight);
 
+  // Don't render anything if there's no text and not editing
+  if (!text && !isEditing) {
+    return null;
+  }
+
+  // When editing, use text bounds to size the editor dynamically
+  let adjustedWidth, adjustedHeight;
+
+  if (isEditing) {
+    if (!text) {
+      // Minimum size for empty text when editing
+      adjustedWidth = Math.max(minWidth, 120);
+      adjustedHeight = Math.max(minHeight, 40);
+    } else {
+      // Dynamic sizing based on text content when editing
+      const textWidth = textBounds.width + 16; // Add padding for editing border
+      const textHeight = textBounds.height + 16; // Add padding for editing border
+      adjustedWidth = snapSizeToGrid(Math.max(textWidth, containerWidth));
+      adjustedHeight = snapSizeToGrid(Math.max(textHeight, containerHeight));
+    }
+  } else {
+    // When not editing, use calculated dimensions
+    adjustedWidth = minWidth;
+    adjustedHeight = minHeight;
+  }
+
   return (
     <BaseShape
       {...props}
-      width={minWidth}
-      height={minHeight}
+      width={adjustedWidth}
+      height={adjustedHeight}
       selected={selected && !isEditing} // Show BaseShape selection when not editing
       onResize={(newWidth, newHeight) => {
         // Snap the resized dimensions to grid
@@ -210,8 +271,8 @@ export const TextShape: React.FC<TextShapeProps> = ({
 
         if (onFontSizeChange) {
           // Calculate new font size based on the resized dimensions
-          const contentWidth = snappedWidth - minPadding * 2;
-          const contentHeight = snappedHeight - minPadding * 2;
+          const contentWidth = snappedWidth;
+          const contentHeight = snappedHeight;
 
           // For text shape, primarily use width-based sizing
           const fontSizeFromWidth = calculateFontSizeFromWidth(contentWidth);
@@ -259,52 +320,65 @@ export const TextShape: React.FC<TextShapeProps> = ({
 
       <div
         ref={containerRef}
-        // className="w-full h-full flex items-center justify-center relative"
+        className="w-full h-full relative"
         style={{
           backgroundColor,
-          padding: minPadding,
+          // Allow pointer events for double-click but prevent text selection when not editing
+          userSelect: isEditing ? "text" : "none",
+          WebkitUserSelect: isEditing ? "text" : "none",
+          MozUserSelect: isEditing ? "text" : "none",
         }}
         onDoubleClick={handleDoubleClick}
       >
-        {isEditing ? (
-          <div className="relative flex items-center justify-center">
-            <textarea
-              ref={textareaRef}
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              onBlur={handleBlur}
-              onKeyDown={handleKeyDown}
-              // className="resize-none border-2 border-blue-400 outline-none bg-transparent overflow-hidden"
-              style={{
-                fontSize: currentFontSize,
-                fontFamily,
-                color: textColor,
-                textAlign,
-                fontWeight,
-                fontStyle,
-                whiteSpace: "pre-wrap", // Allow line breaks and preserve formatting
-                lineHeight: 1.2,
-                padding: "8px",
-              }}
-            />
-          </div>
-        ) : (
-          <div
-            style={{
-              fontSize: currentFontSize,
-              fontFamily,
-              color: textColor,
-              textAlign,
-              fontWeight,
-              fontStyle,
-              whiteSpace: "pre-wrap", // Allow line breaks and preserve formatting
-              lineHeight: 1.2,
-              padding: "8px",
-            }}
-          >
-            {text}
-          </div>
-        )}
+        <div
+          ref={editableRef}
+          contentEditable={isEditing}
+          suppressContentEditableWarning={true}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          style={{
+            fontSize: currentFontSize,
+            fontFamily,
+            color: textColor,
+            textAlign,
+            fontWeight,
+            fontStyle,
+            whiteSpace: "pre", // No automatic wrapping, only manual line breaks
+            lineHeight: 1.2,
+            // Make the editable area exactly match the BaseShape dimensions
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            padding: "4px", // Minimal padding to prevent text from touching border
+            margin: 0, // Ensure no margin
+            border: isEditing ? "2px solid #10b981" : "none", // Use green color like BaseShape
+            borderRadius: "inherit", // Match BaseShape border radius
+            outline: "none",
+            minWidth: isEditing ? "100px" : text ? "20px" : "0",
+            minHeight: isEditing ? "1.5em" : text ? "1em" : "0",
+            background: "transparent", // Always transparent background
+            display: !isEditing && !text ? "none" : "flex",
+            alignItems: "center",
+            justifyContent:
+              textAlign === "center"
+                ? "center"
+                : textAlign === "right"
+                ? "flex-end"
+                : "flex-start",
+            boxSizing: "border-box", // Include border and padding in dimensions
+            wordWrap: "normal", // Prevent automatic word wrapping
+            overflowWrap: "normal", // Prevent automatic overflow wrapping
+            // Critical: Control pointer events and text selection
+            pointerEvents: isEditing ? "auto" : "none", // Disable pointer events when not editing
+            userSelect: isEditing ? "text" : "none", // Disable text selection when not editing
+            WebkitUserSelect: isEditing ? "text" : "none", // Safari support
+            MozUserSelect: isEditing ? "text" : "none", // Firefox support
+          }}
+        >
+          {text || (isEditing ? "Type here..." : "")}
+        </div>
       </div>
     </BaseShape>
   );

@@ -14,6 +14,7 @@ export interface BaseShapeProps {
   style?: React.CSSProperties;
   className?: string;
   lockAspectRatio?: boolean; // New prop for aspect ratio locking
+  hideResizeHandles?: boolean; // New prop to hide resize handles
 }
 
 export const BaseShape: React.FC<BaseShapeProps> = ({
