@@ -98,10 +98,12 @@ export const TextShape: React.FC<TextShapeProps> = ({
 
   // Measure text bounds for precise selection area
   React.useEffect(() => {
-    if (!text || !measureRef.current) return;
+    if (!measureRef.current) return;
 
     const measureElement = measureRef.current;
-    measureElement.textContent = text;
+    // Use current text or placeholder if editing and no text
+    const textToMeasure = text || (isEditing ? "Type here..." : "");
+    measureElement.textContent = textToMeasure;
     measureElement.style.fontSize = `${currentFontSize}px`;
     measureElement.style.fontFamily = fontFamily;
     measureElement.style.fontWeight = fontWeight;
@@ -113,8 +115,16 @@ export const TextShape: React.FC<TextShapeProps> = ({
     const textWidth = measureElement.offsetWidth;
     const textHeight = measureElement.offsetHeight;
 
+    // Debug log to check if bounds are updating
+    console.log("TextShape bounds update:", {
+      textWidth,
+      textHeight,
+      fontSize: currentFontSize,
+      text: textToMeasure,
+    });
+
     setTextBounds({ width: textWidth, height: textHeight });
-  }, [text, currentFontSize, fontFamily, fontWeight, fontStyle]);
+  }, [text, currentFontSize, fontFamily, fontWeight, fontStyle, isEditing]);
 
   // Real-time text measurement while editing
   React.useEffect(() => {
@@ -220,8 +230,8 @@ export const TextShape: React.FC<TextShapeProps> = ({
   const containerHeight = height || 50;
 
   // Calculate minimum dimensions needed to contain the text with no padding
-  const calculatedWidth = Math.max(containerWidth, textBounds.width);
-  const calculatedHeight = Math.max(containerHeight, textBounds.height);
+  const calculatedWidth = Math.max(textBounds.width, 24); // Use minimum grid size instead of containerWidth
+  const calculatedHeight = Math.max(textBounds.height, 24); // Use minimum grid size instead of containerHeight
 
   // Snap dimensions to grid (8, 16, or 24)
   const minWidth = snapSizeToGrid(calculatedWidth);
@@ -241,11 +251,17 @@ export const TextShape: React.FC<TextShapeProps> = ({
       adjustedWidth = Math.max(minWidth, 120);
       adjustedHeight = Math.max(minHeight, 40);
     } else {
-      // Dynamic sizing based on text content when editing
-      const textWidth = textBounds.width + 16; // Add padding for editing border
-      const textHeight = textBounds.height + 16; // Add padding for editing border
-      adjustedWidth = snapSizeToGrid(Math.max(textWidth, containerWidth));
-      adjustedHeight = snapSizeToGrid(Math.max(textHeight, containerHeight));
+      // Dynamic sizing based on text content when editing - measurement already includes padding and border
+      adjustedWidth = snapSizeToGrid(textBounds.width);
+      adjustedHeight = snapSizeToGrid(textBounds.height);
+
+      // Debug log to see calculations
+      console.log("TextShape resize calculation:", {
+        textBounds,
+        adjustedWidth,
+        adjustedHeight,
+        fontSize: currentFontSize,
+      });
     }
   } else {
     // When not editing, use calculated dimensions
@@ -306,13 +322,14 @@ export const TextShape: React.FC<TextShapeProps> = ({
           fontFamily,
           fontWeight,
           fontStyle,
-          padding: 0,
+          padding: "4px", // Match the editable area padding
           margin: 0,
-          border: "none",
+          border: "2px solid transparent", // Include border in measurement
           outline: "none",
           lineHeight: 1.2, // Match the display text line height
           top: "-9999px",
           left: "-9999px",
+          boxSizing: "border-box", // Match editable area box sizing
         }}
       >
         {text}
@@ -351,7 +368,7 @@ export const TextShape: React.FC<TextShapeProps> = ({
             left: 0,
             right: 0,
             bottom: 0,
-            padding: "4px", // Minimal padding to prevent text from touching border
+            padding: "4px", // Match the padding used in size calculations
             margin: 0, // Ensure no margin
             border: isEditing ? "2px solid #10b981" : "none", // Use green color like BaseShape
             borderRadius: "inherit", // Match BaseShape border radius
