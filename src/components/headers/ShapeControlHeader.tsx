@@ -27,16 +27,15 @@ interface ShapeControlHeaderProps {
 
 // Font size options with more variety
 const FONT_SIZES = [
-  { value: "10", label: "10px (Tiny)" },
-  { value: "12", label: "12px (Small)" },
-  { value: "14", label: "14px (Normal)" },
-  { value: "16", label: "16px (Medium)" },
-  { value: "18", label: "18px (Large)" },
-  { value: "20", label: "20px (XL)" },
-  { value: "24", label: "24px (XXL)" },
-  { value: "28", label: "28px (Huge)" },
-  { value: "32", label: "32px (Giant)" },
-  { value: "40", label: "40px (Massive)" },
+  { value: "8", label: "8px (Tiny)" },
+  { value: "16", label: "16px (Small)" },
+  { value: "24", label: "24px (Medium)" },
+  { value: "32", label: "32px (Large)" },
+  { value: "40", label: "40px (XL)" },
+  { value: "48", label: "48px (XXL)" },
+  { value: "56", label: "56px (Huge)" },
+  { value: "64", label: "64px (Giant)" },
+  { value: "72", label: "72px (Massive)" },
 ];
 
 // Font family options with web-safe fonts
