@@ -19,6 +19,7 @@ import { SoundCloudWidget } from "./widgets/SoundCloudWidget";
 import { SpotifyWidget } from "./widgets/SpotifyWidget";
 import { StylishLink } from "./widgets/StylishLink";
 import { LinkPreview } from "./widgets/LinkPreview";
+import { Voting } from "./widgets/Voting";
 
 import {
   RectangleShape,
@@ -53,6 +54,7 @@ import {
   Minimize2,
   LayoutGrid,
   Maximize2,
+  Vote,
 } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -420,6 +422,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       <SpotifyWidget initialUrl={spotifyUrl} width={width} height={height} />
     ),
     stylishlink: () => <StylishLink />,
+    voting: () => <Voting />,
     linkpreview: () => (
       <LinkPreview
         initialUrl={text} // Use text field to store the URL
@@ -689,6 +692,11 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         title: "Link Preview",
         icon: Link,
         iconColor: "bg-cyan-600",
+      },
+      voting: {
+        title: "Voting",
+        icon: Vote,
+        iconColor: "bg-purple-600",
       },
       // Add more as needed
     };

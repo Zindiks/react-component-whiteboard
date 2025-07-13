@@ -10,7 +10,6 @@ interface ScrollingTextShapeProps extends Omit<BaseShapeProps, "children"> {
   fontWeight?: "normal" | "bold";
   fontStyle?: "normal" | "italic";
   backgroundColor?: string;
-  padding?: number;
   onTextChange?: (text: string) => void;
   onFontSizeChange?: (fontSize: number) => void;
   isEditing?: boolean;
@@ -31,7 +30,6 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
   fontWeight = "normal",
   fontStyle = "normal",
   backgroundColor = "transparent",
-  padding = 8,
   scrollDirection = "horizontal",
   scrollSpeed = 50,
   pauseOnHover = true,
@@ -155,7 +153,7 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
           const currentContainerWidth = width || 150;
           const maxOffset = Math.max(
             0,
-            textBounds.width - currentContainerWidth + padding * 2
+            textBounds.width - currentContainerWidth + minPadding * 2
           );
 
           if (bounceOnEnd) {
@@ -180,7 +178,7 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
           const currentContainerHeight = height || 50;
           const maxOffset = Math.max(
             0,
-            textBounds.height - currentContainerHeight + padding * 2
+            textBounds.height - currentContainerHeight + minPadding * 2
           );
 
           if (bounceOnEnd) {
@@ -224,7 +222,6 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
     textBounds,
     width,
     height,
-    padding,
     animationDirection,
   ]);
 
@@ -287,9 +284,13 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
   const containerWidth = width || 150;
   const containerHeight = height || 50;
 
-  // Calculate minimum dimensions needed to contain the text
-  const minWidth = Math.max(containerWidth, textBounds.width + padding * 2);
-  const minHeight = Math.max(containerHeight, textBounds.height + padding * 2);
+  // Calculate minimum dimensions needed to contain the text with minimal padding
+  const minPadding = 4; // Minimal padding for tight border
+  const minWidth = Math.max(containerWidth, textBounds.width + minPadding * 2);
+  const minHeight = Math.max(
+    containerHeight,
+    textBounds.height + minPadding * 2
+  );
 
   return (
     <BaseShape
@@ -305,8 +306,8 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
 
         if (onFontSizeChange) {
           // Calculate new font size based on the resized dimensions
-          const contentWidth = newWidth - padding * 2;
-          const contentHeight = newHeight - padding * 2;
+          const contentWidth = newWidth - minPadding * 2;
+          const contentHeight = newHeight - minPadding * 2;
 
           let newFontSize: number;
 
@@ -364,7 +365,7 @@ export const ScrollingTextShape: React.FC<ScrollingTextShapeProps> = ({
         className="w-full h-full relative overflow-hidden"
         style={{
           backgroundColor,
-          padding,
+          padding: minPadding,
         }}
         onDoubleClick={handleDoubleClick}
         onMouseEnter={(e) => {

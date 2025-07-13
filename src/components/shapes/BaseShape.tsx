@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { SHAPE_CONSTANTS } from "../../constants/appConstants";
+import { snapSizeToGrid } from "../../utils/gridUtils";
 
 export interface BaseShapeProps {
   x: number;
@@ -84,6 +85,9 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
               startSize.width + scaleSE
             );
             newHeight = newWidth / aspectRatio;
+            // Snap to grid
+            newWidth = snapSizeToGrid(newWidth);
+            newHeight = snapSizeToGrid(newHeight);
             break;
           }
           case "sw": {
@@ -94,6 +98,9 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
               startSize.width + scaleSW
             );
             newHeight = newWidth / aspectRatio;
+            // Snap to grid
+            newWidth = snapSizeToGrid(newWidth);
+            newHeight = snapSizeToGrid(newHeight);
             break;
           }
           case "ne": {
@@ -104,6 +111,9 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
               startSize.width + scaleNE
             );
             newHeight = newWidth / aspectRatio;
+            // Snap to grid
+            newWidth = snapSizeToGrid(newWidth);
+            newHeight = snapSizeToGrid(newHeight);
             break;
           }
           case "nw": {
@@ -114,6 +124,9 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
               startSize.width + scaleNW
             );
             newHeight = newWidth / aspectRatio;
+            // Snap to grid
+            newWidth = snapSizeToGrid(newWidth);
+            newHeight = snapSizeToGrid(newHeight);
             break;
           }
         }
@@ -129,6 +142,9 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
               SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
               startSize.height + dy
             );
+            // Snap to grid
+            newWidth = snapSizeToGrid(newWidth);
+            newHeight = snapSizeToGrid(newHeight);
             break;
           case "sw": // bottom-left - width decreases, height increases
             newWidth = Math.max(
@@ -139,6 +155,9 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
               SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
               startSize.height + dy
             );
+            // Snap to grid
+            newWidth = snapSizeToGrid(newWidth);
+            newHeight = snapSizeToGrid(newHeight);
             break;
           case "ne": // top-right - width increases, height decreases
             newWidth = Math.max(
@@ -149,6 +168,9 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
               SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
               startSize.height - dy
             );
+            // Snap to grid
+            newWidth = snapSizeToGrid(newWidth);
+            newHeight = snapSizeToGrid(newHeight);
             break;
           case "nw": // top-left - both directions negative
             newWidth = Math.max(
@@ -159,6 +181,9 @@ export const BaseShape: React.FC<BaseShapeProps> = ({
               SHAPE_CONSTANTS.MIN_SHAPE_SIZE,
               startSize.height - dy
             );
+            // Snap to grid
+            newWidth = snapSizeToGrid(newWidth);
+            newHeight = snapSizeToGrid(newHeight);
             break;
         }
       }

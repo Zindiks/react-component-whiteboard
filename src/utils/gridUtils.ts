@@ -52,3 +52,15 @@ export function snapPointToGrid(
     y: snapToGrid(y, gridSize),
   };
 }
+
+/**
+ * Snap size to nearest 24px increment
+ * @param size - The size to snap
+ * @returns The snapped size (multiple of 24px)
+ */
+export const snapSizeToGrid = (size: number): number => {
+  if (size < 24) return 24; // Minimum size of 24px
+
+  // Snap to nearest multiple of 24px
+  return Math.round(size / 24) * 24;
+};

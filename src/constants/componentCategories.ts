@@ -40,6 +40,12 @@ export const COMPONENT_CATEGORIES: Category[] = [
         icon: "🎉",
         description: "Celebration button",
       },
+      {
+        type: "voting",
+        label: "Voting",
+        icon: "🗳️",
+        description: "Two-option voting widget",
+      },
     ],
   },
   {

@@ -1,5 +1,6 @@
 import React from "react";
 import { BaseShape, BaseShapeProps } from "./BaseShape";
+import { snapSizeToGrid } from "../../utils/gridUtils";
 
 interface TextShapeProps extends Omit<BaseShapeProps, "children"> {
   text?: string;
@@ -10,7 +11,6 @@ interface TextShapeProps extends Omit<BaseShapeProps, "children"> {
   fontWeight?: "normal" | "bold";
   fontStyle?: "normal" | "italic";
   backgroundColor?: string;
-  padding?: number;
   onTextChange?: (text: string) => void;
   onFontSizeChange?: (fontSize: number) => void; // New callback for font size changes
   isEditing?: boolean; // External control of editing state
@@ -18,7 +18,7 @@ interface TextShapeProps extends Omit<BaseShapeProps, "children"> {
 }
 
 export const TextShape: React.FC<TextShapeProps> = ({
-  text = "Double-click to edit",
+  text = "",
   fontSize = 14,
   fontFamily = "Arial, sans-serif",
   textColor = "#374151",
@@ -26,7 +26,6 @@ export const TextShape: React.FC<TextShapeProps> = ({
   fontWeight = "normal",
   fontStyle = "normal",
   backgroundColor = "transparent",
-  padding = 8,
   onTextChange,
   onFontSizeChange,
   isEditing: externalIsEditing,
@@ -178,9 +177,20 @@ export const TextShape: React.FC<TextShapeProps> = ({
   const containerWidth = width || 150;
   const containerHeight = height || 50;
 
-  // Calculate minimum dimensions needed to contain the text
-  const minWidth = Math.max(containerWidth, textBounds.width + padding * 2);
-  const minHeight = Math.max(containerHeight, textBounds.height + padding * 2);
+  // Calculate minimum dimensions needed to contain the text with minimal padding
+  const minPadding = 4; // Minimal padding for tight border
+  const calculatedWidth = Math.max(
+    containerWidth,
+    textBounds.width + minPadding * 2
+  );
+  const calculatedHeight = Math.max(
+    containerHeight,
+    textBounds.height + minPadding * 2
+  );
+
+  // Snap dimensions to grid (8, 16, or 24)
+  const minWidth = snapSizeToGrid(calculatedWidth);
+  const minHeight = snapSizeToGrid(calculatedHeight);
 
   return (
     <BaseShape
@@ -189,15 +199,19 @@ export const TextShape: React.FC<TextShapeProps> = ({
       height={minHeight}
       selected={selected && !isEditing} // Show BaseShape selection when not editing
       onResize={(newWidth, newHeight) => {
+        // Snap the resized dimensions to grid
+        const snappedWidth = snapSizeToGrid(newWidth);
+        const snappedHeight = snapSizeToGrid(newHeight);
+
         // Update the base dimensions (this will be used as minimum size)
         if (props.onResize) {
-          props.onResize(newWidth, newHeight);
+          props.onResize(snappedWidth, snappedHeight);
         }
 
         if (onFontSizeChange) {
           // Calculate new font size based on the resized dimensions
-          const contentWidth = newWidth - padding * 2;
-          const contentHeight = newHeight - padding * 2;
+          const contentWidth = snappedWidth - minPadding * 2;
+          const contentHeight = snappedHeight - minPadding * 2;
 
           // For text shape, primarily use width-based sizing
           const fontSizeFromWidth = calculateFontSizeFromWidth(contentWidth);
@@ -245,10 +259,10 @@ export const TextShape: React.FC<TextShapeProps> = ({
 
       <div
         ref={containerRef}
-        className="w-full h-full flex items-center justify-center relative"
+        // className="w-full h-full flex items-center justify-center relative"
         style={{
           backgroundColor,
-          padding,
+          padding: minPadding,
         }}
         onDoubleClick={handleDoubleClick}
       >
@@ -260,7 +274,7 @@ export const TextShape: React.FC<TextShapeProps> = ({
               onChange={(e) => setEditText(e.target.value)}
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
-              className="resize-none border-2 border-blue-400 outline-none bg-transparent overflow-hidden"
+              // className="resize-none border-2 border-blue-400 outline-none bg-transparent overflow-hidden"
               style={{
                 fontSize: currentFontSize,
                 fontFamily,
@@ -268,16 +282,9 @@ export const TextShape: React.FC<TextShapeProps> = ({
                 textAlign,
                 fontWeight,
                 fontStyle,
-                padding: "2px 4px",
-                width: `${Math.max(textBounds.width + 20, 100)}px`,
-                height: `${Math.max(
-                  textBounds.height + 8,
-                  currentFontSize * 1.5
-                )}px`,
-                borderRadius: "3px",
+                whiteSpace: "pre-wrap", // Allow line breaks and preserve formatting
                 lineHeight: 1.2,
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
+                padding: "8px",
               }}
             />
           </div>
