@@ -80,7 +80,7 @@ export const Timer: React.FC<TimerProps> = ({
   };
 
   return (
-    <Card className="min-w-[200px] overflow-hidden">
+    <Card className="overflow-hidden">
       <CardContent className="p-6">
         <div className="text-center">
           <div

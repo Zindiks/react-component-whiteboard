@@ -19,68 +19,68 @@ export const ZOOM_CONSTANTS = {
 // Component Size Constants
 export const COMPONENT_SIZES = {
   // Default component dimensions
-  DEFAULT_WIDTH: 200,
-  DEFAULT_HEIGHT: 200,
+  DEFAULT_WIDTH: 192, // 192 = 8 * 24
+  DEFAULT_HEIGHT: 192,
 
   // Minimum component sizes
-  MIN_WIDTH: 200,
-  MIN_HEIGHT: 150,
+  MIN_WIDTH: 192,
+  MIN_HEIGHT: 144, // 144 = 6 * 24
 
   // Maximum image size before scaling
-  MAX_IMAGE_SIZE: 400,
+  MAX_IMAGE_SIZE: 384, // 384 = 16 * 24
 
   // YouTube video dimensions (4:3 aspect ratio)
-  YOUTUBE_WIDTH: 400,
-  YOUTUBE_HEIGHT: 300,
+  YOUTUBE_WIDTH: 384, // 384 = 16 * 24
+  YOUTUBE_HEIGHT: 288, // 288 = 12 * 24
 
   // SoundCloud widget dimensions
-  SOUNDCLOUD_WIDTH: 400,
-  SOUNDCLOUD_HEIGHT: 200,
+  SOUNDCLOUD_WIDTH: 384,
+  SOUNDCLOUD_HEIGHT: 192, // 192 = 8 * 24
 
   // Spotify widget dimensions
-  SPOTIFY_WIDTH: 400,
-  SPOTIFY_HEIGHT: 200,
+  SPOTIFY_WIDTH: 384,
+  SPOTIFY_HEIGHT: 192,
 
   // Scrolling text widget dimensions
-  SCROLLING_TEXT_WIDTH: 400,
+  SCROLLING_TEXT_WIDTH: 384,
 
   // Text note fallback dimensions when image load fails
-  IMAGE_FALLBACK_WIDTH: 200,
-  IMAGE_FALLBACK_HEIGHT: 150,
+  IMAGE_FALLBACK_WIDTH: 192,
+  IMAGE_FALLBACK_HEIGHT: 144,
 
   // PDF viewer dimensions
-  PDF_WIDTH: 400,
-  PDF_HEIGHT: 500,
-  PDF_MIN_WIDTH: 300,
-  PDF_MIN_HEIGHT: 400,
+  PDF_WIDTH: 384,
+  PDF_HEIGHT: 504, // 504 = 21 * 24
+  PDF_MIN_WIDTH: 288, // 288 = 12 * 24
+  PDF_MIN_HEIGHT: 384, // 384 = 16 * 24
 
   // Link preview dimensions
-  LINK_PREVIEW_WIDTH: 400,
-  LINK_PREVIEW_HEIGHT: 280,
-  LINK_PREVIEW_MIN_WIDTH: 320,
-  LINK_PREVIEW_MIN_HEIGHT: 200,
+  LINK_PREVIEW_WIDTH: 384,
+  LINK_PREVIEW_HEIGHT: 288, // 288 = 12 * 24
+  LINK_PREVIEW_MIN_WIDTH: 312, // 312 = 13 * 24
+  LINK_PREVIEW_MIN_HEIGHT: 192,
 
   // Link preview compact mode (logo + text)
-  LINK_PREVIEW_COMPACT_WIDTH: 200,
-  LINK_PREVIEW_COMPACT_HEIGHT: 60,
+  LINK_PREVIEW_COMPACT_WIDTH: 192,
+  LINK_PREVIEW_COMPACT_HEIGHT: 72, // 72 = 3 * 24
 
   // Link preview medium mode (image on side + text)
-  LINK_PREVIEW_MEDIUM_WIDTH: 280,
-  LINK_PREVIEW_MEDIUM_HEIGHT: 120,
+  LINK_PREVIEW_MEDIUM_WIDTH: 288, // 288 = 12 * 24
+  LINK_PREVIEW_MEDIUM_HEIGHT: 120, // 120 = 5 * 24
 } as const;
 
 // Layout and Spacing Constants
 export const LAYOUT_CONSTANTS = {
   // Whiteboard bounds padding
-  WHITEBOARD_PADDING: 200,
+  WHITEBOARD_PADDING: 192, // 192 = 8 * 24
 
   // Default whiteboard bounds when no components exist
-  DEFAULT_WHITEBOARD_SIZE: 1000,
+  DEFAULT_WHITEBOARD_SIZE: 960, // 960 = 40 * 24
 
   // Icon sizes
-  ICON_SIZE_SMALL: 20,
+  ICON_SIZE_SMALL: 24, // 24 = 1 * 24
   ICON_SIZE_MEDIUM: 24,
-  ICON_SIZE_LARGE: 32,
+  ICON_SIZE_LARGE: 48, // 48 = 2 * 24
 } as const;
 
 // Z-Index Constants
@@ -171,16 +171,16 @@ export const INTERACTION = {
 // Widget-specific Constants
 export const WIDGET_CONSTANTS = {
   // Text Note widget
-  TEXT_NOTE_MIN_WIDTH: 200,
-  TEXT_NOTE_MIN_HEIGHT: 150,
-  TEXT_NOTE_HEADER_HEIGHT: 60,
-  TEXT_NOTE_ICON_SIZE: 20,
+  TEXT_NOTE_MIN_WIDTH: 192, // 192 = 8 * 24
+  TEXT_NOTE_MIN_HEIGHT: 144, // 144 = 6 * 24
+  TEXT_NOTE_HEADER_HEIGHT: 72, // 72 = 3 * 24
+  TEXT_NOTE_ICON_SIZE: 24, // 24 = 1 * 24
 
   // Timer widget
   TIMER_UPDATE_INTERVAL_MS: 1000,
 
   // ScrollingText widget
-  SCROLLING_TEXT_DEFAULT_WIDTH: 400,
+  SCROLLING_TEXT_DEFAULT_WIDTH: 384, // 384 = 16 * 24
 
   // Button sizes (for h-8 w-8 pattern)
   BUTTON_SIZE_SMALL: 8,
@@ -201,34 +201,35 @@ export const WIDGET_CONSTANTS = {
 
 // Shape Constants
 export const SHAPE_CONSTANTS = {
-  MIN_SHAPE_SIZE: 20, // Minimum width/height for resizable shapes
+  MIN_SHAPE_SIZE: 24, // Minimum width/height for resizable shapes (24px grid)
 } as const;
 
 // Initial Component Positions
 export const INITIAL_POSITIONS = {
-  TIMER: { x: 100, y: 100 },
-  WEATHER: { x: 300, y: 200 },
-  BITCOIN: { x: 600, y: 100 },
-  CURRENCY: { x: 100, y: 400 },
-  CONFETTI: { x: 400, y: 400 },
-  NOTE: { x: 700, y: 400 },
-  WATCH: { x: 1000, y: 100 },
-  SCROLLING_TEXT: { x: 1000, y: 400 },
-  YOUTUBE_VIDEO: { x: 500, y: 200 },
-  SOUNDCLOUD: { x: 800, y: 200 },
-  SPOTIFY: { x: 300, y: 600 },
-  STYLISH_LINK: { x: 600, y: 600 },
+  TIMER: { x: 96, y: 96 }, // 4*24, 4*24
+  WEATHER: { x: 288, y: 192 }, // 12*24, 8*24
+  BITCOIN: { x: 576, y: 96 }, // 24*24, 4*24
+  CURRENCY: { x: 96, y: 384 }, // 4*24, 16*24
+  CONFETTI: { x: 384, y: 384 }, // 16*24, 16*24
+  NOTE: { x: 672, y: 384 }, // 28*24, 16*24
+  WATCH: { x: 960, y: 96 }, // 40*24, 4*24
+  SCROLLING_TEXT: { x: 960, y: 384 }, // 40*24, 16*24
+  YOUTUBE_VIDEO: { x: 480, y: 192 }, // 20*24, 8*24
+  SOUNDCLOUD: { x: 768, y: 192 }, // 32*24, 8*24
+  SPOTIFY: { x: 288, y: 576 }, // 12*24, 24*24
+  STYLISH_LINK: { x: 576, y: 576 }, // 24*24, 24*24
+  VOTING: { x: 864, y: 576 }, // 36*24, 24*24
 } as const;
 
 // Grid Background Constants
 export const GRID_CONSTANTS = {
-  SIZE: 20, // Base grid cell size in pixels
+  SIZE: 24, // Base grid cell size in pixels (divisible by 8)
   COLOR: "#b0b0b0", // Light gray grid lines
   STROKE_WIDTH: 0.5, // Base stroke width
   OPACITY: 0.65, // Reduced base opacity for subtler appearance
   ENABLED: true as boolean, // Grid enabled by default
   DYNAMIC_SIZING: true, // Enable dynamic grid sizing based on zoom
-  SIZES: [10, 20, 40, 80] as const, // Available grid sizes
+  SIZES: [8, 16, 24, 32, 48, 96] as const, // Available grid sizes (all divisible by 8)
   TYPES: ["lines", "dots", "both"] as const, // Available grid types
   DEFAULT_TYPE: "lines" as const, // Default grid type
 } as const;
@@ -244,27 +245,28 @@ export const DRAG_PREVIEW_CONSTANTS = {
   // Preview dimensions for different component types
   PREVIEW_SIZES: {
     // Widget components
-    timer: { width: 200, height: 150 },
-    watch: { width: 200, height: 150 },
-    weather: { width: 300, height: 200 },
-    bitcoin: { width: 400, height: 300 },
-    currency: { width: 350, height: 250 },
-    note: { width: 300, height: 250 },
-    confetti: { width: 200, height: 150 },
-    scrollingtext: { width: 400, height: 100 },
-    youtubeVideo: { width: 400, height: 300 },
-    soundcloud: { width: 400, height: 200 },
-    spotify: { width: 400, height: 200 },
-    linkpreview: { width: 400, height: 280 },
-    stylishlink: { width: 300, height: 150 },
+    timer: { width: 240, height: 168 }, // 10*24, 7*24
+    watch: { width: 192, height: 144 },
+    weather: { width: 288, height: 192 }, // 12*24, 8*24
+    bitcoin: { width: 384, height: 288 }, // 16*24, 12*24
+    currency: { width: 336, height: 240 }, // 14*24, 10*24
+    note: { width: 288, height: 240 }, // 12*24, 10*24
+    confetti: { width: 192, height: 144 },
+    scrollingtext: { width: 384, height: 96 }, // 16*24, 4*24
+    youtubeVideo: { width: 384, height: 288 },
+    soundcloud: { width: 384, height: 192 },
+    spotify: { width: 384, height: 192 },
+    linkpreview: { width: 384, height: 288 },
+    stylishlink: { width: 288, height: 144 }, // 12*24, 6*24
+    voting: { width: 288, height: 312 }, // 12*24, 13*24
 
     // Shape components
-    rectangle: { width: 120, height: 80 },
-    ellipse: { width: 120, height: 80 },
-    arrow: { width: 150, height: 20 },
-    line: { width: 150, height: 20 },
-    text: { width: 150, height: 50 },
-    imageShape: { width: 200, height: 150 },
+    rectangle: { width: 120, height: 96 }, // 5*24, 4*24
+    ellipse: { width: 120, height: 96 },
+    arrow: { width: 144, height: 24 }, // 6*24, 1*24
+    line: { width: 144, height: 24 },
+    text: { width: 144, height: 48 }, // 6*24, 2*24
+    imageShape: { width: 192, height: 144 }, // 8*24, 6*24
   } as const,
 
   // Z-index for drag preview overlay

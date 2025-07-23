@@ -11,11 +11,9 @@ export { LineShape } from "./LineShape";
 
 export { TextShape } from "./TextShape";
 
+export { ScrollingTextShape } from "./ScrollingTextShape";
+
 export { ImageShape } from "./ImageShape";
 export type { ImageShapeProps, ImageFormattingOptions } from "./ImageShape";
 
-// Smart Shapes
-export { SmartRectangleShape } from "./SmartRectangleShape";
-export { SmartEllipseShape } from "./SmartEllipseShape";
-export { SmartArrowShape } from "./SmartArrowShape";
 export { GroupedShape } from "./GroupedShape";

@@ -1,5 +1,6 @@
 import React from "react";
 import { BaseShape, BaseShapeProps } from "./BaseShape";
+import { snapSizeToGrid } from "../../utils/gridUtils";
 
 interface TextShapeProps extends Omit<BaseShapeProps, "children"> {
   text?: string;
@@ -10,12 +11,14 @@ interface TextShapeProps extends Omit<BaseShapeProps, "children"> {
   fontWeight?: "normal" | "bold";
   fontStyle?: "normal" | "italic";
   backgroundColor?: string;
-  padding?: number;
   onTextChange?: (text: string) => void;
+  onFontSizeChange?: (fontSize: number) => void; // New callback for font size changes
+  isEditing?: boolean; // External control of editing state
+  onEditingChange?: (isEditing: boolean) => void; // Callback when editing state changes
 }
 
 export const TextShape: React.FC<TextShapeProps> = ({
-  text = "Double-click to edit",
+  text = "",
   fontSize = 14,
   fontFamily = "Arial, sans-serif",
   textColor = "#374151",
@@ -23,120 +26,154 @@ export const TextShape: React.FC<TextShapeProps> = ({
   fontWeight = "normal",
   fontStyle = "normal",
   backgroundColor = "transparent",
-  padding = 8,
   onTextChange,
-  onResize,
+  onFontSizeChange,
+  isEditing: externalIsEditing,
+  onEditingChange,
   width,
   height,
   selected = false,
   ...props
 }) => {
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [editText, setEditText] = React.useState(text);
-  const [internalFontSize, setInternalFontSize] = React.useState(fontSize);
+  const [internalIsEditing, setInternalIsEditing] = React.useState(false);
   const [textBounds, setTextBounds] = React.useState({ width: 0, height: 0 });
-  const lastKnownSizeRef = React.useRef({
-    width: width || 150,
-    height: height || 50,
-  });
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const editableRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const measureRef = React.useRef<HTMLDivElement>(null);
 
-  // Calculate dynamic font size based on container dimensions
-  const dynamicFontSize = React.useMemo(() => {
-    if (!width || !height || !text) return internalFontSize;
+  // Use external editing state if provided, otherwise use internal state
+  const isEditing =
+    externalIsEditing !== undefined ? externalIsEditing : internalIsEditing;
 
-    // Calculate font size based on container area and text length
-    const area = width * height;
-    const textLength = text.length;
-
-    // Base font size calculation: scale with square root of area
-    let scaledSize = Math.sqrt(area) / 12; // Adjust divisor to control scaling sensitivity
-
-    // Adjust for text length - longer text should be smaller to fit
-    if (textLength > 1) {
-      const lengthFactor = Math.max(0.3, 1 - (textLength - 5) * 0.02); // Gradual decrease
-      scaledSize = scaledSize * lengthFactor;
-    }
-
-    // Ensure text fits within container width (rough estimation)
-    const maxWidthBasedSize = (width - padding * 2) / (textLength * 0.6);
-    const maxHeightBasedSize = (height - padding * 2) * 0.8;
-
-    // Use the most restrictive constraint
-    scaledSize = Math.min(scaledSize, maxWidthBasedSize, maxHeightBasedSize);
-
-    // Clamp to reasonable bounds
-    return Math.max(Math.min(scaledSize, 200), 8);
-  }, [width, height, text, padding, internalFontSize]);
-
-  // Use dynamic font size for rendering, but keep manual font size changes from header
-  const currentFontSize = fontSize !== 14 ? internalFontSize : dynamicFontSize;
-
-  // Use fontSize prop when it changes (from header controls)
-  React.useEffect(() => {
-    setInternalFontSize(fontSize);
-  }, [fontSize]);
-
-  // Update last known size for tracking
-  React.useEffect(() => {
-    if (width && height) {
-      const lastSize = lastKnownSizeRef.current;
-
-      // Call onResize if dimensions changed
-      if (
-        onResize &&
-        (width !== lastSize.width || height !== lastSize.height)
-      ) {
-        onResize(width, height);
+  // Helper function to set editing state
+  const setIsEditing = React.useCallback(
+    (editing: boolean) => {
+      if (externalIsEditing !== undefined) {
+        // If externally controlled, notify parent
+        onEditingChange?.(editing);
+      } else {
+        // If internally controlled, update internal state
+        setInternalIsEditing(editing);
       }
+    },
+    [externalIsEditing, onEditingChange]
+  );
 
-      lastKnownSizeRef.current = { width, height };
-    }
-  }, [width, height, onResize]);
+  // Use simple font size - either from props or default
+  const currentFontSize = fontSize;
+
+  // Calculate font size based on container width with unlimited scaling
+  const calculateFontSizeFromWidth = React.useCallback(
+    (containerWidth: number) => {
+      if (!text || text.length === 0) return currentFontSize;
+
+      const lines = text.split("\n");
+      const longestLine = lines.reduce(
+        (longest, current) =>
+          current.length > longest.length ? current : longest,
+        ""
+      );
+
+      if (longestLine.length === 0) return currentFontSize;
+
+      // Calculate font size based on target character width
+      // Using 0.6 as the character width ratio (adjustable for different fonts)
+      const targetCharWidth = containerWidth / longestLine.length;
+      const calculatedFontSize = targetCharWidth / 0.6;
+
+      // Round to nearest multiple of 8, with minimum of 8px
+      const roundedFontSize = Math.max(
+        8,
+        Math.round(calculatedFontSize / 8) * 8
+      );
+
+      return roundedFontSize;
+    },
+    [text, currentFontSize]
+  );
+
+  // Removed complex font size effect - now handled directly in onResize
+
+  // Removed size tracking effect - component auto-sizes to text bounds
 
   // Measure text bounds for precise selection area
   React.useEffect(() => {
-    if (!text || !measureRef.current) return;
+    if (!measureRef.current) return;
 
     const measureElement = measureRef.current;
-    measureElement.textContent = text;
+    // Use current text or placeholder if editing and no text
+    const textToMeasure = text || (isEditing ? "Type here..." : "");
+    measureElement.textContent = textToMeasure;
     measureElement.style.fontSize = `${currentFontSize}px`;
     measureElement.style.fontFamily = fontFamily;
     measureElement.style.fontWeight = fontWeight;
     measureElement.style.fontStyle = fontStyle;
-    measureElement.style.whiteSpace = "pre-wrap"; // Preserve newlines and wrapping
-    measureElement.style.wordBreak = "break-word"; // Handle long words
-    measureElement.style.maxWidth = `${(width || 150) - padding * 2}px`; // Constrain to container width
+    measureElement.style.whiteSpace = "pre"; // No automatic wrapping for measurement
+    measureElement.style.wordBreak = "normal"; // No automatic breaking for measurement
 
     // Measure the actual text dimensions
     const textWidth = measureElement.offsetWidth;
     const textHeight = measureElement.offsetHeight;
 
+    // Debug log to check if bounds are updating
+    console.log("TextShape bounds update:", {
+      textWidth,
+      textHeight,
+      fontSize: currentFontSize,
+      text: textToMeasure,
+    });
+
     setTextBounds({ width: textWidth, height: textHeight });
-  }, [
-    text,
-    currentFontSize,
-    fontFamily,
-    fontWeight,
-    fontStyle,
-    width,
-    padding,
-  ]);
+  }, [text, currentFontSize, fontFamily, fontWeight, fontStyle, isEditing]);
+
+  // Real-time text measurement while editing
+  React.useEffect(() => {
+    if (!isEditing || !editableRef.current || !measureRef.current) return;
+
+    const handleInput = () => {
+      const currentText = editableRef.current?.textContent || "";
+      if (measureRef.current) {
+        const measureElement = measureRef.current;
+        measureElement.textContent = currentText || "Type here...";
+        measureElement.style.fontSize = `${currentFontSize}px`;
+        measureElement.style.fontFamily = fontFamily;
+        measureElement.style.fontWeight = fontWeight;
+        measureElement.style.fontStyle = fontStyle;
+        measureElement.style.whiteSpace = "pre"; // No automatic wrapping for measurement
+        measureElement.style.wordBreak = "normal"; // No automatic breaking for measurement
+
+        // Measure the actual text dimensions
+        const textWidth = measureElement.offsetWidth;
+        const textHeight = measureElement.offsetHeight;
+
+        setTextBounds({ width: textWidth, height: textHeight });
+      }
+    };
+
+    const editableElement = editableRef.current;
+    editableElement.addEventListener("input", handleInput);
+
+    // Also measure on keyup for better responsiveness
+    editableElement.addEventListener("keyup", handleInput);
+
+    return () => {
+      editableElement.removeEventListener("input", handleInput);
+      editableElement.removeEventListener("keyup", handleInput);
+    };
+  }, [isEditing, currentFontSize, fontFamily, fontWeight, fontStyle]);
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsEditing(true);
-    setEditText(text);
   };
 
   const handleTextSubmit = React.useCallback(() => {
-    if (isEditing) {
+    if (isEditing && editableRef.current) {
       setIsEditing(false);
-      onTextChange?.(editText);
+      const newText = editableRef.current.textContent || "";
+      onTextChange?.(newText);
     }
-  }, [isEditing, editText, onTextChange]);
+  }, [isEditing, onTextChange, setIsEditing]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -144,7 +181,9 @@ export const TextShape: React.FC<TextShapeProps> = ({
       handleTextSubmit();
     } else if (e.key === "Escape") {
       setIsEditing(false);
-      setEditText(text);
+      if (editableRef.current) {
+        editableRef.current.textContent = text;
+      }
     }
   };
 
@@ -176,18 +215,96 @@ export const TextShape: React.FC<TextShapeProps> = ({
   }, [isEditing, handleTextSubmit]);
 
   React.useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.focus();
-      textareaRef.current.select();
+    if (isEditing && editableRef.current) {
+      editableRef.current.focus();
+      // Select all text
+      const range = document.createRange();
+      range.selectNodeContents(editableRef.current);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
     }
   }, [isEditing]);
+
+  const containerWidth = width || 150;
+  const containerHeight = height || 50;
+
+  // Calculate minimum dimensions needed to contain the text with no padding
+  const calculatedWidth = Math.max(textBounds.width, 24); // Use minimum grid size instead of containerWidth
+  const calculatedHeight = Math.max(textBounds.height, 24); // Use minimum grid size instead of containerHeight
+
+  // Snap dimensions to grid (8, 16, or 24)
+  const minWidth = snapSizeToGrid(calculatedWidth);
+  const minHeight = snapSizeToGrid(calculatedHeight);
+
+  // Don't render anything if there's no text and not editing
+  if (!text && !isEditing) {
+    return null;
+  }
+
+  // When editing, use text bounds to size the editor dynamically
+  let adjustedWidth, adjustedHeight;
+
+  if (isEditing) {
+    if (!text) {
+      // Minimum size for empty text when editing
+      adjustedWidth = Math.max(minWidth, 120);
+      adjustedHeight = Math.max(minHeight, 40);
+    } else {
+      // Dynamic sizing based on text content when editing - measurement already includes padding and border
+      adjustedWidth = snapSizeToGrid(textBounds.width);
+      adjustedHeight = snapSizeToGrid(textBounds.height);
+
+      // Debug log to see calculations
+      console.log("TextShape resize calculation:", {
+        textBounds,
+        adjustedWidth,
+        adjustedHeight,
+        fontSize: currentFontSize,
+      });
+    }
+  } else {
+    // When not editing, use calculated dimensions
+    adjustedWidth = minWidth;
+    adjustedHeight = minHeight;
+  }
 
   return (
     <BaseShape
       {...props}
-      width={width || 150}
-      height={height || 50}
-      selected={false} // Hide default BaseShape selection border
+      width={adjustedWidth}
+      height={adjustedHeight}
+      selected={selected && !isEditing} // Show BaseShape selection when not editing
+      onResize={(newWidth, newHeight) => {
+        // Snap the resized dimensions to grid
+        const snappedWidth = snapSizeToGrid(newWidth);
+        const snappedHeight = snapSizeToGrid(newHeight);
+
+        // Update the base dimensions (this will be used as minimum size)
+        if (props.onResize) {
+          props.onResize(snappedWidth, snappedHeight);
+        }
+
+        if (onFontSizeChange) {
+          // Calculate new font size based on the resized dimensions
+          const contentWidth = snappedWidth;
+          const contentHeight = snappedHeight;
+
+          // For text shape, primarily use width-based sizing
+          const fontSizeFromWidth = calculateFontSizeFromWidth(contentWidth);
+          // Also consider height to prevent oversized text, round to nearest multiple of 8
+          const fontSizeFromHeight = Math.max(
+            8,
+            Math.round(contentHeight / 2 / 8) * 8
+          );
+          const newFontSize = Math.min(fontSizeFromWidth, fontSizeFromHeight);
+
+          // Only enforce minimum font size of 8px
+          if (newFontSize !== currentFontSize && newFontSize >= 8) {
+            onFontSizeChange(newFontSize);
+          }
+        }
+      }}
       onSelect={() => {
         if (!isEditing) {
           props.onSelect?.();
@@ -200,20 +317,19 @@ export const TextShape: React.FC<TextShapeProps> = ({
         style={{
           position: "absolute",
           visibility: "hidden",
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
+          whiteSpace: "pre", // Allow line breaks in measurement
           fontSize: `${currentFontSize}px`,
           fontFamily,
           fontWeight,
           fontStyle,
-          maxWidth: `${(width || 150) - padding * 2}px`,
-          padding: 0,
+          padding: "4px", // Match the editable area padding
           margin: 0,
-          border: "none",
+          border: "2px solid transparent", // Include border in measurement
           outline: "none",
           lineHeight: 1.2, // Match the display text line height
           top: "-9999px",
           left: "-9999px",
+          boxSizing: "border-box", // Match editable area box sizing
         }}
       >
         {text}
@@ -221,81 +337,65 @@ export const TextShape: React.FC<TextShapeProps> = ({
 
       <div
         ref={containerRef}
-        className="w-full h-full flex items-center justify-center relative"
+        className="w-full h-full relative"
         style={{
           backgroundColor,
-          padding,
+          // Allow pointer events for double-click but prevent text selection when not editing
+          userSelect: isEditing ? "text" : "none",
+          WebkitUserSelect: isEditing ? "text" : "none",
+          MozUserSelect: isEditing ? "text" : "none",
         }}
         onDoubleClick={handleDoubleClick}
       >
-        {/* Text-aligned selection indicator */}
-        {selected && !isEditing && textBounds.width > 0 && (
-          <div
-            className="absolute border-2 border-blue-500 pointer-events-none"
-            style={{
-              width: `${textBounds.width + 8}px`, // Add small padding
-              height: `${textBounds.height + 4}px`,
-              left: "50%",
-              top: "50%",
-              transform: "translate(-50%, -50%)",
-              borderRadius: "2px",
-            }}
-          />
-        )}
-
-        {isEditing ? (
-          <div className="relative flex items-center justify-center">
-            <textarea
-              ref={textareaRef}
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              onBlur={handleBlur}
-              onKeyDown={handleKeyDown}
-              className="resize-none border-2 border-blue-400 outline-none bg-transparent overflow-hidden"
-              style={{
-                fontSize: currentFontSize,
-                fontFamily,
-                color: textColor,
-                textAlign,
-                fontWeight,
-                fontStyle,
-                padding: "2px 4px",
-                width: `${Math.max(textBounds.width + 20, 100)}px`,
-                height: `${Math.max(
-                  textBounds.height + 8,
-                  currentFontSize * 1.5
-                )}px`,
-                borderRadius: "3px",
-                lineHeight: 1.2,
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-              }}
-            />
-          </div>
-        ) : (
-          <div
-            className="w-full h-full flex items-center"
-            style={{
-              fontSize: currentFontSize,
-              fontFamily,
-              color: textColor,
-              textAlign,
-              fontWeight,
-              fontStyle,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              lineHeight: 1.2,
-              justifyContent:
-                textAlign === "center"
-                  ? "center"
-                  : textAlign === "right"
-                  ? "flex-end"
-                  : "flex-start",
-            }}
-          >
-            {text}
-          </div>
-        )}
+        <div
+          ref={editableRef}
+          contentEditable={isEditing}
+          suppressContentEditableWarning={true}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          style={{
+            fontSize: currentFontSize,
+            fontFamily,
+            color: textColor,
+            textAlign,
+            fontWeight,
+            fontStyle,
+            whiteSpace: "pre", // No automatic wrapping, only manual line breaks
+            lineHeight: 1.2,
+            // Make the editable area exactly match the BaseShape dimensions
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            padding: "4px", // Match the padding used in size calculations
+            margin: 0, // Ensure no margin
+            border: isEditing ? "2px solid #10b981" : "none", // Use green color like BaseShape
+            borderRadius: "inherit", // Match BaseShape border radius
+            outline: "none",
+            minWidth: isEditing ? "100px" : text ? "20px" : "0",
+            minHeight: isEditing ? "1.5em" : text ? "1em" : "0",
+            background: "transparent", // Always transparent background
+            display: !isEditing && !text ? "none" : "flex",
+            alignItems: "center",
+            justifyContent:
+              textAlign === "center"
+                ? "center"
+                : textAlign === "right"
+                ? "flex-end"
+                : "flex-start",
+            boxSizing: "border-box", // Include border and padding in dimensions
+            wordWrap: "normal", // Prevent automatic word wrapping
+            overflowWrap: "normal", // Prevent automatic overflow wrapping
+            // Critical: Control pointer events and text selection
+            pointerEvents: isEditing ? "auto" : "none", // Disable pointer events when not editing
+            userSelect: isEditing ? "text" : "none", // Disable text selection when not editing
+            WebkitUserSelect: isEditing ? "text" : "none", // Safari support
+            MozUserSelect: isEditing ? "text" : "none", // Firefox support
+          }}
+        >
+          {text || (isEditing ? "Type here..." : "")}
+        </div>
       </div>
     </BaseShape>
   );

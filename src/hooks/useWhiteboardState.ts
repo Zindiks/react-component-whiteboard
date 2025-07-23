@@ -62,34 +62,6 @@ const DEFAULT_COMPONENTS: Component[] = [
     type: "scrollingtext",
     zIndex: 8,
   },
-  {
-    id: 9,
-    x: INITIAL_POSITIONS.YOUTUBE_VIDEO.x,
-    y: INITIAL_POSITIONS.YOUTUBE_VIDEO.y,
-    type: "youtubeVideo",
-    zIndex: 9,
-  },
-  {
-    id: 10,
-    x: INITIAL_POSITIONS.SOUNDCLOUD.x,
-    y: INITIAL_POSITIONS.SOUNDCLOUD.y,
-    type: "soundcloud",
-    zIndex: 10,
-  },
-  {
-    id: 11,
-    x: INITIAL_POSITIONS.SPOTIFY.x,
-    y: INITIAL_POSITIONS.SPOTIFY.y,
-    type: "spotify",
-    zIndex: 11,
-  },
-  {
-    id: 12,
-    x: INITIAL_POSITIONS.STYLISH_LINK.x,
-    y: INITIAL_POSITIONS.STYLISH_LINK.y,
-    type: "stylishlink",
-    zIndex: 12,
-  },
 ];
 
 export const useWhiteboardState = () => {
@@ -99,7 +71,7 @@ export const useWhiteboardState = () => {
     []
   );
   const [copiedComponents, setCopiedComponents] = useState<Component[]>([]);
-  const [connectionMode, setConnectionMode] = useState<{
+  const [connectionMode] = useState<{
     active: boolean;
     selectedArrowId: number | null;
     connectionStep: "start" | "end" | null;
@@ -108,7 +80,7 @@ export const useWhiteboardState = () => {
     startConnectionPoint: string | null;
     endConnectionPoint: string | null;
   }>({
-    active: false,
+    active: false, // Disabled to prevent shapes sticking together
     selectedArrowId: null,
     connectionStep: null,
     startShapeId: null,
@@ -190,6 +162,15 @@ export const useWhiteboardState = () => {
         newComponent.width = 150;
         newComponent.height = 50;
         newComponent.text = "Double-click to edit";
+      } else if (type === "scrollingtext") {
+        newComponent.width = 300;
+        newComponent.height = 60;
+        newComponent.text = "Scrolling text - double-click to edit";
+        newComponent.scrollDirection = "horizontal";
+        newComponent.scrollSpeed = 50;
+        newComponent.pauseOnHover = true;
+        newComponent.bounceOnEnd = false;
+        newComponent.backgroundColor = "transparent";
       } else if (type === "imageShape") {
         newComponent.width = 200;
         newComponent.height = 150;
@@ -202,6 +183,9 @@ export const useWhiteboardState = () => {
       }
 
       setComponents((prev) => [...prev, newComponent]);
+
+      // Return the new component ID so it can be selected
+      return newId;
     },
     [components]
   );
@@ -358,88 +342,17 @@ export const useWhiteboardState = () => {
     [selectedComponents, initialPositions]
   );
 
-  // Simplified shape click handler for connection mode
-  const handleShapeClickForConnection = useCallback(
-    (shapeId: number) => {
-      if (connectionMode.active && connectionMode.selectedArrowId) {
-        const arrow = components.find(
-          (c) => c.id === connectionMode.selectedArrowId
-        );
-        if (!arrow || shapeId === connectionMode.selectedArrowId) return;
+  // Simplified shape click handler - no automatic connections
+  const handleShapeClickForConnection = useCallback(() => {
+    // Only handle connection mode for explicit arrow connections
+    // Don't automatically connect shapes to each other
+    return;
+  }, []);
 
-        if (connectionMode.connectionStep === "start") {
-          // Connect the start of the arrow
-          setComponents((prev) =>
-            prev.map((component) =>
-              component.id === connectionMode.selectedArrowId
-                ? {
-                    ...component,
-                    startShapeId: shapeId,
-                    startConnectionPoint: "auto",
-                  }
-                : component
-            )
-          );
-
-          setConnectionMode((prev) => ({
-            ...prev,
-            startShapeId: shapeId,
-            startConnectionPoint: "auto",
-            connectionStep: "end",
-          }));
-
-          stateLogger.info("Arrow start connected to shape", {
-            arrowId: connectionMode.selectedArrowId,
-            shapeId,
-          });
-        } else if (connectionMode.connectionStep === "end") {
-          // Connect the end of the arrow and finish connection
-          setComponents((prev) =>
-            prev.map((component) =>
-              component.id === connectionMode.selectedArrowId
-                ? {
-                    ...component,
-                    endShapeId: shapeId,
-                    endConnectionPoint: "auto",
-                  }
-                : component
-            )
-          );
-
-          // Reset connection mode
-          setConnectionMode({
-            active: false,
-            selectedArrowId: null,
-            connectionStep: null,
-            startShapeId: null,
-            endShapeId: null,
-            startConnectionPoint: null,
-            endConnectionPoint: null,
-          });
-
-          stateLogger.info("Arrow end connected to shape", {
-            arrowId: connectionMode.selectedArrowId,
-            shapeId,
-          });
-        }
-      }
-    },
-    [connectionMode, components]
-  );
-
-  const handleSelect = useCallback(
-    (id: number) => {
-      // Check if we're in connection mode
-      if (connectionMode.active) {
-        handleShapeClickForConnection(id);
-        return;
-      }
-
-      // Single selection only - replace any existing selection
-      setSelectedComponents([id]);
-    },
-    [connectionMode, handleShapeClickForConnection]
-  );
+  const handleSelect = useCallback((id: number) => {
+    // Simple selection - no connection mode interference
+    setSelectedComponents([id]);
+  }, []);
 
   const handleDragStart = (id: number) => {
     // Bring the component to the front when starting to drag
@@ -462,129 +375,25 @@ export const useWhiteboardState = () => {
     }
   };
 
-  // Connection handling functions
-  const handleConnectionPointClick = useCallback(
-    (pointId: string, shapeId: number) => {
-      if (connectionMode.active && connectionMode.selectedArrowId) {
-        const arrow = components.find(
-          (c) => c.id === connectionMode.selectedArrowId
-        );
-        if (!arrow) return;
+  // Connection handling functions - simplified to prevent automatic connections
+  const handleConnectionPointClick = useCallback(() => {
+    // Disabled automatic connections to prevent shapes sticking together
+    return;
+  }, []);
 
-        if (connectionMode.connectionStep === "start") {
-          // Connect the start of the arrow
-          setComponents((prev) =>
-            prev.map((component) =>
-              component.id === connectionMode.selectedArrowId
-                ? {
-                    ...component,
-                    startShapeId: shapeId,
-                    startConnectionPoint: "auto", // Let the arrow calculate the best point
-                  }
-                : component
-            )
-          );
-
-          setConnectionMode((prev) => ({
-            ...prev,
-            startShapeId: shapeId,
-            startConnectionPoint: "auto",
-            connectionStep: "end",
-          }));
-
-          stateLogger.info("Arrow start connected", {
-            arrowId: connectionMode.selectedArrowId,
-            shapeId,
-            pointId: "auto",
-          });
-        } else if (connectionMode.connectionStep === "end") {
-          // Connect the end of the arrow and finish connection
-          setComponents((prev) =>
-            prev.map((component) =>
-              component.id === connectionMode.selectedArrowId
-                ? {
-                    ...component,
-                    endShapeId: shapeId,
-                    endConnectionPoint: "auto", // Let the arrow calculate the best point
-                  }
-                : component
-            )
-          );
-
-          // Reset connection mode
-          setConnectionMode({
-            active: false,
-            selectedArrowId: null,
-            connectionStep: null,
-            startShapeId: null,
-            endShapeId: null,
-            startConnectionPoint: null,
-            endConnectionPoint: null,
-          });
-
-          stateLogger.info("Arrow end connected", {
-            arrowId: connectionMode.selectedArrowId,
-            shapeId,
-            pointId: "auto",
-          });
-        }
-      }
-    },
-    [connectionMode, components]
-  );
-
-  const handleConnectionPointHover = useCallback(
-    (pointId: string | null, shapeId: number) => {
-      // Could add visual feedback here in the future
-      stateLogger.debug("Connection point hover", { pointId, shapeId });
-    },
-    []
-  );
-
-  const startArrowConnection = useCallback((arrowId: number) => {
-    setConnectionMode({
-      active: true,
-      selectedArrowId: arrowId,
-      connectionStep: "start",
-      startShapeId: null,
-      endShapeId: null,
-      startConnectionPoint: null,
-      endConnectionPoint: null,
-    });
-
-    stateLogger.info("Started arrow connection mode", { arrowId });
+  const startArrowConnection = useCallback(() => {
+    // Disabled to prevent shapes from sticking together
+    return;
   }, []);
 
   const cancelArrowConnection = useCallback(() => {
-    setConnectionMode({
-      active: false,
-      selectedArrowId: null,
-      connectionStep: null,
-      startShapeId: null,
-      endShapeId: null,
-      startConnectionPoint: null,
-      endConnectionPoint: null,
-    });
-
-    stateLogger.info("Cancelled arrow connection mode");
+    // Disabled to prevent shapes from sticking together
+    return;
   }, []);
 
-  const disconnectArrow = useCallback((arrowId: number) => {
-    setComponents((prev) =>
-      prev.map((component) =>
-        component.id === arrowId
-          ? {
-              ...component,
-              startShapeId: undefined,
-              endShapeId: undefined,
-              startConnectionPoint: undefined,
-              endConnectionPoint: undefined,
-            }
-          : component
-      )
-    );
-
-    stateLogger.info("Disconnected arrow", { arrowId });
+  const disconnectArrow = useCallback(() => {
+    // Disabled to prevent shapes from sticking together
+    return;
   }, []);
 
   return {
@@ -614,7 +423,7 @@ export const useWhiteboardState = () => {
     handleSelect,
     handleDragStart,
 
-    // Connection actions
+    // Connection actions - disabled to prevent shapes sticking together
     handleConnectionPointClick,
     handleShapeClickForConnection,
     startArrowConnection,

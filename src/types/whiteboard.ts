@@ -27,15 +27,12 @@ export interface Component {
   strokeStyle?: "solid" | "dashed" | "dotted";
   arrowStyle?: "none" | "arrow" | "double-arrow";
   arrowSize?: number;
-  // Smart arrow connection properties
-  startShapeId?: number;
-  endShapeId?: number;
-  startConnectionPoint?: string;
-  endConnectionPoint?: string;
-  // Arrow bend style properties
-  bendStyle?: "straight" | "elbowed" | "curved";
-  bendRadius?: number;
-  elbowOffset?: number;
+  // Scrolling text options
+  scrollDirection?: "horizontal" | "vertical";
+  scrollSpeed?: number;
+  pauseOnHover?: boolean;
+  bounceOnEnd?: boolean;
+  backgroundColor?: string;
 }
 
 export interface Point {

@@ -42,6 +42,9 @@ export interface UsePanControlsProps {
   setMousePosition: React.Dispatch<
     React.SetStateAction<{ x: number; y: number }>
   >;
+  // Text tool props
+  textToolActive?: boolean;
+  onWhiteboardClick?: (x: number, y: number) => void;
 }
 
 export interface UsePanControlsReturn
@@ -59,6 +62,8 @@ export const usePanControls = ({
   applyTransform,
   setSelectedComponents,
   setMousePosition,
+  textToolActive = false,
+  onWhiteboardClick,
 }: UsePanControlsProps): UsePanControlsReturn => {
   // Pan state
   const [isPanning, setIsPanning] = useState(false);
@@ -151,6 +156,16 @@ export const usePanControls = ({
         !isComponentClick &&
         !isUIClick
       ) {
+        // Check if text tool is active
+        if (textToolActive && onWhiteboardClick) {
+          // Convert screen coordinates to world coordinates
+          const worldX = (coords.x - transform.x) / transform.k;
+          const worldY = (coords.y - transform.y) / transform.k;
+          onWhiteboardClick(worldX, worldY);
+          event.preventDefault();
+          return;
+        }
+
         // Left click without space on empty area - start marquee selection
         event.preventDefault(); // Prevent any default text selection
         setIsMarqueeActive(true);
@@ -169,7 +184,16 @@ export const usePanControls = ({
         }
       }
     },
-    [isDragInProgress, isSpacePressed, getEventCoordinates]
+    [
+      isDragInProgress,
+      isSpacePressed,
+      getEventCoordinates,
+      textToolActive,
+      onWhiteboardClick,
+      transform.x,
+      transform.y,
+      transform.k,
+    ]
   );
 
   const handleMouseMove = useCallback(

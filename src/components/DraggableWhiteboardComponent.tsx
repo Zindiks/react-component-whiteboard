@@ -14,12 +14,12 @@ import { CurrencyConverter } from "./widgets/CurrencyConverter";
 import { TextNote } from "./widgets/TextNote";
 import { ConfettiButton } from "./widgets/ConfettiButton";
 import { Watch } from "./widgets/Watch";
-import { ScrollingText } from "./widgets/ScrollingText";
 import { YouTubeVideo } from "./widgets/YouTubeVideo";
 import { SoundCloudWidget } from "./widgets/SoundCloudWidget";
 import { SpotifyWidget } from "./widgets/SpotifyWidget";
 import { StylishLink } from "./widgets/StylishLink";
 import { LinkPreview } from "./widgets/LinkPreview";
+import { Voting } from "./widgets/Voting";
 
 import {
   RectangleShape,
@@ -27,13 +27,15 @@ import {
   ArrowShape,
   LineShape,
   TextShape,
+  ScrollingTextShape,
   ImageShape,
-  SmartRectangleShape,
-  SmartEllipseShape,
-  SmartArrowShape,
   GroupedShape,
 } from "./shapes";
-import type { ImageFormattingOptions } from "./shapes";
+import type {
+  TextFormattingOptions,
+  ShapeFormattingOptions,
+  ImageFormattingOptions,
+} from "../types/formatting";
 import { FloatingHeader } from "./widgets/FloatingHeader";
 import {
   Video,
@@ -52,6 +54,7 @@ import {
   Minimize2,
   LayoutGrid,
   Maximize2,
+  Vote,
 } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -101,34 +104,22 @@ interface DraggableComponentProps {
   // Image formatting options
   rotation?: number;
   opacity?: number;
+  // Scrolling text options
+  scrollDirection?: "horizontal" | "vertical";
+  scrollSpeed?: number;
+  pauseOnHover?: boolean;
+  bounceOnEnd?: boolean;
+  backgroundColor?: string;
+  // Text editing state
+  isEditing?: boolean;
+  onEditingChange?: (id: number, isEditing: boolean) => void;
   onFormattingChange?: (
     id: number,
-    options: Partial<ImageFormattingOptions>
+    options:
+      | Partial<TextFormattingOptions>
+      | Partial<ShapeFormattingOptions>
+      | Partial<ImageFormattingOptions>
   ) => void;
-  // Connection properties
-  startShapeId?: number;
-  endShapeId?: number;
-  startConnectionPoint?: string;
-  endConnectionPoint?: string;
-  onConnectionPointClick?: (pointId: string, shapeId: number) => void;
-  connectionMode?: {
-    active: boolean;
-    selectedArrowId?: number | null;
-    connectionStep?: "start" | "end" | null;
-  };
-  // Bend style properties
-  bendStyle?: "straight" | "elbowed" | "curved";
-  bendRadius?: number;
-  elbowOffset?: number;
-  // All components for connection calculations
-  allComponents?: Array<{
-    id: number;
-    x: number;
-    y: number;
-    width?: number;
-    height?: number;
-    type: string;
-  }>;
 }
 
 export const DraggableComponent: React.FC<DraggableComponentProps> = ({
@@ -169,17 +160,14 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   arrowSize,
   rotation,
   opacity,
+  scrollDirection,
+  scrollSpeed,
+  pauseOnHover,
+  bounceOnEnd,
+  backgroundColor,
+  isEditing,
+  onEditingChange,
   onFormattingChange,
-  startShapeId,
-  endShapeId,
-  startConnectionPoint,
-  endConnectionPoint,
-  onConnectionPointClick,
-  connectionMode,
-  bendStyle,
-  bendRadius,
-  elbowOffset,
-  allComponents,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
@@ -389,7 +377,37 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     note: () => <TextNote />,
     confetti: () => <ConfettiButton />,
     watch: () => <Watch />,
-    scrollingtext: () => <ScrollingText />,
+    scrollingtext: () => (
+      <ScrollingTextShape
+        x={0}
+        y={0}
+        width={width || 300}
+        height={height || 60}
+        selected={selected}
+        onSelect={() => onSelect(id)}
+        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
+        text={text || "Scrolling text - double-click to edit"}
+        onTextChange={(newText) => onTextChange?.(id, newText)}
+        onFontSizeChange={(newFontSize) =>
+          onFormattingChange?.(id, {
+            fontSize: newFontSize,
+          } as Partial<TextFormattingOptions>)
+        }
+        fontSize={fontSize}
+        fontFamily={fontFamily}
+        textColor={textColor}
+        textAlign={textAlign}
+        fontWeight={fontWeight}
+        fontStyle={fontStyle}
+        backgroundColor={backgroundColor}
+        scrollDirection={scrollDirection || "horizontal"}
+        scrollSpeed={scrollSpeed || 50}
+        pauseOnHover={pauseOnHover ?? true}
+        bounceOnEnd={bounceOnEnd ?? false}
+        isEditing={isEditing}
+        onEditingChange={(editing) => onEditingChange?.(id, editing)}
+      />
+    ),
     youtubeVideo: () => (
       <YouTubeVideo initialUrl={youtubeUrl} width={width} height={height} />
     ),
@@ -404,6 +422,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       <SpotifyWidget initialUrl={spotifyUrl} width={width} height={height} />
     ),
     stylishlink: () => <StylishLink />,
+    voting: () => <Voting />,
     linkpreview: () => (
       <LinkPreview
         initialUrl={text} // Use text field to store the URL
@@ -524,12 +543,19 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
         text={text || "Double-click to edit"}
         onTextChange={(newText) => onTextChange?.(id, newText)}
+        onFontSizeChange={(newFontSize) =>
+          onFormattingChange?.(id, {
+            fontSize: newFontSize,
+          } as Partial<TextFormattingOptions>)
+        }
         fontSize={fontSize}
         fontFamily={fontFamily}
         textColor={textColor}
         textAlign={textAlign}
         fontWeight={fontWeight}
         fontStyle={fontStyle}
+        isEditing={isEditing}
+        onEditingChange={(editing) => onEditingChange?.(id, editing)}
       />
     ),
     imageShape: () => (
@@ -549,96 +575,6 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         opacity={opacity || 1}
         onImageChange={(newImageSrc) => onImageChange?.(id, newImageSrc)}
         onFormattingChange={(options) => onFormattingChange?.(id, options)}
-      />
-    ),
-    // Smart Shapes
-    smartRectangle: () => (
-      <SmartRectangleShape
-        x={0}
-        y={0}
-        width={width || 150}
-        height={height || 100}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        fillColor={fillColor}
-        strokeColor={strokeColor}
-        strokeWidth={strokeWidth}
-        borderRadius={borderRadius}
-        text={text}
-        onTextChange={(newText) => onTextChange?.(id, newText)}
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        textColor={textColor}
-        textAlign={textAlign}
-        fontWeight={fontWeight}
-        fontStyle={fontStyle}
-        shapeId={id}
-        canConnect={true}
-        showConnectionPoints={selected}
-      />
-    ),
-    smartEllipse: () => (
-      <SmartEllipseShape
-        x={0}
-        y={0}
-        width={width || 150}
-        height={height || 100}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        fillColor={fillColor}
-        strokeColor={strokeColor}
-        strokeWidth={strokeWidth}
-        text={text}
-        onTextChange={(newText) => onTextChange?.(id, newText)}
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        textColor={textColor}
-        textAlign={textAlign}
-        fontWeight={fontWeight}
-        fontStyle={fontStyle}
-        shapeId={id}
-        canConnect={true}
-        showConnectionPoints={selected || connectionMode?.active}
-        nodeType="default"
-        connectionMode={connectionMode}
-        onConnectionPointClick={(pointId: string, shapeId: number) =>
-          onConnectionPointClick?.(pointId, shapeId)
-        }
-      />
-    ),
-    smartArrow: () => (
-      <SmartArrowShape
-        x={0}
-        y={0}
-        width={width || 150}
-        height={height || 20}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        strokeColor={strokeColor}
-        strokeWidth={strokeWidth}
-        strokeStyle={strokeStyle}
-        arrowStyle={arrowStyle}
-        arrowSize={arrowSize}
-        text={text}
-        onTextChange={(newText) => onTextChange?.(id, newText)}
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        textColor={textColor}
-        fontWeight={fontWeight}
-        fontStyle={fontStyle}
-        shapeId={id}
-        autoConnect={true}
-        bendStyle={bendStyle || "straight"}
-        bendRadius={bendRadius || 20}
-        elbowOffset={elbowOffset || 50}
-        startShapeId={startShapeId}
-        endShapeId={endShapeId}
-        startConnectionPoint={startConnectionPoint}
-        endConnectionPoint={endConnectionPoint}
-        allComponents={allComponents}
       />
     ),
     groupFrame: () => (
@@ -697,6 +633,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     "arrow",
     "line",
     "text",
+    "scrollingtext",
     "imageShape",
   ].includes(type);
 
@@ -755,6 +692,11 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
         title: "Link Preview",
         icon: Link,
         iconColor: "bg-cyan-600",
+      },
+      voting: {
+        title: "Voting",
+        icon: Vote,
+        iconColor: "bg-purple-600",
       },
       // Add more as needed
     };

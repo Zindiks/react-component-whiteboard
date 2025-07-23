@@ -7,6 +7,7 @@ import { GridBackground } from "./components/GridBackground";
 import { FPSMonitor } from "./components/FPSMonitor";
 import { DragPreviewOverlay } from "./components/whiteboard/DragPreviewOverlay";
 import { ShapeControlHeader } from "./components/headers/ShapeControlHeader";
+import { ScrollingTextControlHeader } from "./components/headers/ScrollingTextControlHeader";
 import { usePerformance } from "./hooks/usePerformance";
 import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
 import { Component } from "./types/whiteboard";
@@ -51,7 +52,6 @@ const CustomGrid = () => {
     components,
     selectedComponents,
     copiedComponents,
-    connectionMode,
     setComponents,
     setSelectedComponents,
     setCopiedComponents,
@@ -65,11 +65,6 @@ const CustomGrid = () => {
     handleDrag,
     handleSelect,
     handleDragStart,
-    handleConnectionPointClick,
-    handleShapeClickForConnection,
-    startArrowConnection,
-    cancelArrowConnection,
-    disconnectArrow,
   } = useWhiteboardState();
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -124,6 +119,19 @@ const CustomGrid = () => {
   // Snap to grid toggle state
   const [snapToGrid, setSnapToGrid] = useState(true);
 
+  // Text tool state
+  const [textToolActive, setTextToolActive] = useState(false);
+
+  // Track which text component is currently being edited
+  const [editingTextId, setEditingTextId] = useState<number | null>(null);
+
+  // Clear editing state when text tool is deactivated
+  useEffect(() => {
+    if (!textToolActive) {
+      setEditingTextId(null);
+    }
+  }, [textToolActive]);
+
   // Overview/Minimap state
   const [showOverview, setShowOverview] = useState(false);
   const overviewRef = useRef<HTMLDivElement>(null);
@@ -144,7 +152,28 @@ const CustomGrid = () => {
     handleCategoryClick,
     handleCloseSidebar,
     getActiveCategory,
-  } = useSidebarControls();
+  } = useSidebarControls(); // Text tool functionality
+  const handleWhiteboardClick = useCallback(
+    (x: number, y: number) => {
+      if (textToolActive) {
+        // Create a text component at the clicked position
+        const newComponentId = addNewComponent("text", x, y);
+
+        // Select the newly created text component
+        if (newComponentId) {
+          setSelectedComponents([newComponentId]);
+          // Put the new text component into editing mode with a small delay
+          setTimeout(() => {
+            setEditingTextId(newComponentId);
+          }, 10);
+        }
+
+        // Optionally, turn off text tool after adding text
+        setTextToolActive(false);
+      }
+    },
+    [textToolActive, addNewComponent, setSelectedComponents, setEditingTextId]
+  );
 
   // Use pan controls hook
   const {
@@ -163,6 +192,8 @@ const CustomGrid = () => {
     applyTransform,
     setSelectedComponents,
     setMousePosition,
+    textToolActive,
+    onWhiteboardClick: handleWhiteboardClick,
   });
 
   // Use drag and drop hook
@@ -329,6 +360,8 @@ const CustomGrid = () => {
     previousZoomScale,
     setTransform,
     showZoomIndicatorTemporarily,
+    textToolActive,
+    onToggleTextTool: () => setTextToolActive(!textToolActive),
   });
 
   // Cleanup timeout on unmount
@@ -470,6 +503,7 @@ const CustomGrid = () => {
           left: 0,
           pointerEvents: "all",
           background: "transparent",
+          cursor: textToolActive ? "crosshair" : "default",
         }}
       />
 
@@ -584,21 +618,16 @@ const CustomGrid = () => {
             strokeStyle={component.strokeStyle}
             arrowStyle={component.arrowStyle}
             arrowSize={component.arrowSize}
+            scrollDirection={component.scrollDirection}
+            scrollSpeed={component.scrollSpeed}
+            pauseOnHover={component.pauseOnHover}
+            bounceOnEnd={component.bounceOnEnd}
+            backgroundColor={component.backgroundColor}
+            isEditing={editingTextId === component.id}
+            onEditingChange={(id, isEditing) => {
+              setEditingTextId(isEditing ? id : null);
+            }}
             onFormattingChange={handleFormattingChange}
-            startShapeId={component.startShapeId}
-            endShapeId={component.endShapeId}
-            startConnectionPoint={component.startConnectionPoint}
-            endConnectionPoint={component.endConnectionPoint}
-            onConnectionPointClick={handleConnectionPointClick}
-            connectionMode={connectionMode}
-            allComponents={components.map((c) => ({
-              id: c.id,
-              x: c.x,
-              y: c.y,
-              width: c.width,
-              height: c.height,
-              type: c.type,
-            }))}
           />
         ))}
       </div>
@@ -618,6 +647,8 @@ const CustomGrid = () => {
         onToggleSnap={() => setSnapToGrid(!snapToGrid)}
         gridType={gridType}
         onGridTypeChange={(type) => setGridType(type)}
+        textToolActive={textToolActive}
+        onToggleTextTool={() => setTextToolActive(!textToolActive)}
       />
 
       {/* Component Footer and Sidebar */}
@@ -674,19 +705,34 @@ const CustomGrid = () => {
             "arrow",
             "text",
             "imageShape",
-            "smartRectangle",
-            "smartEllipse",
-            "smartArrow",
             "groupFrame",
           ].includes(selectedComponent.type);
 
-          if (!isShapeComponent) return null;
+          const isScrollingTextComponent =
+            selectedComponent.type === "scrollingtext";
+
+          if (!isShapeComponent && !isScrollingTextComponent) return null;
 
           // Calculate the actual position on screen (not transformed)
           const screenX = selectedComponent.x * transform.k + transform.x;
           const screenY = selectedComponent.y * transform.k + transform.y;
           const screenWidth = (selectedComponent.width || 200) * transform.k;
 
+          // Use ScrollingTextControlHeader for scrolling text components
+          if (isScrollingTextComponent) {
+            return (
+              <ScrollingTextControlHeader
+                selectedComponent={selectedComponent}
+                position={{
+                  x: screenX + screenWidth / 2,
+                  y: screenY - 60,
+                }}
+                onFormattingChange={handleFormattingChange}
+              />
+            );
+          }
+
+          // Use regular ShapeControlHeader for other shape components
           return (
             <ShapeControlHeader
               selectedComponent={selectedComponent}
@@ -696,10 +742,6 @@ const CustomGrid = () => {
               }}
               onFormattingChange={handleFormattingChange}
               onClose={() => setSelectedComponents([])}
-              onStartArrowConnection={startArrowConnection}
-              onCancelArrowConnection={cancelArrowConnection}
-              onDisconnectArrow={disconnectArrow}
-              connectionMode={connectionMode}
             />
           );
         })()}

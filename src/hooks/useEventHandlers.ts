@@ -55,6 +55,9 @@ export interface UseEventHandlersProps {
   previousZoomScale: React.MutableRefObject<number>;
   setTransform: (transform: d3.ZoomTransform) => void;
   showZoomIndicatorTemporarily: () => void;
+  // Text tool props
+  textToolActive?: boolean;
+  onToggleTextTool?: () => void;
 }
 
 export const useEventHandlers = ({
@@ -86,6 +89,8 @@ export const useEventHandlers = ({
   previousZoomScale,
   setTransform,
   showZoomIndicatorTemporarily,
+  textToolActive = false,
+  onToggleTextTool,
 }: UseEventHandlersProps) => {
   useEffect(() => {
     if (!svgRef.current) return;
@@ -377,10 +382,15 @@ export const useEventHandlers = ({
       } else if (event.key === "5" || event.key === "s" || event.key === "S") {
         event.preventDefault();
         setSnapToGrid(!snapToGrid);
+      } else if (event.key === "t" || event.key === "T") {
+        event.preventDefault();
+        onToggleTextTool?.();
       } else if (event.key === "Escape") {
-        // Close overview if open, otherwise deselect all components
+        // Close overview if open, exit text tool if active, otherwise deselect all components
         if (showOverview) {
           setShowOverview(false);
+        } else if (textToolActive) {
+          onToggleTextTool?.();
         } else {
           setSelectedComponents([]);
         }
@@ -464,5 +474,7 @@ export const useEventHandlers = ({
     transform,
     svgRef,
     containerRef,
+    onToggleTextTool,
+    textToolActive,
   ]);
 };

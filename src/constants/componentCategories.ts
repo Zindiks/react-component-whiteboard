@@ -40,6 +40,12 @@ export const COMPONENT_CATEGORIES: Category[] = [
         icon: "🎉",
         description: "Celebration button",
       },
+      {
+        type: "voting",
+        label: "Voting",
+        icon: "🗳️",
+        description: "Two-option voting widget",
+      },
     ],
   },
   {
@@ -71,46 +77,10 @@ export const COMPONENT_CATEGORIES: Category[] = [
     icon: "🎵",
     components: [
       {
-        type: "youtubeVideo",
-        label: "YouTube",
-        icon: "🎬",
-        description: "YouTube video player",
-      },
-      {
-        type: "soundcloud",
-        label: "SoundCloud",
-        icon: "🔊",
-        description: "SoundCloud track",
-      },
-      {
-        type: "spotify",
-        label: "Spotify",
-        icon: "🎵",
-        description: "Spotify player",
-      },
-      {
         type: "scrollingtext",
         label: "Scrolling Text",
         icon: "📣",
         description: "Animated text banner",
-      },
-    ],
-  },
-  {
-    name: "Links & Web",
-    icon: "🌐",
-    components: [
-      {
-        type: "linkpreview",
-        label: "Link Preview",
-        icon: "🔗",
-        description: "Auto-generate link preview with thumbnail",
-      },
-      {
-        type: "stylishlink",
-        label: "Stylish Link",
-        icon: "🔗",
-        description: "Styled web link",
       },
     ],
   },
@@ -142,42 +112,12 @@ export const COMPONENT_CATEGORIES: Category[] = [
         icon: "➖",
         description: "Straight line",
       },
-      {
-        type: "text",
-        label: "Text",
-        icon: "📝",
-        description: "Text shape",
-      },
-      {
-        type: "imageShape",
-        label: "Image",
-        icon: "🖼️",
-        description: "Image shape",
-      },
     ],
   },
   {
-    name: "Smart Shapes",
-    icon: "🧠",
+    name: "Other",
+    icon: "�",
     components: [
-      {
-        type: "smartRectangle",
-        label: "Smart Rectangle",
-        icon: "🔲",
-        description: "Rectangle with connection points",
-      },
-      {
-        type: "smartEllipse",
-        label: "Smart Ellipse",
-        icon: "⭕",
-        description: "Ellipse with connection points and node types",
-      },
-      {
-        type: "smartArrow",
-        label: "Smart Arrow",
-        icon: "🔗",
-        description: "Auto-connecting arrow with curved options",
-      },
       {
         type: "groupFrame",
         label: "Group Frame",
