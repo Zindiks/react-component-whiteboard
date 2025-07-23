@@ -4,33 +4,12 @@ import React, {
   useEffect,
   useRef,
   useMemo,
+  memo,
 } from "react";
 import * as d3 from "d3";
 import { usePerformance } from "../hooks/usePerformance";
-import { Timer } from "./widgets/Timer";
-import { Weather } from "./widgets/Weather";
-import { BitcoinChart } from "./widgets/BitcoinChart";
-import { CurrencyConverter } from "./widgets/CurrencyConverter";
-import { TextNote } from "./widgets/TextNote";
-import { ConfettiButton } from "./widgets/ConfettiButton";
-import { Watch } from "./widgets/Watch";
-import { YouTubeVideo } from "./widgets/YouTubeVideo";
-import { SoundCloudWidget } from "./widgets/SoundCloudWidget";
-import { SpotifyWidget } from "./widgets/SpotifyWidget";
-import { StylishLink } from "./widgets/StylishLink";
-import { LinkPreview } from "./widgets/LinkPreview";
-import { Voting } from "./widgets/Voting";
-
-import {
-  RectangleShape,
-  EllipseShape,
-  ArrowShape,
-  LineShape,
-  TextShape,
-  ScrollingTextShape,
-  ImageShape,
-  GroupedShape,
-} from "./shapes";
+import { ComponentRenderer } from "./ComponentRenderer";
+import type { Component } from "../types/whiteboard";
 import type {
   TextFormattingOptions,
   ShapeFormattingOptions,
@@ -59,10 +38,7 @@ import {
 import { Button } from "./ui/button";
 
 interface DraggableComponentProps {
-  x: number;
-  y: number;
-  id: number;
-  type: string;
+  component: Component;
   onDrag: (
     id: number,
     deltaX: number,
@@ -75,42 +51,9 @@ interface DraggableComponentProps {
   selected: boolean;
   selectedCount?: number; // Total number of selected components
   transform: d3.ZoomTransform;
-  zIndex?: number;
-  imageSrc?: string;
-  width?: number;
-  height?: number;
-  text?: string;
-  youtubeUrl?: string;
-  soundcloudUrl?: string;
-  spotifyUrl?: string;
   onResize?: (id: number, width: number, height: number) => void;
   onTextChange?: (id: number, text: string) => void;
   onImageChange?: (id: number, imageSrc: string) => void;
-  // Text formatting options
-  fontSize?: number;
-  fontFamily?: string;
-  textColor?: string;
-  textAlign?: "left" | "center" | "right";
-  fontWeight?: "normal" | "bold";
-  fontStyle?: "normal" | "italic";
-  // Shape formatting options
-  fillColor?: string;
-  strokeColor?: string;
-  strokeWidth?: number;
-  borderRadius?: number;
-  strokeStyle?: "solid" | "dashed" | "dotted";
-  arrowStyle?: "none" | "arrow" | "double-arrow";
-  arrowSize?: number;
-  // Image formatting options
-  rotation?: number;
-  opacity?: number;
-  // Scrolling text options
-  scrollDirection?: "horizontal" | "vertical";
-  scrollSpeed?: number;
-  pauseOnHover?: boolean;
-  bounceOnEnd?: boolean;
-  backgroundColor?: string;
-  // Text editing state
   isEditing?: boolean;
   onEditingChange?: (id: number, isEditing: boolean) => void;
   onFormattingChange?: (
@@ -122,11 +65,8 @@ interface DraggableComponentProps {
   ) => void;
 }
 
-export const DraggableComponent: React.FC<DraggableComponentProps> = ({
-  x,
-  y,
-  id,
-  type,
+const DraggableComponentBase: React.FC<DraggableComponentProps> = ({
+  component,
   onDrag,
   onDragStart,
   onSelect,
@@ -134,41 +74,14 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   selected,
   selectedCount = 1,
   transform,
-  zIndex,
-  imageSrc,
-  width,
-  height,
-  text,
-  youtubeUrl,
-  soundcloudUrl,
-  spotifyUrl,
   onResize,
   onTextChange,
   onImageChange,
-  fontSize,
-  fontFamily,
-  textColor,
-  textAlign,
-  fontWeight,
-  fontStyle,
-  fillColor,
-  strokeColor,
-  strokeWidth,
-  borderRadius,
-  strokeStyle,
-  arrowStyle,
-  arrowSize,
-  rotation,
-  opacity,
-  scrollDirection,
-  scrollSpeed,
-  pauseOnHover,
-  bounceOnEnd,
-  backgroundColor,
   isEditing,
   onEditingChange,
   onFormattingChange,
 }) => {
+  const { x, y, id, type, zIndex } = component;
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const [isAxisLocked, setIsAxisLocked] = useState(false);
@@ -263,6 +176,17 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   const handleDeleteClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     onDelete(id);
+  };
+
+  // Handle LinkPreview updates
+  const handlePreviewUpdate = (
+    componentId: number,
+    previewData: { url: string; image?: string }
+  ) => {
+    onTextChange?.(componentId, previewData.url);
+    if (previewData.image) {
+      onImageChange?.(componentId, previewData.image);
+    }
   };
 
   // Render display mode toggle buttons for LinkPreview floating header
@@ -368,263 +292,6 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging, handleMouseMove]);
-
-  const componentMap = {
-    timer: () => <Timer />,
-    weather: () => <Weather />,
-    bitcoin: () => <BitcoinChart width={width} height={height} />,
-    currency: () => <CurrencyConverter />,
-    note: () => <TextNote />,
-    confetti: () => <ConfettiButton />,
-    watch: () => <Watch />,
-    scrollingtext: () => (
-      <ScrollingTextShape
-        x={0}
-        y={0}
-        width={width || 300}
-        height={height || 60}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        text={text || "Scrolling text - double-click to edit"}
-        onTextChange={(newText) => onTextChange?.(id, newText)}
-        onFontSizeChange={(newFontSize) =>
-          onFormattingChange?.(id, {
-            fontSize: newFontSize,
-          } as Partial<TextFormattingOptions>)
-        }
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        textColor={textColor}
-        textAlign={textAlign}
-        fontWeight={fontWeight}
-        fontStyle={fontStyle}
-        backgroundColor={backgroundColor}
-        scrollDirection={scrollDirection || "horizontal"}
-        scrollSpeed={scrollSpeed || 50}
-        pauseOnHover={pauseOnHover ?? true}
-        bounceOnEnd={bounceOnEnd ?? false}
-        isEditing={isEditing}
-        onEditingChange={(editing) => onEditingChange?.(id, editing)}
-      />
-    ),
-    youtubeVideo: () => (
-      <YouTubeVideo initialUrl={youtubeUrl} width={width} height={height} />
-    ),
-    soundcloud: () => (
-      <SoundCloudWidget
-        initialUrl={soundcloudUrl}
-        width={width}
-        height={height}
-      />
-    ),
-    spotify: () => (
-      <SpotifyWidget initialUrl={spotifyUrl} width={width} height={height} />
-    ),
-    stylishlink: () => <StylishLink />,
-    voting: () => <Voting />,
-    linkpreview: () => (
-      <LinkPreview
-        initialUrl={text} // Use text field to store the URL
-        width={width}
-        height={height}
-        displayMode={linkPreviewDisplayMode}
-        onPreviewUpdate={(previewData) => {
-          // Store the URL in the text field and preview image in imageSrc
-          onTextChange?.(id, previewData.url);
-          if (previewData.image) {
-            onImageChange?.(id, previewData.image);
-          }
-        }}
-        onDisplayModeChange={(mode) => {
-          // Update the local state when display mode changes
-          setLinkPreviewDisplayMode(mode);
-        }}
-      />
-    ),
-    // Shape components (no headers, resizable, connectable)
-    rectangle: () => (
-      <RectangleShape
-        x={0}
-        y={0}
-        width={width || 150}
-        height={height || 100}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        fillColor={fillColor}
-        strokeColor={strokeColor}
-        strokeWidth={strokeWidth}
-        borderRadius={borderRadius}
-        text={text}
-        onTextChange={(newText) => onTextChange?.(id, newText)}
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        textColor={textColor}
-        textAlign={textAlign}
-        fontWeight={fontWeight}
-        fontStyle={fontStyle}
-      />
-    ),
-    ellipse: () => (
-      <EllipseShape
-        x={0}
-        y={0}
-        width={width || 150}
-        height={height || 100}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        fillColor={fillColor}
-        strokeColor={strokeColor}
-        strokeWidth={strokeWidth}
-        text={text}
-        onTextChange={(newText) => onTextChange?.(id, newText)}
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        textColor={textColor}
-        textAlign={textAlign}
-        fontWeight={fontWeight}
-        fontStyle={fontStyle}
-      />
-    ),
-    arrow: () => (
-      <ArrowShape
-        x={0}
-        y={0}
-        width={width || 150}
-        height={height || 20}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        strokeColor={strokeColor}
-        strokeWidth={strokeWidth}
-        strokeStyle={strokeStyle}
-        arrowStyle={arrowStyle}
-        arrowSize={arrowSize}
-        text={text}
-        onTextChange={(newText) => onTextChange?.(id, newText)}
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        textColor={textColor}
-        fontWeight={fontWeight}
-        fontStyle={fontStyle}
-      />
-    ),
-    line: () => (
-      <LineShape
-        x={0}
-        y={0}
-        width={width || 150}
-        height={height || 20}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        strokeColor={strokeColor}
-        strokeWidth={strokeWidth}
-        strokeStyle={strokeStyle}
-        text={text}
-        onTextChange={(newText) => onTextChange?.(id, newText)}
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        textColor={textColor}
-        fontWeight={fontWeight}
-        fontStyle={fontStyle}
-      />
-    ),
-    text: () => (
-      <TextShape
-        x={0}
-        y={0}
-        width={width || 150}
-        height={height || 50}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        text={text || "Double-click to edit"}
-        onTextChange={(newText) => onTextChange?.(id, newText)}
-        onFontSizeChange={(newFontSize) =>
-          onFormattingChange?.(id, {
-            fontSize: newFontSize,
-          } as Partial<TextFormattingOptions>)
-        }
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        textColor={textColor}
-        textAlign={textAlign}
-        fontWeight={fontWeight}
-        fontStyle={fontStyle}
-        isEditing={isEditing}
-        onEditingChange={(editing) => onEditingChange?.(id, editing)}
-      />
-    ),
-    imageShape: () => (
-      <ImageShape
-        x={0}
-        y={0}
-        width={width || 200}
-        height={height || 150}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        imageSrc={imageSrc}
-        strokeColor={strokeColor}
-        strokeWidth={strokeWidth}
-        borderRadius={borderRadius}
-        rotation={rotation || 0}
-        opacity={opacity || 1}
-        onImageChange={(newImageSrc) => onImageChange?.(id, newImageSrc)}
-        onFormattingChange={(options) => onFormattingChange?.(id, options)}
-      />
-    ),
-    groupFrame: () => (
-      <GroupedShape
-        x={0}
-        y={0}
-        width={width || 200}
-        height={height || 150}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        groupName={text || "Frame"}
-        onGroupNameChange={(newName) => onTextChange?.(id, newName)}
-        groupType="frame"
-        showHeader={true}
-        collapsible={false}
-      />
-    ),
-    groupContainer: () => (
-      <GroupedShape
-        x={0}
-        y={0}
-        width={width || 200}
-        height={height || 150}
-        selected={selected}
-        onSelect={() => onSelect(id)}
-        onResize={(newWidth, newHeight) => onResize?.(id, newWidth, newHeight)}
-        groupName={text || "Container"}
-        onGroupNameChange={(newName) => onTextChange?.(id, newName)}
-        groupType="container"
-        showHeader={true}
-        collapsible={true}
-        collapsed={false}
-      />
-    ),
-  };
-
-  const renderComponent = () => {
-    const componentFactory = componentMap[type as keyof typeof componentMap];
-
-    if (componentFactory) {
-      return componentFactory();
-    }
-
-    return (
-      <div className="w-20 bg-slate-800 rounded-md p-2">
-        <p className="text-white text-center">{id}</p>
-      </div>
-    );
-  };
 
   // Check if this is a shape component (no header, different interaction)
   const isShapeComponent = [
@@ -741,6 +408,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       <div
         ref={componentRef}
         data-component="true"
+        data-testid="draggable-component"
         className={`absolute pointer-events-auto ${
           selected ? "ring-2 ring-blue-500" : ""
         } ${isAxisLocked && isDragging ? "ring-2 ring-orange-400" : ""} group`}
@@ -749,8 +417,44 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
           isShapeComponent ? handleShapeMouseDown : handleComponentMouseDown
         }
       >
-        {renderComponent()}
+        <ComponentRenderer
+          component={component}
+          selected={selected}
+          onSelect={onSelect}
+          onResize={onResize}
+          onTextChange={onTextChange}
+          onImageChange={onImageChange}
+          onFormattingChange={onFormattingChange}
+          isEditing={isEditing}
+          onEditingChange={onEditingChange}
+          linkPreviewDisplayMode={linkPreviewDisplayMode}
+          onPreviewUpdate={handlePreviewUpdate}
+          onDisplayModeChange={(mode) => setLinkPreviewDisplayMode(mode)}
+        />
       </div>
     </>
   );
 };
+
+// Custom comparison function for React.memo
+const areEqual = (
+  prevProps: DraggableComponentProps,
+  nextProps: DraggableComponentProps
+) => {
+  // Only re-render if relevant props change
+  return (
+    prevProps.component.x === nextProps.component.x &&
+    prevProps.component.y === nextProps.component.y &&
+    prevProps.component.width === nextProps.component.width &&
+    prevProps.component.height === nextProps.component.height &&
+    prevProps.selected === nextProps.selected &&
+    prevProps.selectedCount === nextProps.selectedCount &&
+    prevProps.component.zIndex === nextProps.component.zIndex &&
+    prevProps.isEditing === nextProps.isEditing &&
+    // Compare all component properties for deep equality
+    JSON.stringify(prevProps.component) === JSON.stringify(nextProps.component)
+  );
+};
+
+// Export the memoized component
+export const DraggableComponent = memo(DraggableComponentBase, areEqual);

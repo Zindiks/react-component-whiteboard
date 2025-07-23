@@ -583,10 +583,7 @@ const CustomGrid = () => {
         {sortedComponents.map((component) => (
           <DraggableComponent
             key={component.id}
-            x={component.x}
-            y={component.y}
-            id={component.id}
-            type={component.type}
+            component={component}
             onDrag={handleDragWithSnap}
             onDragStart={handleDragStart}
             onSelect={handleSelect}
@@ -597,32 +594,6 @@ const CustomGrid = () => {
             selected={selectedComponents.includes(component.id)}
             selectedCount={selectedComponents.length}
             transform={transform}
-            zIndex={component.zIndex || 0}
-            imageSrc={component.imageSrc}
-            width={component.width}
-            height={component.height}
-            text={component.text}
-            youtubeUrl={component.youtubeUrl}
-            soundcloudUrl={component.soundcloudUrl}
-            spotifyUrl={component.spotifyUrl}
-            fontSize={component.fontSize}
-            fontFamily={component.fontFamily}
-            textColor={component.textColor}
-            textAlign={component.textAlign}
-            fontWeight={component.fontWeight}
-            fontStyle={component.fontStyle}
-            fillColor={component.fillColor}
-            strokeColor={component.strokeColor}
-            strokeWidth={component.strokeWidth}
-            borderRadius={component.borderRadius}
-            strokeStyle={component.strokeStyle}
-            arrowStyle={component.arrowStyle}
-            arrowSize={component.arrowSize}
-            scrollDirection={component.scrollDirection}
-            scrollSpeed={component.scrollSpeed}
-            pauseOnHover={component.pauseOnHover}
-            bounceOnEnd={component.bounceOnEnd}
-            backgroundColor={component.backgroundColor}
             isEditing={editingTextId === component.id}
             onEditingChange={(id, isEditing) => {
               setEditingTextId(isEditing ? id : null);
