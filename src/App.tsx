@@ -11,7 +11,7 @@ import { ScrollingTextControlHeader } from "./components/headers/ScrollingTextCo
 import { usePerformance } from "./hooks/usePerformance";
 import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
 import { Component } from "./types/whiteboard";
-import { useWhiteboardState } from "./hooks/useWhiteboardState";
+import { useWhiteboardStore } from "./store/whiteboardStore";
 import { useZoomControls } from "./hooks/useZoomControls";
 import { usePanControls } from "./hooks/usePanControls";
 import {
@@ -47,7 +47,7 @@ const CustomGrid = () => {
     batchUpdates: true,
   });
 
-  // Use whiteboard state hook
+  // Use whiteboard store
   const {
     components,
     selectedComponents,
@@ -65,7 +65,7 @@ const CustomGrid = () => {
     handleDrag,
     handleSelect,
     handleDragStart,
-  } = useWhiteboardState();
+  } = useWhiteboardStore();
 
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
