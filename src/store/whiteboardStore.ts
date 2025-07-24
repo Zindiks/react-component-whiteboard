@@ -63,23 +63,12 @@ const DEFAULT_COMPONENTS: Component[] = [
   },
 ];
 
-interface ConnectionMode {
-  active: boolean;
-  selectedArrowId: number | null;
-  connectionStep: "start" | "end" | null;
-  startShapeId: number | null;
-  endShapeId: number | null;
-  startConnectionPoint: string | null;
-  endConnectionPoint: string | null;
-}
-
 interface WhiteboardState {
   // State
   components: Component[];
   selectedComponents: number[];
   initialPositions: InitialPosition[];
   copiedComponents: Component[];
-  connectionMode: ConnectionMode;
 
   // Actions
   setComponents: (
@@ -125,15 +114,6 @@ export const useWhiteboardStore = create<WhiteboardState>((set, get) => ({
   selectedComponents: [],
   initialPositions: [],
   copiedComponents: [],
-  connectionMode: {
-    active: false, // Disabled to prevent shapes sticking together
-    selectedArrowId: null,
-    connectionStep: null,
-    startShapeId: null,
-    endShapeId: null,
-    startConnectionPoint: null,
-    endConnectionPoint: null,
-  },
 
   // Setters
   setComponents: (components) =>
