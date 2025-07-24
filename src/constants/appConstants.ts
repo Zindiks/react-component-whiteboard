@@ -7,8 +7,8 @@
 
 // Zoom and Viewport Constants
 export const ZOOM_CONSTANTS = {
-  MIN_ZOOM: 0.1, // Minimum zoom level (10%)
-  MAX_ZOOM: 7, // Maximum zoom level (700%)
+  MIN_ZOOM: 0.24, // Minimum zoom level (10%)
+  MAX_ZOOM: 4.8, // Maximum zoom level (700%)
   ZOOM_INTENSITY: 0.015, // Zoom sensitivity for wheel events
   PAN_SENSITIVITY: 2.0, // Pan sensitivity for two-finger trackpad scrolling. Value chosen based on initial testing; review and validation.
   ZOOM_INDICATOR_TIMEOUT_MS: 200, // Duration to show zoom indicator

@@ -29,7 +29,7 @@ export function getDynamicGridSize(zoomLevel: number): number {
   }
 
   // Ensure the result is divisible by 8
-  return Math.round(calculatedSize / 8) * 8;
+  return Math.round(calculatedSize / GRID_CONSTANTS.SIZE) * GRID_CONSTANTS.SIZE;
 }
 
 /**
@@ -59,8 +59,8 @@ export function snapPointToGrid(
  * @returns The snapped size (multiple of 24px)
  */
 export const snapSizeToGrid = (size: number): number => {
-  if (size < 24) return 24; // Minimum size of 24px
+  if (size < GRID_CONSTANTS.SIZE) return GRID_CONSTANTS.SIZE; // Minimum size of 24px
 
   // Snap to nearest multiple of 24px
-  return Math.round(size / 24) * 24;
+  return Math.round(size / GRID_CONSTANTS.SIZE) * GRID_CONSTANTS.SIZE;
 };

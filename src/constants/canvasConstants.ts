@@ -9,7 +9,7 @@ export const CANVAS_CONSTANTS = {
   // Grid system
   GRID: {
     SIZE: 24,
-    SNAP_THRESHOLD: 12,
+    SNAP_THRESHOLD: 24,
     SHOW_DOTS: true,
     DOT_SIZE: 1,
     DOT_COLOR: "#e0e0e0",
