@@ -2,34 +2,67 @@ import { GRID_CONSTANTS } from "../constants/appConstants";
 
 /**
  * Calculate dynamic grid size based on zoom level
- * This matches the logic used in GridBackground component
  * All grid sizes are ensured to be divisible by 8px
  */
-export function getDynamicGridSize(zoomLevel: number): number {
-  const baseGridSize = GRID_CONSTANTS.SIZE; // 24px
+export function getDynamicGridSize(
+  zoomLevel: number,
+  baseGridSize?: number
+): number {
+  const baseSize = baseGridSize || GRID_CONSTANTS.SIZE; // 24px by default
 
   let calculatedSize: number;
 
-  // Use the same logic as GridBackground component
   if (zoomLevel < 0.25) {
     // Very zoomed out - use large grid (4x base size)
-    calculatedSize = baseGridSize * 4; // 96px
+    calculatedSize = baseSize * 4; // 96px (when base is 24px)
   } else if (zoomLevel < 0.5) {
     // Zoomed out - use medium-large grid (2x base size)
-    calculatedSize = baseGridSize * 2; // 48px
+    calculatedSize = baseSize * 2; // 48px (when base is 24px)
   } else if (zoomLevel > 2) {
-    // Zoomed in - use smaller grid (2/3 base size)
+    // Zoomed in - use smaller grid
     calculatedSize = 16; // 16px (divisible by 8)
   } else if (zoomLevel > 4) {
-    // Very zoomed in - use very small grid (1/3 base size)
+    // Very zoomed in - use very small grid
     calculatedSize = 8; // 8px (divisible by 8)
   } else {
     // Normal zoom - use base size
-    calculatedSize = baseGridSize; // 24px
+    calculatedSize = baseSize; // 24px (base size)
   }
 
   // Ensure the result is divisible by 8
-  return Math.round(calculatedSize / GRID_CONSTANTS.SIZE) * GRID_CONSTANTS.SIZE;
+  return Math.round(calculatedSize / 8) * 8;
+}
+
+/**
+ * Calculate dynamic opacity based on zoom level
+ * Provides smooth opacity transitions for better visual experience
+ */
+export function getDynamicGridOpacity(
+  zoomLevel: number,
+  baseOpacity: number = GRID_CONSTANTS.OPACITY
+): number {
+  if (zoomLevel < 0.2) {
+    return Math.max(baseOpacity * 0.3, 0.2); // Reduced minimum visibility
+  } else if (zoomLevel < 0.4) {
+    return Math.max(baseOpacity * 0.5, 0.3); // Reduced minimum visibility
+  } else if (zoomLevel < 0.7) {
+    return Math.max(baseOpacity * 0.7, 0.45); // Reduced minimum visibility
+  } else if (zoomLevel > 2) {
+    return Math.min(baseOpacity * 1.1, 0.85); // Slightly less visible when zoomed in
+  }
+
+  return baseOpacity;
+}
+
+/**
+ * Calculate dynamic stroke width for grid lines based on zoom and grid size
+ */
+export function getDynamicStrokeWidth(
+  zoomLevel: number,
+  gridSize: number,
+  baseGridSize: number
+): number {
+  return (GRID_CONSTANTS.STROKE_WIDTH / zoomLevel) * (gridSize / baseGridSize);
 }
 
 /**

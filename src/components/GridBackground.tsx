@@ -4,6 +4,11 @@ import { useTheme } from "next-themes";
 import { GRID_CONSTANTS, THEME_COLORS } from "../constants/appConstants";
 import { CANVAS_CONSTANTS } from "../constants/canvasConstants";
 import { usePerformance } from "../hooks/usePerformance";
+import {
+  getDynamicGridSize,
+  getDynamicGridOpacity,
+  getDynamicStrokeWidth,
+} from "../utils/gridUtils";
 
 interface GridBackgroundProps {
   transform: d3.ZoomTransform;
@@ -54,39 +59,16 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
 
     if (!enabled) return;
 
-    // Calculate dynamic grid size based on zoom level (ensure divisible by 8)
+    // Calculate dynamic grid size based on zoom level using utility function
     const baseGridSize = size;
     let gridSize = baseGridSize;
 
     if (dynamicSizing) {
-      // Use the same logic as gridUtils.ts to ensure consistency
-      if (transform.k < 0.25) {
-        gridSize = baseGridSize * 4; // 96px (when base is 24px)
-      } else if (transform.k < 0.5) {
-        gridSize = baseGridSize * 2; // 48px (when base is 24px)
-      } else if (transform.k > 2) {
-        gridSize = 16; // 16px (divisible by 8)
-      } else if (transform.k > 4) {
-        gridSize = 8; // 8px (divisible by 8)
-      } else {
-        gridSize = baseGridSize; // 24px (base size)
-      }
-
-      // Ensure the result is divisible by 8
-      gridSize = Math.round(gridSize / 8) * 8;
+      gridSize = getDynamicGridSize(transform.k, baseGridSize);
     }
 
-    // Calculate dynamic opacity with smooth transitions
-    let dynamicOpacity = opacity;
-    if (transform.k < 0.2) {
-      dynamicOpacity = Math.max(opacity * 0.3, 0.2); // Reduced minimum visibility
-    } else if (transform.k < 0.4) {
-      dynamicOpacity = Math.max(opacity * 0.5, 0.3); // Reduced minimum visibility
-    } else if (transform.k < 0.7) {
-      dynamicOpacity = Math.max(opacity * 0.7, 0.45); // Reduced minimum visibility
-    } else if (transform.k > 2) {
-      dynamicOpacity = Math.min(opacity * 1.1, 0.85); // Slightly less visible when zoomed in
-    }
+    // Calculate dynamic opacity using utility function
+    const dynamicOpacity = getDynamicGridOpacity(transform.k, opacity);
 
     // Create pattern definition
     const defs = svg.append("defs");
@@ -102,8 +84,11 @@ export const GridBackground: React.FC<GridBackgroundProps> = ({
       );
 
     // Create line pattern (L-shaped lines at grid intersections)
-    const dynamicStrokeWidth =
-      (GRID_CONSTANTS.STROKE_WIDTH / transform.k) * (gridSize / baseGridSize);
+    const dynamicStrokeWidth = getDynamicStrokeWidth(
+      transform.k,
+      gridSize,
+      baseGridSize
+    );
 
     // Add L-shaped lines (for "lines" and "both" types)
     if (gridType === "lines" || gridType === "both") {
