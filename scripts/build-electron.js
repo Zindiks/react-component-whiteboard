@@ -7,7 +7,7 @@ build({
   bundle: true,
   platform: "node",
   target: "node18",
-  external: ["electron", "fsevents", "electron-is-dev", "electron-reloader"],
+  external: ["electron", "fsevents", "electron-is-dev"],
   outdir: "dist-electron",
   sourcemap: true,
   format: "esm",

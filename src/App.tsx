@@ -8,6 +8,8 @@ import { FPSMonitor } from "./components/FPSMonitor";
 import { DragPreviewOverlay } from "./components/whiteboard/DragPreviewOverlay";
 import { ShapeControlHeader } from "./components/headers/ShapeControlHeader";
 import { ScrollingTextControlHeader } from "./components/headers/ScrollingTextControlHeader";
+import { getComponentsBounds } from "./utils/boundsUtils";
+import { createRectFromPoints } from "./utils/boundsUtils";
 import { usePerformance } from "./hooks/usePerformance";
 import { COMPONENT_CATEGORIES } from "./constants/componentCategories";
 import { Component } from "./types/whiteboard";
@@ -386,21 +388,7 @@ const CustomGrid = () => {
     }
 
     const padding = LAYOUT_CONSTANTS.WHITEBOARD_PADDING;
-    const bounds = components.reduce(
-      (acc, comp) => ({
-        minX: Math.min(acc.minX, comp.x),
-        minY: Math.min(acc.minY, comp.y),
-        maxX: Math.max(
-          acc.maxX,
-          comp.x + (comp.width || COMPONENT_SIZES.DEFAULT_WIDTH)
-        ),
-        maxY: Math.max(
-          acc.maxY,
-          comp.y + (comp.height || COMPONENT_SIZES.DEFAULT_HEIGHT)
-        ),
-      }),
-      { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
-    );
+    const bounds = getComponentsBounds(components);
 
     return {
       minX: bounds.minX - padding,
@@ -508,21 +496,25 @@ const CustomGrid = () => {
       />
 
       {/* Marquee selection overlay */}
-      {isMarqueeActive && (
-        <div
-          style={{
-            position: "absolute",
-            left: `${Math.min(marqueeStart.x, marqueeEnd.x)}px`,
-            top: `${Math.min(marqueeStart.y, marqueeEnd.y)}px`,
-            width: `${Math.abs(marqueeEnd.x - marqueeStart.x)}px`,
-            height: `${Math.abs(marqueeEnd.y - marqueeStart.y)}px`,
-            border: COLORS.MARQUEE_BORDER,
-            backgroundColor: COLORS.PRIMARY_BLUE_LIGHT,
-            pointerEvents: "none",
-            zIndex: Z_INDEX.MARQUEE_SELECTION,
-          }}
-        />
-      )}
+      {isMarqueeActive &&
+        (() => {
+          const marqueeRect = createRectFromPoints(marqueeStart, marqueeEnd);
+          return (
+            <div
+              style={{
+                position: "absolute",
+                left: `${marqueeRect.left}px`,
+                top: `${marqueeRect.top}px`,
+                width: `${marqueeRect.width}px`,
+                height: `${marqueeRect.height}px`,
+                border: COLORS.MARQUEE_BORDER,
+                backgroundColor: COLORS.PRIMARY_BLUE_LIGHT,
+                pointerEvents: "none",
+                zIndex: Z_INDEX.MARQUEE_SELECTION,
+              }}
+            />
+          );
+        })()}
 
       {/* Zoom indicator overlay */}
       {showZoomIndicator && (
@@ -583,10 +575,7 @@ const CustomGrid = () => {
         {sortedComponents.map((component) => (
           <DraggableComponent
             key={component.id}
-            x={component.x}
-            y={component.y}
-            id={component.id}
-            type={component.type}
+            component={component}
             onDrag={handleDragWithSnap}
             onDragStart={handleDragStart}
             onSelect={handleSelect}
@@ -597,32 +586,6 @@ const CustomGrid = () => {
             selected={selectedComponents.includes(component.id)}
             selectedCount={selectedComponents.length}
             transform={transform}
-            zIndex={component.zIndex || 0}
-            imageSrc={component.imageSrc}
-            width={component.width}
-            height={component.height}
-            text={component.text}
-            youtubeUrl={component.youtubeUrl}
-            soundcloudUrl={component.soundcloudUrl}
-            spotifyUrl={component.spotifyUrl}
-            fontSize={component.fontSize}
-            fontFamily={component.fontFamily}
-            textColor={component.textColor}
-            textAlign={component.textAlign}
-            fontWeight={component.fontWeight}
-            fontStyle={component.fontStyle}
-            fillColor={component.fillColor}
-            strokeColor={component.strokeColor}
-            strokeWidth={component.strokeWidth}
-            borderRadius={component.borderRadius}
-            strokeStyle={component.strokeStyle}
-            arrowStyle={component.arrowStyle}
-            arrowSize={component.arrowSize}
-            scrollDirection={component.scrollDirection}
-            scrollSpeed={component.scrollSpeed}
-            pauseOnHover={component.pauseOnHover}
-            bounceOnEnd={component.bounceOnEnd}
-            backgroundColor={component.backgroundColor}
             isEditing={editingTextId === component.id}
             onEditingChange={(id, isEditing) => {
               setEditingTextId(isEditing ? id : null);

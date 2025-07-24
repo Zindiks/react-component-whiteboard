@@ -10,6 +10,8 @@ import { useCallback, useState, useEffect } from "react";
 import * as d3 from "d3";
 import { Component } from "../types/whiteboard";
 import { COMPONENT_SIZES, MARQUEE_CONSTANTS } from "../constants/appConstants";
+import { createRectFromPoints } from "../utils/boundsUtils";
+import { screenToWhiteboard } from "../utils/coordinateUtils";
 
 export interface PanControlsState {
   isPanning: boolean;
@@ -87,17 +89,12 @@ export const usePanControls = ({
   );
 
   const getComponentsInMarquee = useCallback(() => {
-    const left = Math.min(marqueeStart.x, marqueeEnd.x);
-    const right = Math.max(marqueeStart.x, marqueeEnd.x);
-    const top = Math.min(marqueeStart.y, marqueeEnd.y);
-    const bottom = Math.max(marqueeStart.y, marqueeEnd.y);
+    const marqueeRect = createRectFromPoints(marqueeStart, marqueeEnd);
 
     // Only select if marquee has meaningful size (avoid accidental selections)
-    const marqueeWidth = right - left;
-    const marqueeHeight = bottom - top;
     if (
-      marqueeWidth < MARQUEE_CONSTANTS.MIN_SELECTION_SIZE ||
-      marqueeHeight < MARQUEE_CONSTANTS.MIN_SELECTION_SIZE
+      marqueeRect.width < MARQUEE_CONSTANTS.MIN_SELECTION_SIZE ||
+      marqueeRect.height < MARQUEE_CONSTANTS.MIN_SELECTION_SIZE
     ) {
       return [];
     }
@@ -119,10 +116,10 @@ export const usePanControls = ({
 
       // More precise intersection check
       const hasIntersection = !(
-        componentRight <= left ||
-        componentLeft >= right ||
-        componentBottom <= top ||
-        componentTop >= bottom
+        componentRight <= marqueeRect.left ||
+        componentLeft >= marqueeRect.right ||
+        componentBottom <= marqueeRect.top ||
+        componentTop >= marqueeRect.bottom
       );
 
       return hasIntersection;
@@ -159,9 +156,8 @@ export const usePanControls = ({
         // Check if text tool is active
         if (textToolActive && onWhiteboardClick) {
           // Convert screen coordinates to world coordinates
-          const worldX = (coords.x - transform.x) / transform.k;
-          const worldY = (coords.y - transform.y) / transform.k;
-          onWhiteboardClick(worldX, worldY);
+          const worldCoords = screenToWhiteboard(coords, transform);
+          onWhiteboardClick(worldCoords.x, worldCoords.y);
           event.preventDefault();
           return;
         }
@@ -190,9 +186,7 @@ export const usePanControls = ({
       getEventCoordinates,
       textToolActive,
       onWhiteboardClick,
-      transform.x,
-      transform.y,
-      transform.k,
+      transform,
     ]
   );
 

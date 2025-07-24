@@ -7,8 +7,8 @@
 
 // Zoom and Viewport Constants
 export const ZOOM_CONSTANTS = {
-  MIN_ZOOM: 0.1, // Minimum zoom level (10%)
-  MAX_ZOOM: 7, // Maximum zoom level (700%)
+  MIN_ZOOM: 0.24, // Minimum zoom level (10%)
+  MAX_ZOOM: 4.8, // Maximum zoom level (700%)
   ZOOM_INTENSITY: 0.015, // Zoom sensitivity for wheel events
   PAN_SENSITIVITY: 2.0, // Pan sensitivity for two-finger trackpad scrolling. Value chosen based on initial testing; review and validation.
   ZOOM_INDICATOR_TIMEOUT_MS: 200, // Duration to show zoom indicator
@@ -47,12 +47,6 @@ export const COMPONENT_SIZES = {
   // Text note fallback dimensions when image load fails
   IMAGE_FALLBACK_WIDTH: 192,
   IMAGE_FALLBACK_HEIGHT: 144,
-
-  // PDF viewer dimensions
-  PDF_WIDTH: 384,
-  PDF_HEIGHT: 504, // 504 = 21 * 24
-  PDF_MIN_WIDTH: 288, // 288 = 12 * 24
-  PDF_MIN_HEIGHT: 384, // 384 = 16 * 24
 
   // Link preview dimensions
   LINK_PREVIEW_WIDTH: 384,

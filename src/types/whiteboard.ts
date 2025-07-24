@@ -27,6 +27,9 @@ export interface Component {
   strokeStyle?: "solid" | "dashed" | "dotted";
   arrowStyle?: "none" | "arrow" | "double-arrow";
   arrowSize?: number;
+  // Image formatting options
+  rotation?: number;
+  opacity?: number;
   // Scrolling text options
   scrollDirection?: "horizontal" | "vertical";
   scrollSpeed?: number;
