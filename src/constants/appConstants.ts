@@ -48,12 +48,6 @@ export const COMPONENT_SIZES = {
   IMAGE_FALLBACK_WIDTH: 192,
   IMAGE_FALLBACK_HEIGHT: 144,
 
-  // PDF viewer dimensions
-  PDF_WIDTH: 384,
-  PDF_HEIGHT: 504, // 504 = 21 * 24
-  PDF_MIN_WIDTH: 288, // 288 = 12 * 24
-  PDF_MIN_HEIGHT: 384, // 384 = 16 * 24
-
   // Link preview dimensions
   LINK_PREVIEW_WIDTH: 384,
   LINK_PREVIEW_HEIGHT: 288, // 288 = 12 * 24

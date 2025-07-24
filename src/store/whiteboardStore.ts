@@ -248,9 +248,6 @@ export const useWhiteboardStore = create<WhiteboardState>((set, get) => ({
     } else if (type === "imageShape") {
       newComponent.width = 200;
       newComponent.height = 150;
-    } else if (type === "pdfShape") {
-      newComponent.width = COMPONENT_SIZES.PDF_WIDTH;
-      newComponent.height = COMPONENT_SIZES.PDF_HEIGHT;
     } else if (type === "linkpreview") {
       newComponent.width = COMPONENT_SIZES.LINK_PREVIEW_WIDTH;
       newComponent.height = COMPONENT_SIZES.LINK_PREVIEW_HEIGHT;
