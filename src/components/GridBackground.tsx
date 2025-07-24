@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useCallback } from "react";
 import * as d3 from "d3";
 import { useTheme } from "next-themes";
 import { GRID_CONSTANTS, THEME_COLORS } from "../constants/appConstants";
+import { CANVAS_CONSTANTS } from "../constants/canvasConstants";
 import { usePerformance } from "../hooks/usePerformance";
 
 interface GridBackgroundProps {
@@ -17,7 +18,7 @@ interface GridBackgroundProps {
 export const GridBackground: React.FC<GridBackgroundProps> = ({
   transform,
   enabled = GRID_CONSTANTS.ENABLED,
-  size = GRID_CONSTANTS.SIZE,
+  size = CANVAS_CONSTANTS.GRID.SIZE,
   color,
   opacity = GRID_CONSTANTS.OPACITY,
   dynamicSizing = true,
