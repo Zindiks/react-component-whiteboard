@@ -43,7 +43,10 @@ export const useComponentStore = create<ComponentState>((set, get) => ({
       nextId: nextId + 1,
     }));
 
-    stateLogger.info(`Added component ${nextId}`, { id: nextId, type: componentData.type });
+    stateLogger.info(`Added component ${nextId}`, {
+      id: nextId,
+      type: componentData.type,
+    });
     return nextId;
   },
 
