@@ -3,6 +3,8 @@ import * as d3 from "d3";
 import { Component } from "../types/whiteboard";
 import { COMPONENT_SIZES } from "../constants/appConstants";
 import { widgetLogger } from "../utils/componentLoggers";
+import { getNextComponentId, getMaxZIndex } from "../utils/idUtils";
+import { centerComponentAtMouse } from "../utils/coordinateUtils";
 
 interface UseComponentCreatorsProps {
   components: Component[];
@@ -40,22 +42,19 @@ export const useComponentCreators = ({
           }
 
           // Convert screen coordinates to whiteboard coordinates and center on mouse position
-          const whiteboardX =
-            (mousePosition.x - transform.x) / transform.k - width / 2;
-          const whiteboardY =
-            (mousePosition.y - transform.y) / transform.k - height / 2;
+          const position = centerComponentAtMouse(mousePosition, transform, {
+            width,
+            height,
+          });
 
           // Create a new imageShape component at mouse position
-          const newId = Math.max(...components.map((c) => c.id), 0) + 1;
-          const highestZIndex = Math.max(
-            ...components.map((c) => c.zIndex || 0),
-            0
-          );
+          const newId = getNextComponentId(components);
+          const highestZIndex = getMaxZIndex(components);
 
           const newComponent: Component = {
             id: newId,
-            x: whiteboardX,
-            y: whiteboardY,
+            x: position.x,
+            y: position.y,
             type: "imageShape",
             width,
             height,
@@ -73,21 +72,18 @@ export const useComponentCreators = ({
             imageUrl: imageSrc,
           });
           // Fallback to default size with whiteboard coordinates
-          const whiteboardX =
-            (mousePosition.x - transform.x) / transform.k - 100;
-          const whiteboardY =
-            (mousePosition.y - transform.y) / transform.k - 75;
+          const position = centerComponentAtMouse(mousePosition, transform, {
+            width: COMPONENT_SIZES.IMAGE_FALLBACK_WIDTH,
+            height: COMPONENT_SIZES.IMAGE_FALLBACK_HEIGHT,
+          });
 
-          const newId = Math.max(...components.map((c) => c.id), 0) + 1;
-          const highestZIndex = Math.max(
-            ...components.map((c) => c.zIndex || 0),
-            0
-          );
+          const newId = getNextComponentId(components);
+          const highestZIndex = getMaxZIndex(components);
 
           const newComponent: Component = {
             id: newId,
-            x: whiteboardX,
-            y: whiteboardY,
+            x: position.x,
+            y: position.y,
             type: "imageShape",
             width: COMPONENT_SIZES.IMAGE_FALLBACK_WIDTH,
             height: COMPONENT_SIZES.IMAGE_FALLBACK_HEIGHT,
@@ -105,14 +101,7 @@ export const useComponentCreators = ({
         tempImg.src = imageSrc;
       });
     },
-    [
-      components,
-      mousePosition.x,
-      mousePosition.y,
-      transform,
-      setComponents,
-      setSelectedComponents,
-    ]
+    [components, mousePosition, transform, setComponents, setSelectedComponents]
   );
 
   // Helper function to create a YouTube component at mouse position
@@ -123,22 +112,19 @@ export const useComponentCreators = ({
       const height = COMPONENT_SIZES.YOUTUBE_HEIGHT;
 
       // Convert screen coordinates to whiteboard coordinates and center on mouse position
-      const whiteboardX =
-        (mousePosition.x - transform.x) / transform.k - width / 2;
-      const whiteboardY =
-        (mousePosition.y - transform.y) / transform.k - height / 2;
+      const position = centerComponentAtMouse(mousePosition, transform, {
+        width,
+        height,
+      });
 
       // Create a new YouTube component at mouse position
-      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
-      const highestZIndex = Math.max(
-        ...components.map((c) => c.zIndex || 0),
-        0
-      );
+      const newId = getNextComponentId(components);
+      const highestZIndex = getMaxZIndex(components);
 
       const newComponent: Component = {
         id: newId,
-        x: whiteboardX,
-        y: whiteboardY,
+        x: position.x,
+        y: position.y,
         type: "youtubeVideo",
         width,
         height,
@@ -151,17 +137,10 @@ export const useComponentCreators = ({
       widgetLogger.info("Created YouTube video component", {
         componentId: newId,
         youtubeUrl,
-        position: { x: whiteboardX, y: whiteboardY },
+        position: { x: position.x, y: position.y },
       });
     },
-    [
-      components,
-      mousePosition.x,
-      mousePosition.y,
-      transform,
-      setComponents,
-      setSelectedComponents,
-    ]
+    [components, mousePosition, transform, setComponents, setSelectedComponents]
   );
 
   // Helper function to create a SoundCloud component at mouse position
@@ -178,7 +157,7 @@ export const useComponentCreators = ({
         (mousePosition.y - transform.y) / transform.k - height / 2;
 
       // Create a new SoundCloud component at mouse position
-      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const newId = getNextComponentId(components);
       const highestZIndex = Math.max(
         ...components.map((c) => c.zIndex || 0),
         0
@@ -227,7 +206,7 @@ export const useComponentCreators = ({
         (mousePosition.y - transform.y) / transform.k - height / 2;
 
       // Create a new Spotify component at mouse position
-      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const newId = getNextComponentId(components);
       const highestZIndex = Math.max(
         ...components.map((c) => c.zIndex || 0),
         0
@@ -273,7 +252,7 @@ export const useComponentCreators = ({
       const whiteboardY =
         (mousePosition.y - transform.y) / transform.k - height / 2;
 
-      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const newId = getNextComponentId(components);
       const highestZIndex = Math.max(
         ...components.map((c) => c.zIndex || 0),
         0
@@ -314,7 +293,7 @@ export const useComponentCreators = ({
         (mousePosition.y - transform.y) / transform.k - defaultHeight / 2;
 
       // Create a new text component at mouse position
-      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const newId = getNextComponentId(components);
       const highestZIndex = Math.max(
         ...components.map((c) => c.zIndex || 0),
         0
@@ -368,7 +347,7 @@ export const useComponentCreators = ({
         (mousePosition.y - transform.y) / transform.k - defaultHeight / 2;
 
       // Create a new shape component at mouse position
-      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
+      const newId = getNextComponentId(components);
       const highestZIndex = Math.max(
         ...components.map((c) => c.zIndex || 0),
         0

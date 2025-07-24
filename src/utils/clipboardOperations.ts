@@ -8,6 +8,8 @@
 
 import { Component } from "../types/whiteboard";
 import { clipboardLogger } from "./componentLoggers";
+import { getNextComponentId, getMaxZIndex } from "./idUtils";
+import { getComponentsBounds } from "./boundsUtils";
 import {
   isImageUrl,
   isYouTubeUrl,
@@ -214,16 +216,12 @@ export const screenToWhiteboardCoords = (
 /**
  * Creates new component IDs for pasted components
  */
-export const generateNewComponentId = (components: Component[]): number => {
-  return Math.max(...components.map((c) => c.id), 0) + 1;
-};
+export const generateNewComponentId = getNextComponentId;
 
 /**
  * Gets the highest z-index among all components
  */
-export const getHighestZIndex = (components: Component[]): number => {
-  return Math.max(...components.map((c) => c.zIndex || 0), 0);
-};
+export const getHighestZIndex = getMaxZIndex;
 
 /**
  * Creates new components from copied components with new positions and IDs
@@ -245,15 +243,7 @@ export const createPastedComponents = (
   );
 
   // Calculate the center point of the copied components group
-  const bounds = copiedComponents.reduce(
-    (acc, comp) => ({
-      minX: Math.min(acc.minX, comp.x),
-      minY: Math.min(acc.minY, comp.y),
-      maxX: Math.max(acc.maxX, comp.x + (comp.width || 200)),
-      maxY: Math.max(acc.maxY, comp.y + (comp.height || 200)),
-    }),
-    { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
-  );
+  const bounds = getComponentsBounds(copiedComponents);
 
   const groupCenterX = (bounds.minX + bounds.maxX) / 2;
   const groupCenterY = (bounds.minY + bounds.maxY) / 2;

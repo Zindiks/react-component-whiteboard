@@ -8,6 +8,7 @@
 
 import { useEffect } from "react";
 import * as d3 from "d3";
+import { getNextComponentId, getMaxZIndex } from "../utils/idUtils";
 import { Component } from "../types/whiteboard";
 import {
   isYouTubeUrl,
@@ -346,11 +347,8 @@ export const useDragAndDrop = ({
       width: number,
       height: number
     ) => {
-      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
-      const highestZIndex = Math.max(
-        ...components.map((c) => c.zIndex || 0),
-        0
-      );
+      const newId = getNextComponentId(components);
+      const highestZIndex = getMaxZIndex(components);
 
       const newComponent: Component = {
         id: newId,
@@ -372,11 +370,8 @@ export const useDragAndDrop = ({
       url: string,
       type: "youtubeVideo" | "soundcloud" | "spotify"
     ) => {
-      const newId = Math.max(...components.map((c) => c.id), 0) + 1;
-      const highestZIndex = Math.max(
-        ...components.map((c) => c.zIndex || 0),
-        0
-      );
+      const newId = getNextComponentId(components);
+      const highestZIndex = getMaxZIndex(components);
 
       // Default dimensions for different media types
       let width: number, height: number;
