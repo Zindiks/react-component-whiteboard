@@ -7,9 +7,10 @@ A powerful, interactive whiteboard application built with React, TypeScript, and
 ### 🎨 Interactive Whiteboard
 
 - **Infinite Canvas**: Unlimited workspace for your creativity
-- **Zoom & Pan**: Smooth zoom controls (10% - 700%) with mouse wheel, trackpad, and touch gestures
+- **Zoom & Pan**: Smooth zoom controls (24% - 480%) with mouse wheel, trackpad, and touch gestures
 - **Marquee Selection**: Select multiple components with drag selection
-- **Component Layering**: Z-index management for proper component stacking
+- **Component Layering**: Automatic z-index management for proper component stacking
+- **Smart Grid System**: Dynamic grid sizing based on zoom level with snap-to-grid support
 
 ### 🧩 Rich Component Library
 
@@ -22,10 +23,14 @@ A powerful, interactive whiteboard application built with React, TypeScript, and
   - Currency Converter
   - Text Notes with Markdown support
   - Confetti Button for celebrations
+  - Voting Widget (two-option polls)
+  - Scrolling Text Banner
 - **Integrations**:
   - YouTube Video Player
   - SoundCloud Audio Player
-  - Spotify Widget
+  - Spotify Widget (tracks, playlists, albums)
+  - Link Preview (automatic metadata fetching)
+  - Stylish Link (enhanced link display)
   - External Images with URL detection
 
 ### 🎯 Advanced Functionality
@@ -131,20 +136,39 @@ npm run electron:dist
 ```
 src/
 ├── components/           # React components
-│   ├── widgets/         # Individual widget components
-│   ├── shapes/          # Basic shape components
-│   └── ui/              # Reusable UI components
+│   ├── __tests__/       # Component tests
+│   ├── base/            # Base component classes
+│   ├── headers/         # Control headers for selected components
+│   ├── shapes/          # Shape components (Rectangle, Ellipse, etc.)
+│   ├── ui/              # Reusable UI primitives (Radix UI based)
+│   ├── widgets/         # Widget components (Timer, Weather, etc.)
+│   └── whiteboard/      # Whiteboard-specific components
 ├── hooks/               # Custom React hooks
-│   ├── useWhiteboardState.ts    # Main state management
-│   ├── useZoomControls.ts       # Zoom/pan functionality
-│   ├── useDragAndDrop.ts        # Drag & drop logic
-│   ├── useComponentCreators.ts  # Component creation
-│   └── useEventHandlers.ts      # Global event handling
+│   ├── useZoomControls.ts       # Zoom/pan functionality with D3.js
+│   ├── usePanControls.ts        # Pan gestures and marquee selection
+│   ├── useDragAndDrop.ts        # File & URL drag & drop logic
+│   ├── useComponentCreators.ts  # Component factory functions
+│   ├── useEventHandlers.ts      # Global keyboard/mouse events
+│   ├── useSidebarControls.ts    # Sidebar state management
+│   └── usePerformance.ts        # GPU acceleration & optimization
 ├── store/               # Zustand state management
+│   └── whiteboardStore.ts       # Central state store
 ├── types/               # TypeScript type definitions
 ├── utils/               # Utility functions
+│   ├── boundsUtils.ts           # Geometric calculations
+│   ├── coordinateUtils.ts       # Coordinate transformations
+│   ├── gridUtils.ts             # Grid sizing & snapping
+│   ├── urlDetection.ts          # URL type detection
+│   ├── clipboardOperations.ts   # Copy/paste logic
+│   ├── idUtils.ts               # ID & z-index management
+│   └── logger.ts                # Structured logging system
 ├── constants/           # Application constants
-└── styles/              # Global styles
+│   ├── appConstants.ts          # Core constants (zoom, sizes, etc.)
+│   └── componentCategories.ts   # Component library organization
+├── contexts/            # React Context providers
+├── lib/                 # Third-party library utilities
+├── test/                # Test setup and utilities
+└── assets/              # Static assets
 ```
 
 ## ⚙️ Configuration
@@ -182,11 +206,13 @@ The application follows a modular architecture with:
 
 ### Key Hooks
 
-- `useWhiteboardState`: Manages component state and operations
-- `useZoomControls`: Handles zoom/pan transformations
-- `useDragAndDrop`: File and component drag & drop
-- `useComponentCreators`: Component factory functions
-- `useEventHandlers`: Global keyboard and mouse events
+- `useZoomControls`: Handles zoom/pan transformations with D3.js
+- `usePanControls`: Pan gestures, marquee selection, coordinate conversion
+- `useDragAndDrop`: File, URL, and component drag & drop handling
+- `useComponentCreators`: Component factory functions for all widget types
+- `useEventHandlers`: Global keyboard shortcuts and mouse event coordination
+- `useSidebarControls`: Component library sidebar state management
+- `usePerformance`: GPU acceleration and performance optimizations
 
 ### Building
 
